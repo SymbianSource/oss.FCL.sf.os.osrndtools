@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SystemDefinition schema="3.0.0">
+ <package id="osrndtools" name="OS R&amp;D tools" levels="fw trace">
+  <collection id="stif" name="STIF" level="fw">
+   <component id="testinterface" filter="s60" name="Test Interface" purpose="development">
+    <unit bldFile="stif/testinterface/group"/>
+   </component>
+   <component id="testserver" filter="s60" name="Test Server" purpose="development">
+    <unit bldFile="stif/testserver/group"/>
+   </component>
+   <component id="testengine" filter="s60" name="Test Engine" purpose="development">
+    <unit bldFile="stif/testengine/group"/>
+   </component>
+   <component id="testserverstarter" filter="s60" name="Test Server Starter" purpose="development">
+    <unit bldFile="stif/testserverstarter/group"/>
+   </component>
+   <component id="stiftfwif" filter="s60" name="STIF Test Framework Interface" purpose="development">
+    <unit bldFile="stif/stiftfwif/group"/>
+   </component>
+   <component id="consoleui" filter="s60" name="Console UI" purpose="development">
+    <unit bldFile="stif/consoleui/group"/>
+   </component>
+   <component id="testcombiner" filter="s60" name="Test Combiner" purpose="development">
+    <unit bldFile="stif/testcombiner/group"/>
+   </component>
+   <component id="demomodule" filter="s60" name="Demo Module" purpose="development">
+    <unit bldFile="stif/demomodule/group"/>
+   </component>
+   <component id="atslogger" filter="s60" name="ATS Logger" purpose="development">
+    <unit bldFile="stif/atslogger/group"/>
+   </component>
+   <component id="atsinterface" filter="s60" name="ATS Interface" purpose="development">
+    <unit bldFile="stif/atsinterface/group"/>
+   </component>
+   <component id="testscripter" filter="s60" name="Test Scripter" purpose="development">
+    <unit bldFile="stif/testscripter/group"/>
+   </component>
+   <component id="suevent" filter="s60" name="SU Event" purpose="development">
+    <unit bldFile="stif/suevent/group"/>
+   </component>
+   <component id="stifkerneltestclassbase" filter="s60" name="STIF Kernel Test Class Base" purpose="development">
+    <unit bldFile="stif/stifkerneltestclassbase/group"/>
+   </component>
+   <component id="examples" filter="s60" name="STIF Examples" purpose="development">
+    <!-- <unit bldFile="stif/examples/stiftestmeasurementstub/group"/> -->
+    <!-- <unit bldFile="stif/examples/stifhwresetstub/group"/> -->
+   </component>
+   <component id="testmoduletemplates" filter="s60" name="Test Module Templates" purpose="development">
+    <!-- <unit bldFile="stif/testmoduletemplates/templatescriptxxx/group"/> -->
+    <!-- <unit bldFile="stif/testmoduletemplates/templatekernelscriptxxx/group"/> -->
+    <!-- <unit bldFile="stif/testmoduletemplates/capsmodifierxxx/group"/> -->
+    <!-- <unit bldFile="stif/testmoduletemplates/testmodulexxx/group"/> -->
+    <!-- <unit bldFile="stif/testmoduletemplates/stifunitxxx/group"/> -->
+    <!-- <unit bldFile="stif/testmoduletemplates/hardcodedtestmodulexxx/group"/> -->
+   </component>
+   <component id="stif_build" filter="s60" name="STIF Build" purpose="development">
+    <unit bldFile="stif/group"/>
+   </component>
+  </collection>
+  <collection id="memspy" name="Memspy" level="trace">
+   <component id="driver" filter="s60" name="Memspy Driver" purpose="development">
+    <unit bldFile="memspy/driver/group"/>
+   </component>
+   <component id="memspy_engine" filter="s60" name="Memspy Engine" purpose="development">
+    <unit bldFile="memspy/engine/group"/>
+   </component>
+   <component id="commandline" filter="s60" name="Memspy Command Line" purpose="development">
+    <unit bldFile="memspy/commandline/group"/>
+   </component>
+   <component id="console" filter="s60" name="Memspy Console" purpose="development">
+    <unit bldFile="memspy/console/group"/>
+   </component>
+   <component id="memspy_build" filter="s60" name="Memspy Build" purpose="development">
+    <unit bldFile="memspy/group"/>
+   </component>
+  </collection>
+  <collection id="hti" name="Harmonized Test Interface" level="trace">
+   <component id="htiframework" filter="s60" name="HTI Framework" purpose="development">
+    <unit bldFile="hti/htiframework/group"/>
+   </component>
+   <component id="hticfg" filter="s60" name="HTI Config" purpose="development">
+    <unit bldFile="hti/hticfg/group"/>
+   </component>
+   <component id="htiautostart" filter="s60" name="HTI Autostart" purpose="development">
+    <unit bldFile="hti/htiautostart/group"/>
+   </component>
+   <component id="htifilehlp" filter="s60" name="HTI File Help" purpose="development">
+    <unit bldFile="hti/htifilehlp/group"/>
+   </component>
+   <component id="htiwatchdog" filter="s60" name="HTI Watchdog" purpose="development">
+    <unit bldFile="hti/htiwatchdog/group"/>
+   </component>
+   <component id="hti_build" filter="s60" name="HTI Build" purpose="development">
+    <unit bldFile="hti/group"/>
+   </component>
+  </collection>
+    <collection id="testexecfw1" name="Test Execution Framework v1" level="fw">
+      <component id="cinidata" name="CINI Data" purpose="development">
+        <unit bldFile="testexecfw1/cinidata" mrp="testexecfw1/cinidata/tools_cinidata.mrp"/>
+      </component>
+      <component id="testexecute" name="Test Execute" deprecated="^2" purpose="development">
+        <unit bldFile="testexecfw1/testexecute/Group" mrp="testexecfw1/testexecute/Group/tools_testexecute.mrp"/>
+      </component>
+    </collection>
+    <collection id="osrndtools_info" name="OS R&amp;D tools Info" level="trace">
+      <component id="osrndtools_plat" filter="s60" name="OS R&amp;D tools Platform Interfaces" class="api" purpose="development">
+        <unit bldFile="osrndtools_plat/group"/>
+          <!-- need to #include the next bld.inf  in the above one -->
+        <unit bldFile="osrndtools_plat/hti_api/group"/>
+      </component>
+      <component id="osrndtools_metadata" name="OS R&amp;D tools Metadata" class="config" introduced="^2" purpose="development" target="desktop">
+        <unit mrp="osrndtools_info/osrndtools_metadata/osrndtools_metadata.mrp"/>
+      </component>
+    </collection>
+  </package>
+</SystemDefinition>

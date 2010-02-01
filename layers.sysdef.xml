@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE SystemDefinition SYSTEM "sysdef_1_4_0.dtd" [
+  <!ENTITY layer_real_source_path "sf/os/osrndtools" >
+]>
+
+<SystemDefinition name="osrndtools" schema="1.4.0">
+  <systemModel>
+    <layer name="os_layer">
+      <module name="osrndtools">
+        <unit unitID="tools.osrndtools" mrp="" bldFile="&layer_real_source_path;/group" name="osrndtools" />
+      </module>
+    </layer>
+  </systemModel>
+</SystemDefinition>
+

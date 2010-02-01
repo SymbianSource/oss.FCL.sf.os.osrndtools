@@ -1,0 +1,6 @@
+component           osrndtools_metadata
+source   \sf\os\osrndtools\osrndtools_info\osrndtools_metadata 
+source   \sf\os\osrndtools\package_definition.xml
+source   \sf\os\osrndtools\distribution.policy.s60
+notes_source      \component_defs\release.src
+ipr T 
