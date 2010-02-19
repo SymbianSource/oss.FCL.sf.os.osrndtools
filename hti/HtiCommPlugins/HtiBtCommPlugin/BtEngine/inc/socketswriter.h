@@ -21,7 +21,7 @@
 
 // INCLUDES
 #include <in_sock.h>
-#include "TimeOutNotifier.h"
+#include "timeoutnotifier.h"
 
 // FORWARD DECLARATIONS
 class CTimeOutTimer;

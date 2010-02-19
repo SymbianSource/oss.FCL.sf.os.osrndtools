@@ -21,8 +21,8 @@
 #include <f32file.h>
 
 #include "HtiUsbSerialCommEcomPlugin.h"
-#include <hticfg.h>
-#include <htilogging.h>
+#include <HtiCfg.h>
+#include <HtiLogging.h>
 
 // EXTERNAL DATA STRUCTURES
 
@@ -36,6 +36,8 @@ _LIT( KHtiCfgPath,          "\\" ); // root of drive
 _LIT( KHtiUsbSerialCommCfg, "HTIUsbSerialComm.cfg" );
 _LIT8( KUsbPortNumber,      "PortNumber" );
 _LIT8( KUsbDataRate,        "DataRate" );
+_LIT8( KUsbRetryTimes,      "RetryTimes" );
+_LIT8( KUsbRetryInterval,   "RetryInterval" );
 
 // _LIT( KUsbPddName, "" );
 _LIT( KUsbLddName, "EUSBC" );
@@ -306,8 +308,41 @@ void CHtiUsbSerialCommEcomPlugin::InitCommPortL()
     err = iCommPort.Open( iCommServ, commPort, ECommExclusive, ECommRoleDTE );
     if ( err )
         {
-        HTI_LOG_FORMAT( "Failed to open port %d", err );
-        ShowErrorNotifierL( _L( "Failed to open port" ), err );
+        //read retry parameters from cfg
+        TInt retryTimes = 10;
+        TRAPD( paramRetryTimesErr,
+                retryTimes = iCfg->GetParameterIntL( KUsbRetryTimes ) );
+        if ( paramRetryTimesErr != KErrNone )
+            {
+            HTI_LOG_TEXT( "RetryTimes is not defined in cfg, using default" );
+            }
+        HTI_LOG_FORMAT( " RetryTimes  = %d", retryTimes );
+        
+        TInt retryInterval = 10;
+        TRAPD( paramRetryIntervalErr,
+                retryInterval = iCfg->GetParameterIntL( KUsbRetryInterval ) );
+        if ( paramRetryIntervalErr != KErrNone )
+            {
+            HTI_LOG_TEXT( "RetryInterval is not defined in cfg, using default" );
+            }
+        HTI_LOG_FORMAT( " RetryInterval  = %d(s)", retryInterval );
+
+        // retry to open the port
+        for( TInt i=0; i<retryTimes; i++ )
+            {
+            User::After( retryInterval * 1000000 );
+            err = iCommPort.Open( iCommServ, commPort, ECommExclusive, ECommRoleDTE );
+            if( !err )
+                {
+                break;
+                }
+            }
+
+        if( err )
+            {
+            HTI_LOG_FORMAT( "Failed to open port %d", err );
+            ShowErrorNotifierL( _L( "Failed to open port" ), err );
+            }
         }
     User::LeaveIfError( err );
     HTI_LOG_TEXT( "Port open - checking port capabilities" );

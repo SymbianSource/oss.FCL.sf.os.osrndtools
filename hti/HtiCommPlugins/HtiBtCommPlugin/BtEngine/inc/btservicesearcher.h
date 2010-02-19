@@ -24,11 +24,11 @@
 #include <bttypes.h>
 #include <btextnotifiers.h>
 
-#include "SdpAttributeParser.h"
-#include "SdpAttributeNotifier.h"
+#include "sdpattributeparser.h"
+#include "sdpattributenotifier.h"
 
 // CONSTANTS
-#include "MessageProtocolConstants.h"
+#include "messageprotocolconstants.h"
 
 // CLASS DECLARATIONS
 /**

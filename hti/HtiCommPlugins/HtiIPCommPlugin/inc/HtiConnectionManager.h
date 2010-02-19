@@ -21,10 +21,10 @@
 
 
 // INCLUDES
-#include <HTICommPluginInterface.h> // defined in HtiFramework project
+#include <HtiCommPluginInterface.h> // defined in HtiFramework project
 #include <es_sock.h>
 #include <in_sock.h>
-#include <CommDbConnPref.h>
+#include <commdbconnpref.h>
 
 #include "HtiIPCommServerCommon.h"
 #include "HtiSocketMonitor.h"

@@ -18,7 +18,7 @@
 
 
 // INCLUDE FILES
-#include "CSocketReader.h"
+#include "Csocketreader.h"
 #include "MSocketReaderObserver.h"
 #include <badesca.h>
 

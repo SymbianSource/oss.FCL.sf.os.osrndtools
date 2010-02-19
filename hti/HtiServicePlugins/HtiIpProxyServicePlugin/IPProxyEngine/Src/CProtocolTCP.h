@@ -70,7 +70,7 @@ NONSHARABLE_CLASS( CProtocolTCP ) : public CBase, public MBPProtocol,
         void ProtocolErrorL( TInt aErrorCode, const TDesC8& aReceivedData );
         void OpenLocalTCPConnectionL( TUint aPort );
         void OpenListeningTCPConnectionL( TUint aPort );
-        void CloseTCPConnection( TUint aPort );
+        void CloseTCPConnectionL( TUint aPort );
         void CloseAllTCPConnections();
 
     public: // From MBPProtocol

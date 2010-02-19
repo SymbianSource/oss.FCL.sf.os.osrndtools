@@ -24,8 +24,8 @@
 #include <es_sock.h>
 #include <bluetooth/btpowercontrol.h>
 #include <bt_sock.h>
-#include <BTextNotifiers.h>
-#include <BtSdp.h>
+#include <btextnotifiers.h>
+#include <btsdp.h>
 
 #include "SocketObserver.h"
 

@@ -22,7 +22,7 @@
 #define HTISTIFTFSERVICEPLUGIN_H
 
 //  INCLUDES
-#include <HTIServicePluginInterface.h>
+#include <HtiServicePluginInterface.h>
 
 // CONSTANTS
 

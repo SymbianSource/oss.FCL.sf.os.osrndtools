@@ -20,10 +20,10 @@
 #include "HtiIPCommEcomPlugin.h"
 #include "HtiConnectionManager.h"
 #include "HtiCfg.h"
-#include "HtiIPCommlogging.h"
+#include "HtiIPCommLogging.h"
 
 #include <commdb.h>             // CCommsDatabase
-#include <hticfg.h>
+#include <HtiCfg.h>
 
 
 // CONSTANTS

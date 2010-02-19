@@ -23,7 +23,7 @@
 
 //  INCLUDES
 #include <e32base.h>
-#include <HTIServicePluginInterface.h>
+#include <HtiServicePluginInterface.h>
 
 // CONSTANTS
 

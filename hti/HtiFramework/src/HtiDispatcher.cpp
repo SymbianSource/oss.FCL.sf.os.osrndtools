@@ -20,10 +20,10 @@
 #include "HtiDispatcher.h"
 #include "HtiMessage.h"
 #include "HtiMessageQueue.h"
-#include "HTILogging.h"
+#include "HtiLogging.h"
 #include "HtiCommAdapter.h"
-#include "HTIServicePluginInterface.h"
-#include "HTICommPluginInterface.h"
+#include "HtiServicePluginInterface.h"
+#include "HtiCommPluginInterface.h"
 #include "HtiSecurityManager.h"
 #include "HtiVersion.h"
 

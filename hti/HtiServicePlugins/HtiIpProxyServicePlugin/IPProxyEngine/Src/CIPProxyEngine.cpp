@@ -19,9 +19,9 @@
 
 // INCLUDE FILES
 #include "CIPProxyEngine.h"
-#include "CTCPPortListener.h"
+#include "Ctcpportlistener.h"
 #include "CLocalTCPConnection.h"
-#include "CSocketRouter.h"
+#include "Csocketrouter.h"
 #include "MIPProxyEngineObserver.h"
 #include "MHostConnection.h"
 #include "MAbstractConnection.h"
@@ -528,6 +528,7 @@ void CIPProxyEngine::CloseTCPConnection( TUint aPort )
     DEBUG_PRINT( DEBUG_STRING(
         "CIPProxyEngine::CloseTCPConnection(), port=%d"), aPort );
 
+    // Delete local TCP connections
     TInt index = FindLocalTCPConn( aPort );
     if ( index > -1 )
         {
@@ -537,6 +538,25 @@ void CIPProxyEngine::CloseTCPConnection( TUint aPort )
 
         DEBUG_PRINT( DEBUG_STRING(
             "CIPProxyEngine::CloseTCPConnection(), conn deleted.") );
+        }
+    
+    // stop listening on this port
+    TInt peerListenerArrayCount = iPeerListenerArray->Count();
+    for ( TInt i = 0; i < peerListenerArrayCount; i++ )
+        {
+        CTCPPortListener* listener = iPeerListenerArray->At( i );
+        if(listener->Port() == aPort)
+            {
+            listener->Cancel();
+            iPeerListenerArray->Delete(i);
+            delete listener;
+            break;
+            }
+        }
+    
+    if(iPeerListenerArray->Count() == 0)
+        {
+        iListening = EFalse;
         }
     }
 
@@ -552,6 +572,8 @@ void CIPProxyEngine::CloseAllTCPConnections()
     iSocketRouter->ResetQueue();
     iSocketRouter->RemoveAllPeers();
 
+    iLocalConnArray->ResetAndDestroy();
+    
     StopListening();
 
     if ( iPeerListenerArray )

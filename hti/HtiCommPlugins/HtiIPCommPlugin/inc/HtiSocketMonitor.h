@@ -21,7 +21,7 @@
 
 
 // INCLUDES
-#include <HTICommPluginInterface.h> // defined in HtiFramework project
+#include <HtiCommPluginInterface.h> // defined in HtiFramework project
 
 
 // FORWARD DECLARATIONS

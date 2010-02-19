@@ -17,9 +17,9 @@
 
 
 // INCLUDE FILES
-#include "HtiEchoServiceplugin.h"
+#include "HtiEchoServicePlugin.h"
 #include <HtiDispatcherInterface.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 
 // CONSTANTS
 const static TUid KEchoServiceUid = { 0x1020DEBF };

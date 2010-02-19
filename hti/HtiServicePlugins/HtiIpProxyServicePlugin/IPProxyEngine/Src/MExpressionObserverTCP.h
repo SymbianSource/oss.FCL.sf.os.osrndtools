@@ -40,7 +40,7 @@ NONSHARABLE_CLASS( MExpressionObserverTCP ) :
 
         virtual void OpenListeningTCPConnectionL( TUint aPort ) = 0;
 
-        virtual void CloseTCPConnection( TUint aPort ) = 0;
+        virtual void CloseTCPConnectionL( TUint aPort ) = 0;
 
         virtual void CloseAllTCPConnections() = 0;
     };

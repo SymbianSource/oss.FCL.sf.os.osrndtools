@@ -22,7 +22,7 @@
 
 //  INCLUDES
 #include <e32base.h>
-#include "CSocket.h"
+#include "Csocket.h"
 #include "MSocketObserver.h"
 #include "MProtocolObserverTCP.h"
 #include "MProtocolObserverUDP.h"
@@ -101,10 +101,10 @@ NONSHARABLE_CLASS( CSocketRouter ) : public CActive,
 
         /**
         * Finds peer socket from the array.
-        * @param aRemotePort A port to remove from the array
+        * @param aPort A port to remove from the array
         * @return index of the peer socket, -1 if not found
         */
-        TInt FindPeerSocket( TUint aRemotePort );
+        TInt FindPeerSocket( TUint aPort );
 
         /**
         * Removes all peer sockets from the array.
@@ -185,7 +185,7 @@ NONSHARABLE_CLASS( CSocketRouter ) : public CActive,
         void TCPFrameParsedL( TUint aPort, const TDesC8& aData );
         void OpenLocalTCPConnectionL( TUint aPort );
         void OpenListeningTCPConnectionL( TUint aPort );
-        void CloseTCPConnection( TUint aPort );
+        void CloseTCPConnectionL( TUint aPort );
         void CloseAllTCPConnections();
 
     protected:  // From MProtocolObserverUDP

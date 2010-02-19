@@ -21,8 +21,8 @@
 #include <f32file.h>
 
 #include "HtiSerialCommEcomPlugin.h"
-#include <hticfg.h>
-#include <htilogging.h>
+#include <HtiCfg.h>
+#include <HtiLogging.h>
 
 // CONSTANTS
 _LIT( KHtiSerialError, "HtiSerialError" );

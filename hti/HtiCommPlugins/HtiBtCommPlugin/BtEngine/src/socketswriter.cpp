@@ -17,8 +17,8 @@
 
 
 // INCLUDE FILES
-#include "SocketsWriter.h"
-#include "TimeOutTimer.h"
+#include "socketswriter.h"
+#include "timeouttimer.h"
 #include "BtSerialEngine.pan"
 #include "SocketObserver.h"
 #include "HtiBtEngineLogging.h"

@@ -19,8 +19,8 @@
 // INCLUDE FILES
 #include <bt_sock.h>
 
-#include "MessageServiceSearcher.h"
-#include "BTServiceSearcher.pan"
+#include "messageservicesearcher.h"
+#include "btservicesearcher.pan"
 
 
 // ============================ MEMBER FUNCTIONS ===============================

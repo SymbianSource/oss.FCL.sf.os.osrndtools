@@ -21,7 +21,7 @@
 
 // INCLUDES
 #include <btsdp.h>
-#include "StaticArrayC.h"
+#include "staticarrayc.h"
 
 // FORWARD DECLARATIONS
 class MSdpAttributeNotifier;

@@ -21,7 +21,7 @@
 // INCLUDE FILES
 #include <e32std.h>
 #include <HtiDispatcherInterface.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 
 #include "HtiStifTfServicePlugin.h"
 #include "HtiStifTfIf.h"

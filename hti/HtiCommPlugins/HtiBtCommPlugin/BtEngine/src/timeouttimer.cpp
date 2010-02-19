@@ -17,8 +17,8 @@
 
 
 // INCLUDE FILES
-#include "TimeOutTimer.h"
-#include "TimeOutNotifier.h"
+#include "timeouttimer.h"
+#include "timeoutnotifier.h"
 #include "HtiBtEngineLogging.h"
 
 // -----------------------------------------------------------------------------

@@ -18,7 +18,7 @@
 
 // INCLUDE FILES
 #include "HtiSocketMonitor.h"
-#include "HtiIPCommlogging.h"
+#include "HtiIPCommLogging.h"
 
 
 CHtiSocketMonitor* CHtiSocketMonitor::NewL( MHtiSocketObserver::TRequestType aType, MHtiSocketObserver* aObserver )

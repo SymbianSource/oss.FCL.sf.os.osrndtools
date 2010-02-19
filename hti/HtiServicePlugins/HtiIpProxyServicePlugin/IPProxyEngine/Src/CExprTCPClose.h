@@ -68,7 +68,7 @@ NONSHARABLE_CLASS( CExprTCPClose ) : public CBase, public MBPExpression
 
     public: // new functions
 
-        TInt TryParsing( TDes8& aData, TInt& aLength );
+        TInt TryParsingL( TDes8& aData, TInt& aLength );
 
     private:
 

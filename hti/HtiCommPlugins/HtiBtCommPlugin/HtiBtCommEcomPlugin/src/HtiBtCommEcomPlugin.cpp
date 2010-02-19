@@ -22,8 +22,8 @@
 
 #include "HtiBtCommEcomPlugin.h"
 #include "BtSerialClient.h"
-#include <hticfg.h>
-#include <htilogging.h>
+#include <HtiCfg.h>
+#include <HtiLogging.h>
 
 // CONSTANTS
 _LIT( KHtiCfgPath,       "\\" ); // root of drive
