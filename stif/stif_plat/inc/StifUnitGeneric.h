@@ -461,13 +461,14 @@ EXPORT_C CTestModuleBase* LibEntryL()
     {
     return STIF_UNIT_MODULE_CLASS_NAME::NewL();
     }
-
+#ifndef STIFUNIT_SETHEAPANDSTACKSIZE
 EXPORT_C TInt SetRequirements( CTestModuleParam*& /*aTestModuleParam*/, 
                                TUint32& /*aParameterValid*/ )
     {
     return KErrNone;
     }
 
+#endif
 #endif      // StifUnitGeneric_H
 
 // End of File

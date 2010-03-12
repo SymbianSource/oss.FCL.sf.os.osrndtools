@@ -20,7 +20,7 @@
 #define TESTCASE_H
 
 //  INCLUDES
-#include <E32Base.h>
+#include <e32base.h>
 #include <stifinternal/TestServerClient.h>
 #include <StifTestModule.h>
 #include "TestCaseNotify.h"

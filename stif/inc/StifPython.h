@@ -21,7 +21,7 @@
 #define STIFPYTHON_H
 
 //  INCLUDES
-#include <E32Base.h>
+#include <e32base.h>
 
 // CONSTANTS
 _LIT(KPythonScripter, "pythonscripter");
