@@ -158,9 +158,9 @@ void CProtocolTCP::OpenListeningTCPConnectionL( TUint aPort )
 // CProtocolTCP::CloseTCPConnection
 // -----------------------------------------------------------------------------
 //
-void CProtocolTCP::CloseTCPConnection( TUint aPort )
+void CProtocolTCP::CloseTCPConnectionL( TUint aPort )
     {
-    iObserver->CloseTCPConnection( aPort );
+    iObserver->CloseTCPConnectionL( aPort );
     }
 
 // -----------------------------------------------------------------------------

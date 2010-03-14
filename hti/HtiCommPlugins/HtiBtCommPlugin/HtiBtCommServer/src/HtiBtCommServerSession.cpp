@@ -29,7 +29,7 @@
 #include <e32std.h>
 #include <e32svr.h>
 
-#include <HTICommPluginInterface.h> // KErrComModuleReset;
+#include <HtiCommPluginInterface.h> // KErrComModuleReset;
 
 // CONSTANTS
  _LIT(KBtComSessPanic, "BtComSessAssrt");

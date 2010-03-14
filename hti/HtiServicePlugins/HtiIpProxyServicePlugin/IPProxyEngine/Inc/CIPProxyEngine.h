@@ -24,7 +24,7 @@
 #include <e32base.h>
 #include <es_sock.h>
 #include "MIPProxyEngine.h"
-#include "MHostConnectionObserver.h"
+#include "Mhostconnectionobserver.h"
 #include "MLocalTCPConnectionObserver.h"
 #include "MTCPPortListenerObserver.h"
 #include "MSocketRouterObserver.h"

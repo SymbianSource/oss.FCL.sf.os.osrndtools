@@ -60,7 +60,7 @@ NONSHARABLE_CLASS( MProtocolObserverTCP ) : public MProtocolObserver
         * Close a TCP connection
         * @param aPort Remote port number to close
         */
-        virtual void CloseTCPConnection( TUint aPort ) = 0;
+        virtual void CloseTCPConnectionL( TUint aPort ) = 0;
 
         /**
         * Close all TCP connections from listening & connecting ports

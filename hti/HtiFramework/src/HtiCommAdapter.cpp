@@ -18,11 +18,11 @@
 
 #include "HtiCommAdapter.h"
 #include "HtiDispatcher.h"
-#include "HTICommPluginInterface.h"
+#include "HtiCommPluginInterface.h"
 #include "HtiMessage.h"
 #include "HtiNotifier.h"
 
-#include "HTILogging.h"
+#include "HtiLogging.h"
 
 //default value for max message size for incoming messages
 //used if value in constructor is not valid (<0)

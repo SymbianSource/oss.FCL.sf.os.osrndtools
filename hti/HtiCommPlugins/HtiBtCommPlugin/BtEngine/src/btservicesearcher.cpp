@@ -17,8 +17,8 @@
 
 
 // INCLUDE FILES
-#include "BTServiceSearcher.h"
-#include "BTServiceSearcher.pan"
+#include "btservicesearcher.h"
+#include "btservicesearcher.pan"
 
 #include "HtiBtEngineLogging.h"
 

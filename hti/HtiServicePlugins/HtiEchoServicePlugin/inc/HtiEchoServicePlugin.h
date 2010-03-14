@@ -21,7 +21,7 @@
 #define CHTIECHOSERVICEPLUGIN_H__
 
 // INCLUDES
-#include <HTIServicePluginInterface.h>
+#include <HtiServicePluginInterface.h>
 
 // CONSTANTS
 

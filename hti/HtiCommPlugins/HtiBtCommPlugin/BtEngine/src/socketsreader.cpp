@@ -18,7 +18,7 @@
 
 // INCLUDE FILES
 #include "BtSerialEngine.pan"
-#include "SocketsReader.h"
+#include "socketsreader.h"
 #include "SocketObserver.h"
 
 // -----------------------------------------------------------------------------

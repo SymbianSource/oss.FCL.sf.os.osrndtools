@@ -21,7 +21,7 @@
 #define HTIIPPROXYSERVICEPLUGIN_H__
 
 // INCLUDES
-#include <HTIServicePluginInterface.h>
+#include <HtiServicePluginInterface.h>
 #include "MSocket.h"
 #include "MHostConnection.h"
 #include "MAbstractConnection.h"

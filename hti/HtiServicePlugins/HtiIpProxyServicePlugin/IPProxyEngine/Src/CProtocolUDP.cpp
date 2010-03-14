@@ -132,22 +132,42 @@ void CProtocolUDP::WriteFrameL( MSocketWriter& aSocketWriter,
         "CProtocolUDP::WriteFrameL(), peer port=%d, original port=%d" ),
         aPeerPort, aOriginalPort );
 
-    aSocketWriter.WriteL( KUDPPrefix );
+    TInt bufSize = 0;
+    bufSize += KUDPPrefix().Length();
+    bufSize += KHexDecimalLength;
+    bufSize += KPortSuffix().Length();
+    bufSize += KHexDecimalLength;
+    bufSize += KLengthSuffix().Length();
+    bufSize += aData.Length();
+    bufSize += KDataSuffix().Length();
+    bufSize += KMessageSuffix().Length();
+    
+    TBuf8<KHexDecimalLength> hexbuf;
+    HBufC8* buf = HBufC8::NewLC( bufSize );
+    TPtr8 ptr( buf->Des() );
+    
+    // Append UDP prefix
+    ptr.Append( KUDPPrefix );
 
-    TBuf8<KHexDecimalLength> portBuf;
-    portBuf.Format( KHexFormat, aPeerPort );
-    aSocketWriter.WriteL( portBuf );
-    aSocketWriter.WriteL( KPortSuffix );
+    // Append peer port
+    hexbuf.Format( KHexFormat, aPeerPort );
+    ptr.Append( hexbuf );
+    ptr.Append( KPortSuffix );
 
-    TBuf8<KHexDecimalLength> lengthBuf;
-    lengthBuf.Format( KHexFormat, aData.Length() );
-    aSocketWriter.WriteL( lengthBuf );
+    // Append data length
+    hexbuf.Format( KHexFormat, aData.Length() );
+    ptr.Append( hexbuf );
+    ptr.Append( KLengthSuffix );
 
-    aSocketWriter.WriteL( KLengthSuffix );
-    aSocketWriter.WriteL( aData );
-    aSocketWriter.WriteL( KDataSuffix );
+    // Append data
+    ptr.Append( aData );
+    ptr.Append( KDataSuffix );
+    ptr.Append( KMessageSuffix );
+    
+    // Write to socket
+    aSocketWriter.WriteL( *buf );
 
-    aSocketWriter.WriteL( KMessageSuffix );
+    CleanupStack::PopAndDestroy( buf );
     }
 
 // -----------------------------------------------------------------------------
