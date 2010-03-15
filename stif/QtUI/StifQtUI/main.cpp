@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies). 
+* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
 * All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of "Eclipse Public License v1.0"
@@ -10,20 +10,19 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
-* 
-* Description: STIF version declaration
+*
+* Description: QT C++ based Class.
+*              Application entrance.
 *
 */
+#include <QApplication>
+#include "frmmain.h"
 
-#ifndef VERSION_H_
-#define VERSION_H_
+int main(int argc, char* argv[])
+{
+    QApplication app(argc, argv);
+    frmMain win;
+    win.showMaximized();
+    return app.exec();
+}
 
-#define STIF_MAJOR_VERSION 7
-#define STIF_MINOR_VERSION 3
-#define STIF_BUILD_VERSION 27
-
-#define STIF_REL_DATE "23th Feb 2010"
-
-#define TO_UNICODE(text) _L(text) 
-
-#endif /*VERSION_H_*/

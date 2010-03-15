@@ -113,7 +113,7 @@ TDesC8* THtiSystemProtocolHelper::AuthMessageL( const TDesC8& aToken )
 *
 **************************************************************************/
 CHtiDispatcher::CHtiDispatcher( TInt aMaxQueueMemorySize,
-                                TBool aShowErrorDialogs ):
+        TInt aReconnectDelay, TBool aShowErrorDialogs ):
     iIdleActive( EFalse ),
     iMaxQueueMemorySize( aMaxQueueMemorySize > 0 ?
                          aMaxQueueMemorySize : KDefaultMaxQueueSize ),
@@ -122,7 +122,8 @@ CHtiDispatcher::CHtiDispatcher( TInt aMaxQueueMemorySize,
     iConsole( NULL ),
     iIdleOverCommAdapter( EFalse ),
     iHtiInstanceId( 0 ),
-    iShowErrorDialogs( aShowErrorDialogs )
+    iShowErrorDialogs( aShowErrorDialogs ),
+    iReconnectDelay (aReconnectDelay)
     {
     HTI_LOG_FORMAT( "MaxQueueMemorySize %d", iMaxQueueMemorySize );
     iQueueSizeLowThresold = ( iMaxQueueMemorySize / 2 ) / 2;
@@ -256,11 +257,12 @@ CHtiDispatcher::~CHtiDispatcher()
 CHtiDispatcher* CHtiDispatcher::NewLC( const TDesC8& aCommPlugin,
                                 TInt aMaxMsgSize,
                                 TInt aMaxQueueMemory,
+                                TInt aReconnectDelay,
                                 TBool aShowConsole,
                                 TBool aShowErrorDialogs )
     {
     CHtiDispatcher* obj = new (ELeave) CHtiDispatcher(
-            aMaxQueueMemory, aShowErrorDialogs );
+            aMaxQueueMemory, aReconnectDelay,aShowErrorDialogs );
     CleanupStack::PushL( obj );
     obj->ConstructL( aCommPlugin, aMaxMsgSize, aShowConsole );
     return obj;
@@ -269,11 +271,12 @@ CHtiDispatcher* CHtiDispatcher::NewLC( const TDesC8& aCommPlugin,
 CHtiDispatcher* CHtiDispatcher::NewL( const TDesC8& aCommPlugin,
                                 TInt aMaxMsgSize,
                                 TInt aMaxQueueMemory,
+                                TInt aReconnectDelay,
                                 TBool aShowConsole,
                                 TBool aShowErrorDialogs )
     {
     CHtiDispatcher* obj = NewLC( aCommPlugin, aMaxMsgSize, aMaxQueueMemory,
-            aShowConsole, aShowErrorDialogs );
+            aReconnectDelay,aShowConsole, aShowErrorDialogs );
     CleanupStack::Pop();
     return obj;
     }
@@ -1239,4 +1242,26 @@ TUid CHtiDispatcher::MapServicePluginUid( const TUid aUid )
             break;
         }
     return mappedUid;
+    }
+
+TBool CHtiDispatcher::CommReconnect()
+    {
+    if(iReconnectDelay == 0)
+        {
+        return EFalse;
+        }
+    
+    //Delay
+    HTI_LOG_FORMAT( "Reconnect deley : %d seconds", iReconnectDelay);
+    User::After(iReconnectDelay * 1000 * 1000);
+    
+    //Reconnect
+    iIncomingQueue->RemoveAll();
+    iOutgoingQueue->RemoveAll();
+    
+    iListener->Reset();
+    iSender->Reset();
+    iListener->ReceiveMessage();
+
+    return ETrue;
     }

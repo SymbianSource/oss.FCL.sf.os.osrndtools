@@ -103,16 +103,37 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
     {
     TFileName serverName;
 
-	TInt ret;
+    TInt ret = KErrNone;
 
-    // Create global semaphore start-up
+    // Create global semaphore start-up. It will be indexed (if given name already exsists, index will be increased)
     RSemaphore startSemaphore;
     TName semaphoreName = _L("startupSemaphore");
     semaphoreName.Append( aModuleName );
-    ret = startSemaphore.CreateGlobal( semaphoreName, 0);
-	if ( ret != KErrNone )
+    TInt x = 0;
+    RBuf semName;
+    ret = semName.Create(KMaxName);
+    if(ret != KErrNone)
         {
-		startSemaphore.Close();
+        RDebug::Print(_L("RTestServer::Connect() Could not create buffer for semaphore name [%d]"), ret);
+        return ret;
+        }
+    do
+        {
+        semName.Format(_L("%S%d"), &semaphoreName, x);
+        ret = startSemaphore.CreateGlobal(semName, 0);
+        RDebug::Print(_L("RTestServer::Connect() Creating global semaphore [%S] with result [%d]"), &semName, ret);
+        if(ret != KErrAlreadyExists)
+            {
+            semaphoreName.Copy(semName);
+            break;
+            }
+        x++;
+        } while (ETrue);
+    semName.Close();
+    
+    if ( ret != KErrNone )
+        {
+        startSemaphore.Close();
         return ret;
         }
 
@@ -129,7 +150,18 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
 
     RProcess pr;
 
-    ret = KErrNone;
+    // Data to be passed to new process. It will contain module name and synchronization semaphore name separated with space.
+    // I.e. it will be: "mymodule startupSemaphore0"
+    RBuf data; 
+    ret = data.Create(KMaxName);
+    if(ret != KErrNone)
+        {
+        RDebug::Print(_L("RTestServer::Connect() Could not create buffer for data to be passed to process [%d]"), ret);
+        return ret;
+        }
+    data.Format(_L("%S %S"), &aModuleName, &semaphoreName);
+    RDebug::Print(_L("RTestServer::Connect() Data for new process prepared [%S]"), &data);
+    
 
     // Indication is Create() operation needed
     TBool doCreate( ETrue );
@@ -138,11 +170,11 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
         // Create without path(Uses Symbian default path).
         // Note: If TestScriter used then module name is format:
         // testscripter_testcasefilename
-        ret = pr.Create( aModuleName,  aModuleName );
+        
+        ret = pr.Create( aModuleName, data );
         if( ret == KErrNone )
             {
-            RDebug::Print( _L( "Combination (1): Caps modifier[%S], Module[%S]" ),
-                                    &aModuleName, &aModuleName );
+            RDebug::Print(_L("RTestServer::Connect() Combination (1): Caps modifier [%S], Data [%S]"), &aModuleName, &data);
             doCreate = EFalse;
             }
     #endif // __WINS__
@@ -161,17 +193,16 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
             ret_caps = GetCapsModifier( aConfigFile, capsModifierName );
             if( ret_caps != KErrNone )
                 {
-                RDebug::Print( _L( "Caps modifier was not defined. Default modifier will be used" ) );
+                RDebug::Print( _L( "RTestServer::Connect() Caps modifier was not defined. Default modifier will be used" ) );
                 }
             else
                 {
                 #ifdef __WINS__ // CodeWarrior(emulator)
                     // Create without path(Uses Symbian default path)
-                    ret = pr.Create( capsModifierName, aModuleName );
+                    ret = pr.Create( capsModifierName, data );
                     if( ret == KErrNone )
                         {
-                        RDebug::Print( _L( "Combination (2): Caps modifier[%S], Module[%S]" ),
-                                        &capsModifierName, &aModuleName );
+                        RDebug::Print( _L( "RTestServer::Connect() Combination (2): Caps modifier [%S], Data [%S]"), &capsModifierName, &data);
                         doCreate = EFalse;
                         }
                 #endif // __WINS__
@@ -200,7 +231,7 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
         if( find_ret != KErrNone )
 			{
 			// Module was not found, using default exe: testserverstarter.exe
-			RDebug::Print( _L( "Correct caps modifier module not found, capabilities cannot set" ) );
+			RDebug::Print( _L( "RTestServer::Connect() Correct caps modifier module not found, capabilities cannot set" ) );
 			if ( aModuleName.Find( _L( "testscripter_ui_" ) ) == 0 ) 
 				{
 				pathAndExeModule.Copy( KDefaultUiExeName );    	
@@ -213,8 +244,9 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
         if( trapd_ret != KErrNone )
            {
            // FindExeL fails
-           RDebug::Print( _L( "Caps modifier module searching fails with error: %d" ), trapd_ret );
+           RDebug::Print( _L( "RTestServer::Connect() Caps modifier module searching fails with error: %d" ), trapd_ret );
            startSemaphore.Close();
+           data.Close();
            return trapd_ret;
            }
 
@@ -222,16 +254,17 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
 
     if ( doCreate )
         {
-        ret = pr.Create( pathAndExeModule, aModuleName );
+        ret = pr.Create( pathAndExeModule, data );
         RDebug::Print(
-            _L( "Combination (3): Caps modifier[%S], Module[%S]. Result: %d" ),
-            &pathAndExeModule, &aModuleName, ret );
+            _L( "RTestServer::Connect() Combination (3): Caps modifier [%S], Data [%S], Result [%d]" ),
+            &pathAndExeModule, &data, ret );
         }
 
-        
+    data.Close();
+    
     if ( ret != KErrNone )
         {
-		startSemaphore.Close();  
+        startSemaphore.Close();  
         return ret;
         }
 

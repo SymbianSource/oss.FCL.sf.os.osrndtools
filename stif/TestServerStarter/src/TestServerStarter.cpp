@@ -50,7 +50,7 @@
 GLDEF_C TInt E32Main()
     {
 
-    RDebug::Print(_L("New process starting"));
+    RDebug::Print(_L("STIF: New process starting"));
 
     // Get module name from command line
 	const TInt length = User().CommandLineLength();
@@ -66,13 +66,21 @@ GLDEF_C TInt E32Main()
 
 	User().CommandLine( moduleName );
 
-    RDebug::Print (moduleName);
+    RDebug::Print(_L("STIF: Received data [%S]"), &moduleName);
+
+    // Extract semaphore name passed in data
+    TInt index = moduleName.Find(_L(" "));
+    RDebug::Print(_L("STIF: Space separator found at position [%d]"), index);
+    TPtrC semaphoreName = moduleName.Mid(index + 1);
+    moduleName = moduleName.Left(index);
+
+    RDebug::Print(_L("STIF: Extracted module name [%S] and sempahore name [%S]"), &moduleName, &semaphoreName);
 
     // Open start-up synchronization semaphore
     RSemaphore startup;
     RDebug::Print(_L(" Openingstart-up semaphore"));
-    TName semaphoreName = _L("startupSemaphore");
-    semaphoreName.Append( moduleName );
+    //TName semaphoreName = _L("startupSemaphore");
+    //semaphoreName.Append( moduleName );
     
     TInt res = startup.OpenGlobal(semaphoreName);
     RDebug::Print(_L("Opening result %d"), res);    

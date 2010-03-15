@@ -476,7 +476,7 @@ void CFileOutput::OpenExistingFileL( const TDesC& aTestPath,
         iFileAndDirName.Insert( iFileAndDirName.Length(), txtPrt );
         }
 
-    TBool isOpen( EFalse );
+//  TBool isOpen( EFalse );
     TInt ret( KErrNone );
 
   

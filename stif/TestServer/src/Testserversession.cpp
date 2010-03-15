@@ -646,8 +646,14 @@ TInt CTestModule::EnumerateTestCasesL( const RMessage2& aMessage )
     // Get data from message
     TFileName config;
     TRAPD( res, aMessage.ReadL( 0, config ) );
-    if( res != KErrNone )
+    if(res == KErrDied)
         {
+        RDebug::Print(_L("CTestModule::EnumerateTestCasesL() Reading from RMessage ended with KErrDied. Client is not alive anymore and this request will be ignored"));
+        return res;
+        }
+    else if( res != KErrNone )
+        {
+        RDebug::Print(_L("CTestModule::EnumerateTestCasesL() #1 Panic client with [%d], res=[%d]"), EBadDescriptor, res);
         PanicClient( EBadDescriptor, aMessage );
         return res;
         }
@@ -702,8 +708,14 @@ TInt CTestModule::EnumerateTestCasesL( const RMessage2& aMessage )
     
     TPckgBuf<TInt> countPckg( testCases->Count() );
     TRAP( res, aMessage.WriteL( 1, countPckg ) );
-    if( res != KErrNone )
+    if(res == KErrDied)
         {
+        RDebug::Print(_L("CTestModule::EnumerateTestCasesL() Writing to RMessage ended with KErrDied. Client is not alive anymore and this request will be ignored"));
+        return res;
+        }
+    else if( res != KErrNone )
+        {
+        RDebug::Print(_L("CTestModule::EnumerateTestCasesL() #2 Panic client with [%d], res=[%d], config=[%S]"), EBadDescriptor, res, &config);
         PanicClient( EBadDescriptor, aMessage );
         return res;
         }

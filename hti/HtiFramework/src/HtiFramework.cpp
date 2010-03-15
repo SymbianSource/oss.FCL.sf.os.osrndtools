@@ -49,6 +49,7 @@ _LIT8( KStartUpDelay,       "StartUpDelay" );
 _LIT8( KEnableHtiWatchDog,  "EnableHtiWatchDog" );
 _LIT8( KEnableHtiAutoStart, "EnableHtiAutoStart" );
 _LIT8( KShowErrorDialogs,   "ShowErrorDialogs" );
+_LIT8( KReconnectDelay,     "ReconnectDelay");
 
 const static TInt KDefaultMaxWaitTime  = 90; // seconds
 const static TInt KDefaultStartUpDelay = 5;  // seconds
@@ -57,6 +58,7 @@ const static TInt KHtiWatchDogEnabledDefault = 0;
 const static TInt KHtiConsoleEnabledDefault = 0;
 const static TInt KHtiAutoStartEnabledDefault = 0;
 const static TInt KHtiShowErrorDialogsDefault = 1;
+const static TInt KHtiReconnectDelay = 0;
 
 // MACROS
 
@@ -101,6 +103,7 @@ void CHtiFramework::ConstructL()
     TInt showConsole = KHtiConsoleEnabledDefault;
     TInt enableHtiAutoStart = KHtiAutoStartEnabledDefault;
     TInt showErrorDialogs = KHtiShowErrorDialogsDefault;
+    TInt reconnectDelay = KHtiReconnectDelay;
 
     TRAPD( err, iCfg = CHtiCfg::NewL() );
     if ( err == KErrNone )
@@ -212,7 +215,14 @@ void CHtiFramework::ConstructL()
                 HTI_LOG_TEXT( "The following parameter not defined in cfg, using default value:" );
                 HTI_LOG_DES( KShowErrorDialogs );
                 }
-
+            
+            TRAP( paramErr, reconnectDelay = iCfg->GetParameterIntL( KReconnectDelay ) );
+            if ( paramErr != KErrNone )
+                {
+                HTI_LOG_TEXT( "The following parameter not defined in cfg, using default value:" );
+                HTI_LOG_DES( KReconnectDelay );
+                }
+            
             if ( !IsStartAcceptedL( enableHtiAutoStart ) )
                 {
                 User::Leave( KErrAbort );
@@ -220,7 +230,7 @@ void CHtiFramework::ConstructL()
 
             WaitNormalState( maxWaitTime, startUpDelay );
             iDispatcher = CHtiDispatcher::NewL( commPlugin, maxMsgSize,
-                    maxQueueSize, showConsole != 0, showErrorDialogs != 0 );
+                    maxQueueSize, reconnectDelay, showConsole != 0, showErrorDialogs != 0 );
             }
         }
 
@@ -239,7 +249,7 @@ void CHtiFramework::ConstructL()
 
         //create with default values
         iDispatcher = CHtiDispatcher::NewL(
-            KNullDesC8, 0, 0, showConsole != 0, showErrorDialogs != 0 );
+            KNullDesC8, 0, 0, 0, showConsole != 0, showErrorDialogs != 0 );
         }
 
     HTI_LOG_FORMAT( "Priority setting = %d", priority );
