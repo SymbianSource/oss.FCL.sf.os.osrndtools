@@ -91,7 +91,7 @@ class CSettingServer
         /**
         * Return pointer to the Logger(iSettingServerLogger)
         */
-        CStifLogger* CSettingServer::Logger();
+        CStifLogger* Logger();
 
     public: // Functions from base classes
 

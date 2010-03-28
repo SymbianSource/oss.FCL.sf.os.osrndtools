@@ -233,8 +233,8 @@ NONSHARABLE_CLASS(CTestCombiner)
         /**
         * Get running slave.
         */
-        CSlaveInfo* CTestCombiner::GetSlave( TUint32 aSlaveId );
-        CSlaveInfo* CTestCombiner::GetSlave( TDesC& aSlaveName );
+        CSlaveInfo* GetSlave( TUint32 aSlaveId );
+        CSlaveInfo* GetSlave( TDesC& aSlaveName );
 
         /**
         * Check requested events and send unset to first requested.

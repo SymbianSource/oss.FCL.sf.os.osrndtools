@@ -139,8 +139,8 @@ class RHtiBtCommInterface : public RSessionBase
         * During Connect(), connect the server
         * to remote BT host service.
         */
-        TInt RHtiBtCommInterface::ConnectBt( TDesC8& aDeviceNameOrAddress,
-                                             TInt aPort );
+        TInt ConnectBt( TDesC8& aDeviceNameOrAddress,
+                        TInt aPort );
 
 };
 

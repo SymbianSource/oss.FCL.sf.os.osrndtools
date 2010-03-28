@@ -259,7 +259,7 @@ class CUIStore
         *
         * Returns Symbian OS error code.
         */
-        IMPORT_C TInt CUIStore::SaveTestSet2( TDes& aSetName );
+        IMPORT_C TInt SaveTestSet2( TDes& aSetName );
         /**
         * Load test set.
         *
