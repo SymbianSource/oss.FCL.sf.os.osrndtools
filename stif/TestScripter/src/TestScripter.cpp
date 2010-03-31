@@ -2361,14 +2361,17 @@ TBool CTestRunner::ExecuteLineL( TDesC& aKeyword,
             iTestScripter->TestModuleIf().Printf( KPrintPriLow, _L("Runner"), 
                 _L("%S"), &aKeyword );
 
-            TName buf;
+            RBuf buf;
+            buf.CreateL(1024);
+            CleanupClosePushL(buf);
+            
             TPtrC tmp;
 
             while( aItem->GetNextString( tmp ) == KErrNone )
                 {
                 if( buf.Length() + tmp.Length() >= buf.MaxLength() )
                     {
-                    break;
+                    buf.ReAllocL(buf.MaxLength() + tmp.Length() * 10);
                     }
                 buf.Append( tmp );
                 buf.Append( _L(" ") );
@@ -2378,6 +2381,7 @@ TBool CTestRunner::ExecuteLineL( TDesC& aKeyword,
                 _L("Test"), 
                 _L("%S"), &buf);
             RDebug::Print( _L("Print : Test : %S"), &buf );
+            CleanupStack::PopAndDestroy(&buf);
             }
             break;
         case TTestKeywords::EAllowNextResult:

@@ -1351,7 +1351,12 @@ void CTestEngine::InitEngineL( const RMessage2& aMessage )
 
         SetLoggerSettings( loggerSettings ) ;
 
-        ReadTestModulesL( parser );
+        TRAP(r, ReadTestModulesL( parser ));
+        if(r != KErrNone)
+            {
+            __TRACE(KError, (CStifLogger::ERed, _L("Reading test modules finished with error [%d]"), r));
+            User::Leave(r);
+            }
 
         CleanupStack::PopAndDestroy( settings );
         CleanupStack::PopAndDestroy( parser );
@@ -1830,8 +1835,11 @@ void CTestEngine::ParseTestModulesL(CStifParser* aParser, CTestModuleList* aModu
 
     sectionParser = aParser->SectionL(aSectionStart, aSectionEnd);
 
+    TBool sectionOK;
+
     while(sectionParser)
         {
+        sectionOK = ETrue;
         __TRACE(KInit, (_L("Found '%S' and '%S' sections"), &aSectionStart, &aSectionEnd));
         CleanupStack::PushL(sectionParser);
         __TRACE(KInit, (_L("Starting to read module information")));
@@ -1842,120 +1850,129 @@ void CTestEngine::ParseTestModulesL(CStifParser* aParser, CTestModuleList* aModu
         CleanupStack::PushL(item);
         if(!item)
             {
-            CleanupStack::PopAndDestroy(item);
-            __TRACE(KError, (CStifLogger::ERed, _L("'%S' not found from Module section"), &KModuleName));
-            LeaveIfErrorWithNotify(KErrNotFound);
+            __TRACE(KError, (CStifLogger::ERed, _L("'%S' not found from Module section. Skipping whole section."), &KModuleName));
+            sectionOK = EFalse;
             }
         else
             {
             __TRACE(KInit, (_L("'%S' found"), &KModuleName));
             }
 
-        TPtrC name;
         TName moduleName;
         TInt ret(KErrNone);
-        ret = item->GetString(KModuleName, name);
-        if(ret != KErrNone)
+
+        if(sectionOK)
             {
-            CleanupStack::PopAndDestroy(item);
-            __TRACE(KError, (CStifLogger::ERed, _L("Module name parsing left with error %d"), ret));
-            LeaveIfErrorWithNotify(ret);
-            }
-        else
-            {
-            __TRACE(KInit, (_L("Module '%S' found from ini-file"), &name));
-            moduleName.Copy(name);
-            moduleName.LowerCase();
-            ret = aModuleList->AddTestModule(moduleName);
-            if(ret != KErrNone && ret != KErrAlreadyExists)
+            TPtrC name;
+            ret = item->GetString(KModuleName, name);
+            if(ret != KErrNone)
                 {
-                CleanupStack::PopAndDestroy(item);
-                __TRACE(KError, (CStifLogger::ERed, _L("Could not add module to list of modules. Error %d"), ret));
-                LeaveIfErrorWithNotify(ret);
-				}
+                __TRACE(KError, (CStifLogger::ERed, _L("Module name parsing ended with error [%d]. Skipping whole section"), ret));
+                sectionOK = EFalse;
+                }
+            else
+                {
+                __TRACE(KInit, (_L("Module '%S' found from ini-file"), &name));
+                moduleName.Copy(name);
+                moduleName.LowerCase();
+                ret = aModuleList->AddTestModule(moduleName);
+                if(ret != KErrNone && ret != KErrAlreadyExists)
+                    {
+                    CleanupStack::PopAndDestroy(item);
+                    __TRACE(KError, (CStifLogger::ERed, _L("Could not add module to list of modules. Error %d"), ret));
+                    LeaveIfErrorWithNotify(ret);
+                    }
+                }
             }
         CleanupStack::PopAndDestroy(item);
 
         //Get pointer to added module
-        CTestModuleInfo* moduleInfo = aModuleList->GetModule(moduleName);
-        if(!moduleInfo)
+        if(sectionOK)
             {
-            __TRACE(KError, (CStifLogger::ERed, _L("Could not add get module info from list")));
-            LeaveIfErrorWithNotify(KErrNotFound);
-			}
-
-        // Get ini file, if it exists
-        __TRACE(KInit, (_L("Start parsing ini file")));
-        _LIT(KIniFile, "IniFile=");
-        item = sectionParser->GetItemLineL(KIniFile);
-        if(item)
-            {
-            __TRACE(KInit, (_L("'%S' found"), &KIniFile));
-            CleanupStack::PushL(item);
-            TPtrC iniFile;
-            ret = item->GetString(KIniFile, iniFile);
-            if(ret == KErrNone)
+            CTestModuleInfo* moduleInfo = aModuleList->GetModule(moduleName);
+            if(!moduleInfo)
                 {
-                // Module inifile (might be empty) OK
-                TFileName filename;
-                filename.Copy(iniFile);
-                TStifUtil::CorrectFilePathL( filename );
-                filename.LowerCase();
-                __TRACE(KInit, (CStifLogger::EBold, _L("Initialization file '%S' found, file can be empty"), &iniFile));
-                moduleInfo->SetIniFile(filename);
+                __TRACE(KError, (CStifLogger::ERed, _L("Could not add get module info from list")));
+                LeaveIfErrorWithNotify(KErrNotFound);
+                }
+    
+            // Get ini file, if it exists
+            __TRACE(KInit, (_L("Start parsing ini file")));
+            _LIT(KIniFile, "IniFile=");
+            item = sectionParser->GetItemLineL(KIniFile);
+            if(item)
+                {
+                __TRACE(KInit, (_L("'%S' found"), &KIniFile));
+                CleanupStack::PushL(item);
+                TPtrC iniFile;
+                ret = item->GetString(KIniFile, iniFile);
+                if(ret == KErrNone)
+                    {
+                    // Module inifile (might be empty) OK
+                    TFileName filename;
+                    filename.Copy(iniFile);
+                    TStifUtil::CorrectFilePathL( filename );
+                    filename.LowerCase();
+                    __TRACE(KInit, (CStifLogger::EBold, _L("Initialization file '%S' found, file can be empty"), &iniFile));
+                    moduleInfo->SetIniFile(filename);
+                    }
+                else
+                    {
+                    __TRACE(KInit, (_L("Initialization file not found")));
+                    }
+                CleanupStack::PopAndDestroy(item);
                 }
             else
                 {
-                __TRACE(KInit, (_L("Initialization file not found")));
+                __TRACE(KInit, (_L("'%S' not found"), &KIniFile));
                 }
-            CleanupStack::PopAndDestroy(item);
+    
+            // Get config (testcase) file
+            __TRACE(KInit, (_L("Start parsing cfg files")));
+            TPtrC cfgTag;
+            for(TInt i = 0; i < 2; i++)
+                {
+                //Set tag for config files
+                if(i == 0)
+                    {
+                    cfgTag.Set(_L("ConfigFile="));
+                    }
+                    else
+                    {
+                    cfgTag.Set(_L("TestCaseFile="));
+                    }
+                //Read data
+                item = sectionParser->GetItemLineL(cfgTag);
+                while(item)
+                    {
+                    CleanupStack::PushL(item);
+                    __TRACE(KInit, (_L("Item '%S' found"), &cfgTag));
+                    TPtrC cfgFile;
+                    ret = item->GetString(cfgTag, cfgFile);
+                    if(ret == KErrNone)
+                        {
+                        TFileName ifile;
+                        ifile.Copy(cfgFile);
+                        TStifUtil::CorrectFilePathL( ifile );
+                        ifile.LowerCase();
+                        __TRACE(KInit, (_L("Configuration file '%S' found"), &ifile));
+                        moduleInfo->AddCfgFile(ifile);
+                        }
+                    else
+                        {
+                        __TRACE(KInit, (_L("Configuration file not found")));
+                        }
+                    CleanupStack::PopAndDestroy(item);
+                    item = sectionParser->GetNextItemLineL(cfgTag);
+                    }
+                }
+    
+            __TRACE(KInit, (_L("Module '%S' information read correctly"), &moduleName));
             }
         else
             {
-            __TRACE(KInit, (_L("'%S' not found"), &KIniFile));
+            __TRACE(KError, (_L("Module '%S' information skipped"), &moduleName));
             }
-
-        // Get config (testcase) file
-        __TRACE(KInit, (_L("Start parsing cfg files")));
-        TPtrC cfgTag;
-        for(TInt i = 0; i < 2; i++)
-            {
-            //Set tag for config files
-            if(i == 0)
-                {
-                cfgTag.Set(_L("ConfigFile="));
-                }
-                else
-                {
-                cfgTag.Set(_L("TestCaseFile="));
-                }
-            //Read data
-            item = sectionParser->GetItemLineL(cfgTag);
-            while(item)
-                {
-                CleanupStack::PushL(item);
-                __TRACE(KInit, (_L("Item '%S' found"), &cfgTag));
-                TPtrC cfgFile;
-                ret = item->GetString(cfgTag, cfgFile);
-                if(ret == KErrNone)
-                    {
-                    TFileName ifile;
-                    ifile.Copy(cfgFile);
-                    TStifUtil::CorrectFilePathL( ifile );
-                    ifile.LowerCase();
-                    __TRACE(KInit, (_L("Configuration file '%S' found"), &ifile));
-                    moduleInfo->AddCfgFile(ifile);
-                    }
-                else
-                    {
-                    __TRACE(KInit, (_L("Configuration file not found")));
-                    }
-                CleanupStack::PopAndDestroy(item);
-                item = sectionParser->GetNextItemLineL(cfgTag);
-                }
-            }
-
-        __TRACE(KInit, (_L("Module '%S' information read correctly"), &moduleName));
 
         // Get next section...
         CleanupStack::PopAndDestroy(sectionParser);
@@ -1998,7 +2015,12 @@ void CTestEngine::ReadTestModulesL(CStifParser* aParser)
     _LIT(KTestModuleEnd, "[End_Module]");
 
     __TRACE(KInit, (_L("Starting to search module sections")));
-    ParseTestModulesL(aParser, moduleList, KTestModuleStart, KTestModuleEnd);
+    TRAPD(err, ParseTestModulesL(aParser, moduleList, KTestModuleStart, KTestModuleEnd));
+    if(err != KErrNone)
+        {
+        __TRACE(KError, (CStifLogger::ERed, _L("Parsing test modules returned error [%d]"), err));
+        User::Leave(err);
+        }
     __TRACE(KInit, (CStifLogger::EBold, _L("End parsing test modules")));
     __TRACE(KInit, (_L("")));
 
