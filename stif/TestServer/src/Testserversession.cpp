@@ -358,9 +358,8 @@ TInt CTestModule::CloseSession( const RMessage2& aMessage )
         {
         TInt handle = 0;
         CObject* theObj = NULL;
-        TInt count = iTestExecutionHandle->Count();
-            
-        for( TInt i = 0 ; i < count; i++ )
+        TInt count = iTestExecutionHandle->Count();        
+        for ( TInt i = count - 1; i >= 0; i-- )
             {
             theObj=iTestExecutionHandle->operator[]( i );
             if( theObj )
@@ -374,7 +373,6 @@ TInt CTestModule::CloseSession( const RMessage2& aMessage )
 
         delete iTestExecutionHandle;
         iTestExecutionHandle = NULL;
-
         }
 
     // Deletion must be done here, because the "CloseSession" message is 

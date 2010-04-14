@@ -163,6 +163,12 @@ class CMenu
     protected:  // New functions
         // None
 
+    private:   // New functions
+        /**
+        * Changes internal variables to move cursor in the menu.
+        */
+        void MovePosition(TInt aDelta);
+
     protected:  // Functions from base classes
         // None    
 
@@ -217,7 +223,7 @@ class CMenu
 		TUpdateType             iUpdateType;
 		
     private:    // Data
-        // None
+        TName           iScrolledLine; //Original value of line, that was recently scrolled
 
     public:     // Friend classes
         // None
