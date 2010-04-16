@@ -18,7 +18,7 @@
 
 // INCLUDE FILES
 #include <e32uid.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 
 #include "HtiIPCommServerCommon.h"
 #include "HtiIPCommServerClient.h"

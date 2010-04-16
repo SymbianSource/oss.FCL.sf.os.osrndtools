@@ -21,7 +21,7 @@
 #include <e32cons.h>
 #include <e32svr.h>
 #include <f32file.h>
-#include <HAL.h>
+#include <hal.h>
 #include <hal_data.h>
 
 

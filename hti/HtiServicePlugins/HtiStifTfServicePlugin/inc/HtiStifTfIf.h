@@ -23,7 +23,7 @@
 
 //  INCLUDES
 #include <StifTFwIf.h>
-#include <HTIServicePluginInterface.h>
+#include <HtiServicePluginInterface.h>
 
 // CONSTANTS
 

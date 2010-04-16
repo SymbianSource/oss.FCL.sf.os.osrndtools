@@ -37,7 +37,7 @@
  * used to variate the source code based on the SDK in use. The value of the
  * flag should be always changed to reflect the current build environment.
  */
-#define SYMBIAN_VERSION_SUPPORT                              SYMBIAN_3
+#define SYMBIAN_VERSION_SUPPORT                              SYMBIAN_4
 
 
 #endif  // __SYMBIAN_VERSION_HRH

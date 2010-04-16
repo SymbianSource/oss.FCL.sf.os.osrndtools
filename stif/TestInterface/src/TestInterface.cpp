@@ -430,13 +430,21 @@ EXPORT_C TInt StartSession()
     TPtr moduleName = cmdLine->Des();
     User().CommandLine( moduleName );
 
-    RDebug::Print (moduleName);
+    RDebug::Print(_L("StartSession() Received data [%S]"), &moduleName);
+
+    // Extract semaphore name passed in data    
+    TInt index = moduleName.Find(_L(" "));
+    RDebug::Print(_L("StartSession() Space separator found at position [%d]"), index);
+    TPtrC semaphoreName = moduleName.Mid(index + 1);
+    moduleName = moduleName.Left(index);
+
+    RDebug::Print(_L("StartSession() Extracted module name [%S] and sempahore name [%S]"), &moduleName, &semaphoreName);
    
     // Open start-up synchronization semaphore
     RSemaphore startup;
-    RDebug::Print(_L(" Openingstart-up semaphore"));
-    TName semaphoreName = _L("startupSemaphore");
-    semaphoreName.Append( moduleName );
+    RDebug::Print(_L(" Opening start-up semaphore"));
+//    TName semaphoreName = _L("startupSemaphore");
+//    semaphoreName.Append( moduleName );
     
     TInt res = startup.OpenGlobal(semaphoreName);
     RDebug::Print(_L("Opening result %d"), res);    
@@ -448,7 +456,7 @@ EXPORT_C TInt StartSession()
     if ( r ==   KErrAlreadyExists )
         {        
         // Ok, server was already started
-        RDebug::Print(_L("Server already started, signaling semaphore and existing"));
+        RDebug::Print(_L("Server already started, signaling semaphore and exiting"));
         startup.Signal();        
         //__UHEAP_MARKEND;
         

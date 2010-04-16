@@ -20,7 +20,7 @@
 #include <e32std.h>
 #include <c32comm.h>
 #include "BtSerialClient.h"
-#include "MessageServiceSearcher.h"
+#include "messageservicesearcher.h"
 #include "BtSerialEngine.pan"
 #include "HtiBtEngineLogging.h"
 #include "socketswriter.h"

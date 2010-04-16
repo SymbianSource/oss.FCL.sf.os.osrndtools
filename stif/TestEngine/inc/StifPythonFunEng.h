@@ -21,7 +21,7 @@
 #define STIFPYTHONFUNENG_H
 
 //  INCLUDES
-#include <E32Base.h>
+#include <e32base.h>
 
 // CONSTANTS
 // None

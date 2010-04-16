@@ -1833,6 +1833,12 @@ void CTestCombiner::Complete( CTestCase* aTestCase, TInt aError )
     // Checking if user wants to skip the rest of the execution in case of error @js
     if(iCancelIfError && iSchedulerActive)    
         {
+        // Cancel event if it was waiting event
+        if(iTestRunner->iEvent.Name() != KNullDesC && iTestRunner->iEvent.Type() == TEventIf::EWaitEvent)
+            {
+            TestModuleIf().CancelEvent(iTestRunner->iEvent, &iTestRunner->iStatus);
+            }
+
         // Interpret execution result type from returned result
         TInt executionResult = TFullTestResult::ECaseExecuted; // Ok
         if( (aTestCase->iResult.iCaseExecutionResultType >= 

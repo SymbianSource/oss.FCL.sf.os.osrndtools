@@ -20,7 +20,7 @@
 #include "HtiFtpServicePlugin.h"
 #include <HtiFtpBackupFakeBase.h>
 #include <HtiDispatcherInterface.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 
 #include <e32property.h>
 #include <hash.h>

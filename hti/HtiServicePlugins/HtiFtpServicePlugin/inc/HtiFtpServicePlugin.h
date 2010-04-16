@@ -23,7 +23,7 @@
 // INCLUDES
 #include <e32std.h>
 #include <f32file.h>
-#include <HTIServicePluginInterface.h>
+#include <HtiServicePluginInterface.h>
 
 // CONSTANTS
 enum TFtpCommand

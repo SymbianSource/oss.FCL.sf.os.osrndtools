@@ -18,11 +18,11 @@
 
 #include "HtiCommAdapter.h"
 #include "HtiDispatcher.h"
-#include "HTICommPluginInterface.h"
+#include "HtiCommPluginInterface.h"
 #include "HtiMessage.h"
 #include "HtiNotifier.h"
 
-#include "HTILogging.h"
+#include "HtiLogging.h"
 
 //default value for max message size for incoming messages
 //used if value in constructor is not valid (<0)
@@ -213,6 +213,11 @@ void CHtiCommAdapter::RunL()
     // USB errors from d32usbc.h
     else if ( -6700 > iStatus.Int() && iStatus.Int() > -6712 )
         {
+        if(iDispatcher->CommReconnect())
+            {
+            return;
+            }
+
         if ( iDispatcher->GetShowErrorDialogs() )
             {
             TBuf<48> errorText;
@@ -226,6 +231,11 @@ void CHtiCommAdapter::RunL()
     else if ( iStatus == KErrDisconnected )
         {
         // This happens if Bluetooth connection is lost.
+        if(iDispatcher->CommReconnect())
+            {
+            return;
+            }
+        
         if ( iDispatcher->GetShowErrorDialogs() )
             {
             CHtiNotifier::ShowErrorL(
@@ -259,6 +269,7 @@ void CHtiCommAdapter::RunL()
                 {
                 HTI_LOG_FORMAT( "Error %d, reissue request", iStatus.Int() );
                 iDispatcher->Notify( iStatus.Int() );
+                User::After(2000000);
                 ReceiveMessage();
                 }
             break;
@@ -289,7 +300,7 @@ void CHtiCommAdapter::RunL()
                 iMsgToReceive = NULL;
 
                 iDispatcher->Notify( iStatus.Int() );
-
+                User::After(2000000);
                 ReceiveMessage();
                 }
             break;

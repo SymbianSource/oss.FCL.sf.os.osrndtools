@@ -21,7 +21,7 @@
 
 // INCLUDES
 #include <e32base.h>
-#include "BTServiceSearcher.h"
+#include "btservicesearcher.h"
 
 // CLASS DECLARATIONS
 /**

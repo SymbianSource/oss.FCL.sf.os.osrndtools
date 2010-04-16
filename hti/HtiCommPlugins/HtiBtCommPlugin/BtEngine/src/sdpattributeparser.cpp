@@ -19,9 +19,9 @@
 // INCLUDE FILES
 #include <bt_sock.h>
 
-#include "SdpAttributeParser.h"
-#include "SdpAttributeParser.pan"
-#include "SdpAttributeNotifier.h"
+#include "sdpattributeparser.h"
+#include "sdpattributeparser.pan"
+#include "sdpattributenotifier.h"
 
 // ============================ MEMBER FUNCTIONS ==============================
 

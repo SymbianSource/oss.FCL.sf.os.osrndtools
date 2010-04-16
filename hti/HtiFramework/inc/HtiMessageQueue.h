@@ -23,7 +23,7 @@
 
 #include "HtiMessage.h"
 
-class CHtiMessageQueue : public CBase
+class CHtiMessageQueue  : public CBase
     {
 public:
     /**

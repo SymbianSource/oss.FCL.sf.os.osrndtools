@@ -279,6 +279,13 @@ EXPORT_C void CTestModuleIf::Printf( const TInt aPriority,
     VA_LIST list;
     VA_START(list,aFmt);
     TName aBuf;
+    RBuf buf;
+    TInt ret = buf.Create(1024);
+    if(ret != KErrNone)
+        {
+        __RDEBUG((_L("STF: Printf: Buffer creation failed [%d]"), ret));
+        return;
+        }
 
     // Cut the description length
     TInt len = aDefinition.Length();
@@ -293,9 +300,17 @@ EXPORT_C void CTestModuleIf::Printf( const TInt aPriority,
     TDesOverflowHandler overFlowHandler (this, aPriority, shortDescription);
 
     // Parse parameters
-    aBuf.AppendFormatList(aFmt,list, &overFlowHandler);        
+    buf.AppendFormatList(aFmt, list, &overFlowHandler);
+    
+    if(buf.Length() == 0)
+        {
+        __RDEBUG((_L("STF: Printf: Unable to prepare print buffer (probably printed string is too long)")));
+        }
 
     // Print
+    aBuf.Copy(buf.Left(aBuf.MaxLength()));
+    buf.Close();
+
     iTestExecution->DoNotifyPrint( aPriority, shortDescription, aBuf );
 
     }

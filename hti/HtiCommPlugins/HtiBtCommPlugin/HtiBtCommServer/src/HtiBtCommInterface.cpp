@@ -25,7 +25,7 @@
 #include "HtiBtCommInterface.h"
 
 #include <e32uid.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 
 // CONSTANTS
 const TUint KBtCommServerDefaultMessageSlots = 4; // Read, write, readCancel, writeCancel

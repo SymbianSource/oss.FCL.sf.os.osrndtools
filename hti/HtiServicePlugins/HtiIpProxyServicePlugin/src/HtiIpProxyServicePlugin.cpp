@@ -19,11 +19,11 @@
 // INCLUDE FILES
 #include "HtiIpProxyServicePlugin.h"
 #include <HtiDispatcherInterface.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 #include <badesca.h>
 #include <in_sock.h>
 #include "MSocketObserver.h"
-#include "MHostConnectionObserver.h"
+#include "Mhostconnectionobserver.h"
 #include "CIPProxyEngine.h"
 
 // CONSTANTS

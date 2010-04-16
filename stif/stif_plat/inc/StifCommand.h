@@ -21,7 +21,7 @@
 
 
 //  INCLUDES
-#include <E32Base.h>
+#include <e32base.h>
 
 // CONSTANTS 
 const TInt KMaxCommandParamsLength = 50;	// DEPRECATED use KMaxCommandParamsLength2 instead

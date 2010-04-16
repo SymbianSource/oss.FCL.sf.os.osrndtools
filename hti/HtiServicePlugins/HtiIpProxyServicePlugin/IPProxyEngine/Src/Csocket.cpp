@@ -18,11 +18,11 @@
 
 
 // INCLUDE FILES
-#include "CSocket.h"
+#include "Csocket.h"
 #include <es_sock.h>
 #include <in_sock.h>
 #include "CSocketWriter.h"
-#include "CSocketReader.h"
+#include "Csocketreader.h"
 #include "MSocketObserver.h"
 
 #define DEBUG_FILENAME "IPProxyEngine.log"

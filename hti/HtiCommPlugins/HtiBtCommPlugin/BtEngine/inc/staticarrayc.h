@@ -68,7 +68,7 @@ class TStaticArrayC
     };
 
 // INCLUDES
-#include "StaticArrayC.inl"
+#include "staticarrayc.inl"
 
 /**
 * CONSTRUCT_STATIC_ARRAY_C

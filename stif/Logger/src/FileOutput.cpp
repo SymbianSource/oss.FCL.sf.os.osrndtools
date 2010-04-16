@@ -476,10 +476,13 @@ void CFileOutput::OpenExistingFileL( const TDesC& aTestPath,
         iFileAndDirName.Insert( iFileAndDirName.Length(), txtPrt );
         }
 
-    TBool isOpen( EFalse );
+//  TBool isOpen( EFalse );
     TInt ret( KErrNone );
 
-    iIsFileOpen = iFileSession.IsFileOpen( iFileAndDirName, isOpen );
+  
+    iIsFileOpen=iFile.Open( iFileSession, iFileAndDirName,
+            EFileWrite | EFileStreamText |
+                    EFileShareAny );
     if( iIsFileOpen == KErrNotFound )
         {
         ret =  iFile.Create( iFileSession, iFileAndDirName, 
@@ -498,9 +501,8 @@ void CFileOutput::OpenExistingFileL( const TDesC& aTestPath,
         }
     else if( iIsFileOpen == KErrNone )
         {
-        ret = iFile.Open( iFileSession, iFileAndDirName,
-                            EFileWrite | EFileStreamText |
-                                    EFileShareAny );
+      
+        ret=KErrNone;
         }
     // Probably path not found
     else

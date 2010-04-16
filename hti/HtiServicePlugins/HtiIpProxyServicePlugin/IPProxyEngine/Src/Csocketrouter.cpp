@@ -18,7 +18,7 @@
 
 
 // INCLUDE FILES
-#include "CSocketRouter.h"
+#include "Csocketrouter.h"
 #include "CommRouterDefinitions.h"
 #include "MSocketRouterObserver.h"
 #include "MBPProtocol.h"
@@ -215,13 +215,14 @@ void CSocketRouter::RemovePeerSocket( RSocket* aSocket )
 // CSocketRouter::FindPeerSocket
 // -----------------------------------------------------------------------------
 //
-TInt CSocketRouter::FindPeerSocket( TUint aRemotePort )
+TInt CSocketRouter::FindPeerSocket( TUint aPort )
     {
     DEBUG_PRINT( DEBUG_STRING( "CSocketRouter::FindPeerSocket()" ) );
     TInt count = iPeerSocketArray->Count();
     for ( TInt i = 0; i < count; i++ )
         {
-        if ( iPeerSocketArray->At( i )->RemotePort() == aRemotePort )
+        if ( iPeerSocketArray->At( i )->RemotePort() == aPort 
+                || iPeerSocketArray->At( i )->LocalPort() == aPort)
             {
             return i;
             }
@@ -648,17 +649,24 @@ void CSocketRouter::OpenListeningTCPConnectionL( TUint aPort )
 // CSocketRouter::CloseTCPConnection
 // -----------------------------------------------------------------------------
 //
-void CSocketRouter::CloseTCPConnection( TUint aPort )
+void CSocketRouter::CloseTCPConnectionL( TUint aPort )
     {
     DEBUG_PRINT( DEBUG_STRING( "CloseTCPConnection, port = %d" ), aPort );
+    
     // Close the socket if it exists
+    CArrayPtr<CSocket>* socketArrayForDestroy = new (ELeave) CArrayPtrFlat<CSocket> ( 10 );
+    CleanupStack::PushL(socketArrayForDestroy);
     TInt index = FindPeerSocket( aPort );
-    if ( index > -1 )
+    while ( index > -1 )
         {
-        RemovePeerSocket( index );
+        socketArrayForDestroy->AppendL(iPeerSocketArray->At( index ));
+        iPeerSocketArray->Delete(index);
+        index = FindPeerSocket( aPort );
         }
+    socketArrayForDestroy->ResetAndDestroy();
+    CleanupStack::PopAndDestroy(socketArrayForDestroy);
 
-    if ( iObserver && index > -1 )
+    if ( iObserver )
         {
         iObserver->CloseTCPConnection( aPort );
         }

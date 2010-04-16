@@ -94,6 +94,8 @@ public:
     * @param aMaxMsgSize maximum size for an incoming message
     * @param aMaxQueueMemorySize maximum size of all messages in the
     *        incoming queue
+    * @param aReconnectDelay seconds of delay for reconnecting when connection
+    *        lost. Value 0 means that reconnect would not happen.
     * @param aShowConsole whether to open a console window for HTI
     * @param aShowErrorDialogs whether to show a dialog in case of critical
     *        error or just silently exit
@@ -102,6 +104,7 @@ public:
     static CHtiDispatcher* NewL( const TDesC8& aCommPlugin,
                                  TInt aMaxMsgSize,
                                  TInt aMaxQueueMemorySize,
+                                 TInt aReconnectDelay,
                                  TBool aShowConsole,
                                  TBool aShowErrorDialogs );
 
@@ -113,6 +116,8 @@ public:
     * @param aMaxMsgSize maximum size for an incoming message
     * @param aMaxQueueMemorySize maximum size of all messages in the
     *        incoming queue
+    * @param aReconnectDelay seconds of delay for reconnecting when connection
+    *        lost. Value 0 means that reconnect would not happen.
     * @param aShowConsole whether to open a console window for HTI
     * @param aShowErrorDialogs whether to show a dialog in case of critical
     *        error or just silently exit
@@ -121,6 +126,7 @@ public:
     static CHtiDispatcher* NewLC( const TDesC8& aCommPlugin,
                                   TInt aMaxMsgSize,
                                   TInt aMaxQueueMemorySize,
+                                  TInt aReconnectDelay,
                                   TBool aShowConsole,
                                   TBool aShowErrorDialogs );
 
@@ -207,12 +213,20 @@ public: // Inherited methods from MHtiDispatcher
     */
     TBool GetShowErrorDialogs();
 
+    
+    /*
+     * Delay a period and reconnect when connection lost.
+     * If the period is 0, reconnect would not happen.
+     * @return whether reconnect
+     */
+     TBool CommReconnect();
+     
 protected:
     /**
     * Constructors
     *
     */
-    CHtiDispatcher( TInt aMaxQueueMemorySize, TBool aShowErrorDialogs );
+    CHtiDispatcher( TInt aMaxQueueMemorySize, TInt aReconnectDelay, TBool aShowErrorDialogs );
 
     void ConstructL( const TDesC8& aCommPlugin,
                      TInt aMaxMsgSize,
@@ -460,6 +474,12 @@ private:
     * errors or just silently exit.
     */
     TBool iShowErrorDialogs;
+    
+    /**
+     * Delay a period and reconnect when connection lost.
+     * If the period is 0, reconnect would not happen.
+     */
+    TInt iReconnectDelay;
     };
 
 

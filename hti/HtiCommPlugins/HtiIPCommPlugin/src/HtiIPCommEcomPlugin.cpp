@@ -18,7 +18,7 @@
 
 // INCLUDE FILES
 #include "HtiIPCommEcomPlugin.h"
-#include <htilogging.h>
+#include <HtiLogging.h>
 
 CHtiIPCommEcomPlugin* CHtiIPCommEcomPlugin::NewL()
     {

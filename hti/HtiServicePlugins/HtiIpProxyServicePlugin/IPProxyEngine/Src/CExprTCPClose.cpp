@@ -88,7 +88,7 @@ TBool CExprTCPClose::HandleRecievedMsgL( TDes8& aData, TInt& aStartPos,
 
         TPtr8 dataToParse( aData.MidTPtr( aStartPos ) );
 
-        TInt err = TryParsing( dataToParse, aLength );
+        TInt err = TryParsingL( dataToParse, aLength );
 
         if ( err != KErrNone )
             {
@@ -110,7 +110,7 @@ TBool CExprTCPClose::HandleRecievedMsgL( TDes8& aData, TInt& aStartPos,
 // CExprTCPClose::TryParsing
 // -----------------------------------------------------------------------------
 //
-TInt CExprTCPClose::TryParsing( TDes8& aData, TInt& aLength )
+TInt CExprTCPClose::TryParsingL( TDes8& aData, TInt& aLength )
     {
     __ASSERT_ALWAYS( aData.Left( KTCPClosePrefix().Length() ) == KTCPClosePrefix,
         User::Panic( _L("Protocol"), 1 ) );
@@ -133,7 +133,7 @@ TInt CExprTCPClose::TryParsing( TDes8& aData, TInt& aLength )
             }
 
         // send parsed results
-        iObserver->CloseTCPConnection( port );
+        iObserver->CloseTCPConnectionL( port );
 
         aLength = frameOverhead;
 

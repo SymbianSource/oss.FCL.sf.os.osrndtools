@@ -21,7 +21,7 @@
 // INCLUDE FILES
 #include "HtiIPCommServerCommon.h"
 #include "HtiIPCommServerSession.h"
-#include "HtiIPCommlogging.h"
+#include "HtiIPCommLogging.h"
 
 CHtiIPCommServerSession::CHtiIPCommServerSession( CHtiIPCommServer* aServer )
     :iServer( aServer )

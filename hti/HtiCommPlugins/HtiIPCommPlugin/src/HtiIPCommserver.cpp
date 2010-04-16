@@ -23,7 +23,7 @@
 #include "HtiIPCommServerCommon.h"
 #include "HtiIPCommServer.h"
 #include "HtiIPCommServerSession.h"
-#include "HtiIPCommlogging.h"
+#include "HtiIPCommLogging.h"
 
 CHtiIPCommServer::CHtiIPCommServer()
     :CServer2( EPriorityUserInput, EUnsharableSessions ),

@@ -23,7 +23,7 @@ class CBtSerialClient;
 
 // INCLUDES
 #include <c32comm.h>
-#include <HTICommPluginInterface.h> // defined in HtiFramework project
+#include <HtiCommPluginInterface.h> // defined in HtiFramework project
 
 #include "HtiBtCommInterface.h" // RHtiBtCommInterface
 

@@ -33,6 +33,8 @@
 //#define STIFUNIT_OOMTESTINITIALIZEL
 //#define STIFUNIT_OOMHANDLEWARNINGL
 //#define STIFUNIT_OOMTESTFINALIZEL
+// Uncomment following define, if you want to increase heap or stack size.
+// #define STIFUNIT_SETHEAPANDSTACKSIZE
 /******************************************************************************/
 
 
@@ -55,6 +57,28 @@ _LIT( KLogStart, "STIFUnitXXX logging starts!" );
 
 // Include STIF unit generic file
 #include <StifUnitGeneric.h>
+
+/*
+ * Implementation of setHeapAndStack virtual methods.
+ * To changes heap and stack size provide new values to iTestThreadStackSize, iTestThreadMinHeap and iTestThreadMaxHeap. 
+*/
+
+#ifdef STIFUNIT_SETHEAPANDSTACKSIZE
+EXPORT_C TInt SetRequirements( CTestModuleParam*& aTestModuleParam, 
+                               TUint32& aParameterValid )
+    {
+    aParameterValid = KStifTestModuleParameterChanged;
+    CTestModuleParamVer01* param = CTestModuleParamVer01::NewL(); 
+    // Stack size 
+    param->iTestThreadStackSize= 16384; // 16K stack 
+    // Heap sizes 
+    param->iTestThreadMinHeap = 4096; // 4K heap min 
+    param->iTestThreadMaxHeap = 1048576;// 1M heap max 
+
+    return KErrNone;
+    }
+#undef STIFUNIT_SETHEAPANDSTACKSIZE
+#endif
 
 /*
  * User implementation of OOM virtual methods.

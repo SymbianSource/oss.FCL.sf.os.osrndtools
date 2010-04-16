@@ -56,8 +56,8 @@ PRJ_MMPFILES
 	// Test Server Starter
 	#include "../TestServerStarter/group/bld.inf"
 	
-	// StifTfwIf
-	#include "../StifTfwIf/group/bld.inf"
+	// StifTFwIf
+	#include "../StifTFwIf/group/bld.inf"
 	
 	// Console UI
 	#include "../ConsoleUI/group/bld.inf"

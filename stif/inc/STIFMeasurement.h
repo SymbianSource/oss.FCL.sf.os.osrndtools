@@ -19,7 +19,7 @@
 #define STIF_MEASUREMENT_H
 
 // INCLUDES
-#include <E32Base.h>
+#include <e32base.h>
 
 // Maximum length of measurement types(see literals below)
 const TInt KStifMeasurementTypeLength = 30; 

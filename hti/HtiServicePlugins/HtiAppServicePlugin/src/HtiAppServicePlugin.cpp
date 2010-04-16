@@ -22,7 +22,7 @@
 
 #include "HtiAppServicePlugin.h"
 #include <HtiDispatcherInterface.h>
-#include <HTILogging.h>
+#include <HtiLogging.h>
 
 // CONSTANTS
 const static TUid KAppServiceUid = { 0x1020DEC7 };
