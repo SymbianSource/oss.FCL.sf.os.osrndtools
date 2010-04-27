@@ -1747,19 +1747,7 @@ TInt CTestModuleContainer::ReadParametersFromTestModule(
         __TRACE( KInit, (  _L("Loaded test module[%S]"), &dllName ) );
         }
 
-    // Verify the UID
-    TUid KUidTestModule = TUid::Uid ( 0x101FB3E7 );
-    TUidType requiredUID( KDynamicLibraryUid, KSharedLibraryUid, KUidTestModule );
-
-    TUidType moduleUID = testModule.Type();    
-    if ( moduleUID != requiredUID )
-        {
-        // New instance can't be created
-        RDebug::Print( ( _L("STIF TF: Test module has invalid UID. Aborting loading!") ) );
-        __TRACE ( KError, ( CStifLogger::EError, _L("Test module has invalid UID. Aborting loading!" ) ) );
-        testModule.Close();
-        return KErrNotSupported;
-        }
+    
 
     CTestInterfaceFactoryTestModule libEntry = NULL;
     
@@ -1973,7 +1961,10 @@ TInt CTestModuleContainer::GetTestModuleParams( const TDesC& aModuleName,
 */
 void CTestModuleContainer::GetTestCaseTitleL(TDes& aTestCaseTitle)
     {
-    iCTestModule->GetTestCaseTitleL(iOperationIntBuffer, aTestCaseTitle); //currently run test case stored in the iOperationIntBuffer variable 
+    //currently run test case stored in the iOperationIntBuffer variable
+    iCTestModule->GetTestCaseTitleL( iOperationIntBuffer, 
+                                     iCTestExecution->GetConfigFileName(),
+                                    aTestCaseTitle);  
     }
 
 

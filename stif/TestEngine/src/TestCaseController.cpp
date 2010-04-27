@@ -2567,18 +2567,7 @@ TInt CTestRemoteCmdNotifier::DynamicResetModule(
         __TRACE( KInit, (  _L("Loaded reset module[%S]"), &dllName ) );
         }
 
-    // Verify the UID
-    TUid KUidTestModule = TUid::Uid ( 0x101FB3E7 );
-    TUidType requiredUID( KDynamicLibraryUid, KSharedLibraryUid, KUidTestModule );
-
-    TUidType moduleUID = resetModule.Type();    
-    if ( moduleUID != requiredUID )
-        {
-        // New instance can't be created
-        RDebug::Print( ( _L("STIF TF: Reset module has invalid UID. Aborting loading!") ) );
-        __TRACE ( KError, ( CStifLogger::EError, _L("Reset module has invalid UID. Aborting loading!" ) ) );
-        return KErrNotSupported;
-        }
+    
 
     // Get pointer to first exported function
     CTestInterfaceFactory libEntry;

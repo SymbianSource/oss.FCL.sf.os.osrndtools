@@ -55,6 +55,234 @@ struct TThreadStartTestServerSession
 
 // ================= MEMBER FUNCTIONS =========================================
 
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: NewL
+
+    Description: Create new test cases list    
+
+    Parameters: const TDesC& aConfigFileName :in:  Config file name
+
+    Return Values: CTestCasesList* Pointer to new test cases list
+
+    Errors/Exceptions: Leaves if memory allocation fails or ConstructL leaves.
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+CTestCasesList* CTestCasesList::NewL( const TDesC& aConfigFileName )
+    {    
+    CTestCasesList* self = new(ELeave)CTestCasesList;
+    CleanupStack::PushL( self );
+    self->ConstructL( aConfigFileName );
+    CleanupStack::Pop( self );
+    return self;
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: ~CTestCasesList
+
+    Description: Destructor    
+
+    Parameters: 
+
+    Return Values: 
+
+    Errors/Exceptions: 
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+CTestCasesList::~CTestCasesList()
+    {
+    delete iConfigFileName;
+    iConfigFileName = NULL;
+    iTestCases.ResetAndDestroy();
+    iTestCases.Close();
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: AppendTestCaseL
+
+    Description: Appends test case.
+
+    Parameters: const TDesC& aTestCaseTitle  in: Test case title
+
+    Return Values: 
+
+    Errors/Exceptions: Leaves if memory allocation fails
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+void CTestCasesList::AppendTestCaseL( const TDesC& aTestCaseTitle )
+    {
+    HBufC* testCaseTitle = aTestCaseTitle.AllocL();
+    CleanupStack::PushL( testCaseTitle );
+    iTestCases.AppendL( testCaseTitle );
+    CleanupStack::Pop( testCaseTitle );
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: GetTestCaseTitleL
+
+    Description: Returns specified test case title  
+
+    Parameters: TInt aIndex: in: Requested test case index. 
+
+    Return Values: Test case title.
+
+    Errors/Exceptions: Leaves if test case index is invalid
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+const TDesC& CTestCasesList::GetTestCaseTitleL( TInt aIndex ) const
+    {    
+    if ( ( aIndex < 0 ) || ( aIndex >= iTestCases.Count() ) )
+        {
+        User::Leave( KErrNotFound );
+        }
+    return *iTestCases[ aIndex ];
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: GetConfigFileName
+
+    Description: Returns config file name  
+
+    Parameters: 
+
+    Return Values: Config file name.
+
+    Errors/Exceptions: 
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+const TDesC& CTestCasesList::GetConfigFileName() const
+    {    
+    return *iConfigFileName;
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: Count
+
+    Description: Returns count of test cases.    
+
+    Parameters: 
+
+    Return Values: Test cases count.
+
+    Errors/Exceptions: 
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+TInt CTestCasesList::Count() const
+    {
+    return iTestCases.Count();
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: ResetAndDestroy
+
+    Description: Resets list of test cases.    
+
+    Parameters: 
+
+    Return Values: 
+
+    Errors/Exceptions: 
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+void CTestCasesList::ResetAndDestroy()
+    {    
+    iTestCases.ResetAndDestroy();
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: ~CTestCasesList
+
+    Description: Destructor    
+
+    Parameters: 
+
+    Return Values: 
+
+    Errors/Exceptions: 
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+CTestCasesList::CTestCasesList()
+    {
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestCasesList
+
+    Method: ~CTestCasesList
+
+    Description: Destructor    
+
+    Parameters: 
+
+    Return Values: 
+
+    Errors/Exceptions: 
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+void CTestCasesList::ConstructL( const TDesC& aConfigFileName )
+    {
+    iConfigFileName = aConfigFileName.AllocL();
+    }
 
 /*
 -------------------------------------------------------------------------------
@@ -188,8 +416,8 @@ CTestModule::~CTestModule()
     iIniBuffer = NULL;
 
     // Delete array of test case titles
-    iTestCaseTitles.ResetAndDestroy();
-    iTestCaseTitles.Close();
+    iTestCaseTitlesMap.ResetAndDestroy();
+    iTestCaseTitlesMap.Close();
     }
 
 /*
@@ -690,18 +918,34 @@ TInt CTestModule::EnumerateTestCasesL( const RMessage2& aMessage )
         User::Leave( KErrGeneral );
         }
     
+    CTestCasesList* testCasesList = NULL;
+    for ( TInt i = 0; i < iTestCaseTitlesMap.Count(); i++ )
+        {
+        if ( iTestCaseTitlesMap[ i ]->GetConfigFileName() == config )
+            {
+            testCasesList = iTestCaseTitlesMap[ i ];
+            break;
+            }
+        }
+    if ( testCasesList == NULL )
+        {
+        testCasesList = CTestCasesList::NewL( config );
+        CleanupStack::PushL( testCasesList );
+        iTestCaseTitlesMap.AppendL( testCasesList );
+        CleanupStack::Pop( testCasesList );
+        }
+    
     // Store titles (for further use, i.e. when asked for title from the interface via CTestModuleIf->CTestThreadContainer->CTestModuleContainer)
-    iTestCaseTitles.ResetAndDestroy();
+    testCasesList->ResetAndDestroy();
     TInt i;
     for(i = 0; i < testCases->Count(); i++)
         {
         //Handle situation when test cases are enumerated not as 0-based (testscripter, ...)
         if(i == 0 && (*testCases)[i]->iCaseNumber > 0)
             {
-            iTestCaseTitles.Append(NULL);
+            testCasesList->AppendTestCaseL( KNullDesC );
             }
-        HBufC* title = (*testCases)[i]->iTitle.AllocL();
-        iTestCaseTitles.Append(title);
+        testCasesList->AppendTestCaseL( (*testCases)[i]->iTitle );
         }
     
     TPckgBuf<TInt> countPckg( testCases->Count() );
@@ -1380,10 +1624,25 @@ const TDesC& CTestModule::Name() const
     
 -------------------------------------------------------------------------------
 */
-void CTestModule::GetTestCaseTitleL(TInt aTestCaseNumber, TDes& aTestCaseTitle)
+void CTestModule::GetTestCaseTitleL(TInt aTestCaseNumber, const TDesC& aConfigFile,TDes& aTestCaseTitle)
     {
-    RDebug::Print(_L("Trying to get test case title from module. Index=%d, count=%d"), aTestCaseNumber, iTestCaseTitles.Count());
-    aTestCaseTitle.Copy(*(iTestCaseTitles[aTestCaseNumber]));
+    CTestCasesList* testCasesList = NULL;
+    for ( TInt i = 0; i < iTestCaseTitlesMap.Count(); i++ )
+        {
+        if ( iTestCaseTitlesMap[ i ]->GetConfigFileName() == aConfigFile )
+            {
+            testCasesList = iTestCaseTitlesMap[ i ];
+            break;
+            }
+        }
+    if ( testCasesList == NULL )
+        {
+        User::Leave( KErrNotFound );
+        }
+    
+    RDebug::Print(_L("Trying to get test case title from module. Index=%d, count=%d"), aTestCaseNumber, testCasesList->Count() );
+    
+    aTestCaseTitle.Copy( testCasesList->GetTestCaseTitleL( aTestCaseNumber ) );
     }
 
 

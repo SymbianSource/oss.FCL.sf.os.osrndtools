@@ -470,6 +470,7 @@ class CTestExecution
         */
         TInt TestThreadMutexHandle() { return iTestThreadMutex.Handle(); };
 
+        const TDesC& GetConfigFileName() const { return iConfig; }
     public: // Functions from base classes
         // None
 

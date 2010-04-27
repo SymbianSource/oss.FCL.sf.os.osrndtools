@@ -194,7 +194,7 @@ CTestReport::CTestReport( const TTestReportMode aReportMode ):
 
 -------------------------------------------------------------------------------
 */
-void CTestReport::ConstructL( TTestReportSettings& aTestReportSettings )
+void CTestReport::ConstructL( CTestReportSettings& aTestReportSettings )
     {
     // Create summary for all test cases
     _LIT( KName, "All test cases" );
@@ -307,7 +307,7 @@ void CTestReport::ConstructL( TTestReportSettings& aTestReportSettings )
 
 -------------------------------------------------------------------------------
 */
-CTestReport* CTestReport::NewL( TTestReportSettings& aTestReportSettings,
+CTestReport* CTestReport::NewL( CTestReportSettings& aTestReportSettings,
                                 const TTestReportMode aReportMode )
     {
     CTestReport* self = new ( ELeave ) CTestReport( aReportMode );
@@ -339,6 +339,9 @@ CTestReport* CTestReport::NewL( TTestReportSettings& aTestReportSettings,
 */
 CTestReport::~CTestReport()
     {
+    iTestModulesVersionsInfo.ResetAndDestroy();
+    iTestModulesVersionsInfo.Close();
+        
     // Reset and destroy arrays
     iTestSummaries.ResetAndDestroy();
     delete iTotalSummary;

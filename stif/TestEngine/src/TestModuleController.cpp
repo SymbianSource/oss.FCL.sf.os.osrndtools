@@ -393,10 +393,11 @@ CTestModuleController::~CTestModuleController()
     iTestCaseArray.Close();
 
     // Release the config file array
+    iConfigFiles.ResetAndDestroy();
     iConfigFiles.Close();
 
     // Release the config file array
-    iFailedEnumerateConfig.Reset();
+    iFailedEnumerateConfig.ResetAndDestroy();
     iFailedEnumerateConfig.Close();
     
     // Release the children array

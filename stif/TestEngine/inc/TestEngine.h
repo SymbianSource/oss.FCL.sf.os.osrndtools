@@ -59,20 +59,25 @@ enum TTestEnginePanic
     };
 
 // Struct to Test report settings
-class TTestReportSettings
+NONSHARABLE_CLASS(CTestReportSettings)
+	:public CBase
     {
     public:
+    
+        /**
+        * NewL is two-phased constructor.
+        */
+        static CTestReportSettings* NewL();
 
-        TTestReportSettings(){ iCreateTestReport = ETrue;
-                                iPath = NULL;
-                                iName = NULL;
-                                iFormat = CStifLogger::ETxt;
-                                iOutput = CStifLogger::EFile;
-                                iOverwrite = ETrue; 
-                                iXML = EFalse;
-                             }
 
-       ~TTestReportSettings(){ delete iPath; delete iName; }
+       ~CTestReportSettings();
+       
+    private:
+       CTestReportSettings();
+       /**
+       * By default Symbian OS constructor is private.
+       */
+       void ConstructL();
 
     public:
 
@@ -231,7 +236,7 @@ class CTestEngineServer
 
     public:     // Data
         // Test report settings
-        TTestReportSettings     iTestReportSettings;
+        CTestReportSettings*     iTestReportSettings;
 
         // Logger overwrite settings
         TLoggerSettings         iLoggerSettings;
