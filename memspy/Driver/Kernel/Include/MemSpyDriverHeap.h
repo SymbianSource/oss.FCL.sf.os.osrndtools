@@ -228,6 +228,7 @@ private: // Internal class
     /**
      * Used when opening the kernel heap
      */
+#ifndef __SYMBIAN_KERNEL_HYBRID_HEAP__
     class RHeapKExtended : public RHeapK
         {
     public:
@@ -243,7 +244,7 @@ private: // Internal class
         inline void ResetFailed() { iFailed = EFalse; }
         inline void ResetFailAllocCount() { iFailAllocCount = 0; }
         };
-
+#endif
 private:
     RHeapK* iKernelHeap;
     DChunk* iChunk;

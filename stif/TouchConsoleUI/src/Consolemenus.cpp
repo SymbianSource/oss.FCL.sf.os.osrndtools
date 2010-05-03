@@ -476,13 +476,16 @@ CMenu* CMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
             {
             // If in the beginning of the list
 
-            iLast = iItemCount - 1;
-            iFirst = iLast - iScreenSize;
-            if ( iFirst < 0 )
-            	{
-            	iFirst = 0;            	
-            	}
-            iPosOnScreen = iLast - iFirst;
+            if(iItemCount > 0)
+                {
+                iLast = iItemCount - 1;
+                iFirst = iLast - iScreenSize;
+                if ( iFirst < 0 )
+                	{
+                	iFirst = 0;            	
+                	}
+                iPosOnScreen = iLast - iFirst;
+                }
             }
         else if ( iPosOnScreen == 0 )
             {
@@ -4391,15 +4394,22 @@ CMenu* CTestSetChoiceMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
             {
             case EKeyEnter:
             case EKeyRightArrow:
-                {
+                {           
+                if(iPosOnScreen < iFileList.Count())
+                    {
                 
-                ret = iMain->UIStore().LoadTestSet( iFileList.operator [](iPosOnScreen)->Des() );
-                if (ret == KErrNone)
-                	{
-                	((CTestSetMenu*)iParent)->SetCreated();
-                	((CTestSetMenu*)iParent)->SetTestSetFileName(iFileList.operator [](iPosOnScreen)->Des());
-                	}
-                return iParent;
+                    ret = iMain->UIStore().LoadTestSet( iFileList.operator [](iPosOnScreen)->Des() );
+                    if (ret == KErrNone)
+                        {
+                        ((CTestSetMenu*)iParent)->SetCreated();
+                        ((CTestSetMenu*)iParent)->SetTestSetFileName(iFileList.operator [](iPosOnScreen)->Des());
+                        }
+                    return iParent;
+                    }
+                else
+                    {
+                    return this;
+                    }
                 }
             default:
                 break;

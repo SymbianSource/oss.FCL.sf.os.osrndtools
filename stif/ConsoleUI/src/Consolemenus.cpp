@@ -218,7 +218,7 @@ CMenu::~CMenu()
 */
 void CMenu::TimerUpdate()
     {    
-
+    iScrolledLine.Zero();
     RRefArray<TDesC> texts;
     User::LeaveIfError( ItemTexts( texts ) );
     
@@ -244,7 +244,7 @@ void CMenu::TimerUpdate()
 
     // If menu item have not been changed after last timer, then
     // start scrolling  
-    const TDesC& name = texts[ iFirst + iPosOnScreen ]; 
+    const TDesC& name = texts[ iFirst + iPosOnScreen ];
     if ( name.Length() > ( iSize.iWidth - KMenuOverhead ) )
         {
 
@@ -255,7 +255,7 @@ void CMenu::TimerUpdate()
         iStart = iStart + iDirection;
 
         // "Right end"
-        if ( iStart + iSize.iWidth > name.Length() + KMenuOverhead )
+        if ( iStart + iSize.iWidth > name.Length() + KMenuOverhead + 2)
             {
             iStart--;
             iDirection = -1;
@@ -277,7 +277,8 @@ void CMenu::TimerUpdate()
         LimitedAppend( iTmp, name.Mid ( iStart ) );
             
         iConsole->SetPos( 0, iPosOnScreen+1);       
-        iConsole->Printf ( iTmp.Left( iSize.iWidth -2 )  );
+        Print(iTmp);
+        iScrolledLine.Copy(texts[iFirst + iPosOnScreen].Left(iScrolledLine.MaxLength())); 
 
         iConsole->SetPos(x,y);
         }
@@ -395,10 +396,14 @@ void CMenu::PrintMenuL( TUpdateType aType )
         {
         //removing "*" sign from the previous cursor position
         iConsole->SetPos(0, iPrevPosOnScreen + iMenuItemsListStartIndex);
-        line.Append( _L("  ") );
-        iConsole->Printf(line);
+        //line.Append( _L("  ") );
+        AppendBefore(iPrevPosOnScreen + iFirst, line);
+        LimitedAppend(line, iScrolledLine);
+        //iConsole->Printf(line);
+        Print(line);
         iConsole->SetPos(0, iPosOnScreen + iMenuItemsListStartIndex);
         line.Zero();
+        iScrolledLine.Zero();
         
         //writing "*" sign before the currently selected line
         line.Append( _L(" *") );
@@ -408,7 +413,67 @@ void CMenu::PrintMenuL( TUpdateType aType )
         }
     }
 
+/*
+-------------------------------------------------------------------------------
 
+    Class: CMenu
+
+    Method: SelectL
+
+    Description: Common method to count all variables needed for printing
+                 page of the screen.
+
+    Parameters: TInt aDelta       :in:      where to move current position
+                 Value > 0 stands for moving down the menu.
+                 Value < 0 stands for moving up the menu.
+
+    Return Values: 
+
+    Errors/Exceptions: None
+
+    Status: Draft
+
+-------------------------------------------------------------------------------
+*/
+void CMenu::MovePosition(TInt aDelta)
+    {
+    if(iItemCount > 0 && aDelta != 0)
+        {
+        // Valid screen size
+        TInt screenSize = iScreenSize + 1;
+        TInt realPosition = iFirst + iPosOnScreen;
+
+        // Number of all pages and items in the last page
+        TInt rest = iItemCount % screenSize;
+        TInt pages = (iItemCount / screenSize) + ((rest == 0) ? (0) : (1));
+
+        // Current page
+        TInt currPage = realPosition / screenSize;
+        
+        // New page
+        TInt newRealPosition = realPosition + aDelta;
+        while(newRealPosition < 0)
+            newRealPosition += iItemCount;
+        newRealPosition %= iItemCount;
+        TInt newPage = newRealPosition / screenSize;
+        
+        // Change position
+        iFirst = newPage * screenSize;
+        iLast = iFirst + screenSize - 1;
+        if(iLast >= iItemCount)
+            iLast = iItemCount - 1;
+        iPrevPosOnScreen = iPosOnScreen;
+        iPosOnScreen = newRealPosition % screenSize;
+        if(newPage == pages - 1 && iPosOnScreen >= rest)
+            iPosOnScreen = rest - 1;
+            
+        // Prevent refreshing
+        iPreventClearScreen = (currPage == newPage);
+        }
+    else
+        iPreventClearScreen = ETrue;    
+    }
+    
 /*
 -------------------------------------------------------------------------------
 
@@ -442,6 +507,7 @@ CMenu* CMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
     case EKeyEscape:
         aContinue = EFalse;
         return this;
+
     // SelectL item
     case EKeyEnter:
     case EKeyRightArrow:
@@ -453,139 +519,33 @@ CMenu* CMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
 
     // Go down
     case EKeyDownArrow:
-        {
-        if ( iFirst + iPosOnScreen == iItemCount - 1 )
-            {
-            // If end of the list, go to beginning
-            iPosOnScreen = 0;
-            iFirst = 0;
-            iLast = iScreenSize;
-            if ( iLast > iItemCount - 1 )
-            	{
-            	iLast = iItemCount - 1;
-            	}
-            }
-        else 
-            {
-            if ( iPosOnScreen == iScreenSize )
-                {
-                iPosOnScreen = 0;
-                iFirst += iScreenSize + 1;
-                iLast += iScreenSize + 1;
-                }
-            else
-                {
-                // Going down "in-screen", no need to update items
-                iPrevPosOnScreen = iPosOnScreen;
-                iPreventClearScreen = EFalse;
-                if (iItemCount > 0)
-                    {
-                    iPosOnScreen++;
-                    iPreventClearScreen = ETrue;
-                    }
-                }
-            }
+        MovePosition(1);
         break;
-        }
         
     // Go Up
     case EKeyUpArrow:
-        {                               
-        // The second condition is needed for the cursor not to go to "next" page (if it does not exist)
-        if ( iFirst + iPosOnScreen == 0 )
-            {
-            // If in the beginning of the list
-            if (iItemCount == iScreenSize + 1 || iItemCount == iScreenSize)
-                {
-                iPosOnScreen = iItemCount - 1;
-                }
-            else
-                {
-                iFirst = (iItemCount / iScreenSize) * iScreenSize;
-                iLast = iItemCount - 1;
-                iPosOnScreen = iItemCount % iScreenSize - 1;
-                if (iItemCount > iScreenSize)
-                    {
-                    iFirst++;
-                    iPosOnScreen--;
-                    }
-                }
-            }
-        else if ( iPosOnScreen == 0 )
-            {
-            iPosOnScreen = iScreenSize;
-            iLast -= iScreenSize + 1;
-            iFirst -= iScreenSize + 1;
-            }
-        else
-            {
-            iPrevPosOnScreen = iPosOnScreen;
-            iPosOnScreen--;
-            iPreventClearScreen = ETrue;
-            }
-        
+        MovePosition(-1);
         break;
-        }
 
     // Additional keys
     case EKeyHome:
     case '3':
-        iPosOnScreen = 0;
-        iFirst = 0;
-        iLast = iScreenSize;
-
-        if ( iLast > iItemCount - 1 )
-            {
-            iLast = iItemCount - 1;
-            }
+        MovePosition(-iFirst - iPosOnScreen);
         break;
 
     case EKeyEnd:
     case '9':
-        iLast = iItemCount - 1;
-        iFirst = iLast - iScreenSize;
-
-        if ( iFirst < 0 )
-            {
-            iFirst = 0;
-            }
-        iPosOnScreen = iLast - iFirst;        
+        MovePosition(iItemCount - 1 - iFirst - iPosOnScreen);
         break;
 
     case EKeyPageUp:
     case '1':
-
-        iFirst = iFirst - iScreenSize;
-        iLast = iLast - iScreenSize;
-
-        if ( iFirst < 0 )
-            {
-            iFirst = 0;
-            iPosOnScreen = 0;           
-            iLast = iScreenSize;
-            if ( iLast > iItemCount - 1 )
-                {
-                iLast = iItemCount - 1;
-                }
-            }
+        MovePosition((iFirst + iPosOnScreen - iScreenSize - 1 >= 0) ? (-iScreenSize - 1) : (-iFirst - iPosOnScreen));
         break;
 
     case EKeyPageDown:
     case '7':
-        iFirst = iFirst + iScreenSize;
-        iLast = iLast + iScreenSize;
-
-        // Going too far
-        if ( iLast > iItemCount - 1 )
-            {
-            iLast = iItemCount - 1;
-            iFirst = iLast - iScreenSize;
-            if ( iFirst < 0 )
-                {
-                iFirst = 0;
-                }
-            }
-        iPosOnScreen = iLast - iFirst;
+        MovePosition((iFirst + iPosOnScreen + iScreenSize + 1 < iItemCount) ? (iScreenSize + 1) : (iItemCount - 1 - iFirst - iPosOnScreen));
         break;
     default:  // Bypass the keypress
         break;
@@ -681,8 +641,8 @@ void CMenu::SetParent ( CMenu* aMenu )
 void CMenu::Print( const TDesC& aPrint )
     {
     
-    iConsole->Printf ( aPrint.Left( iSize.iWidth - KMenuOverhead ) );
-    iConsole->Printf(_L("\n"));
+    iConsole->Write ( aPrint.Left( iSize.iWidth - KMenuOverhead ) );
+    iConsole->Write(_L("\n"));
 
     }
 
@@ -1120,7 +1080,7 @@ CMenu* CFileNameQueryView::SelectL( TKeyCode aSelection,
                 error.iText.AppendNum( ret );
                 iMain->Error( error );
                 }
-            return iParent;
+        return iParent;
             }
         else
             {
@@ -4428,17 +4388,23 @@ CMenu* CTestSetChoiceMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
             {
             case EKeyEnter:
             case EKeyRightArrow:
-            	{           
+                {           
+                if(iPosOnScreen < iFileList.Count())
+                    {
+                    const TDesC& aSetName = iFileList.operator [](iPosOnScreen)->Des();
                 
-                const TDesC& aSetName = iFileList.operator [](iPosOnScreen)->Des();
-                
-                ret = iMain->UIStore().LoadTestSet( iFileList.operator [](iPosOnScreen)->Des() );
-                if (ret == KErrNone)
-                	{
-                	((CTestSetMenu*)iParent)->SetCreated();
-                	((CTestSetMenu*)iParent)->SetTestSetFileName(iFileList.operator [](iPosOnScreen)->Des());
-                	}
-                return iParent;
+                    ret = iMain->UIStore().LoadTestSet( iFileList.operator [](iPosOnScreen)->Des() );
+                    if (ret == KErrNone)
+                        {
+                        ((CTestSetMenu*)iParent)->SetCreated();
+                        ((CTestSetMenu*)iParent)->SetTestSetFileName(iFileList.operator [](iPosOnScreen)->Des());
+                        }
+                    return iParent;
+                    }
+                else
+                    {
+                    return this;
+                    }
                 }
             default:
                 break;

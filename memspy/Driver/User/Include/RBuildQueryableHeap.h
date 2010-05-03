@@ -30,13 +30,6 @@ class RBuildQueryableHeap : public RHeap
 public: // API
     TBool IsDebugEUser() const;
     TInt CellHeaderSize( TMemSpyDriverCellType aType ) const;
-
-public: // Exposure of RHeap protected data members
-    inline TInt MinCellSize() const
-        {
-        return iMinCell;
-        }
-
     };
 
 

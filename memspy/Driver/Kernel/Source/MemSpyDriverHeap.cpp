@@ -511,8 +511,10 @@ void RMemSpyDriverRHeapKernelInPlace::SetKernelHeap( RHeapK& aKernelHeap )
 
 void RMemSpyDriverRHeapKernelInPlace::FailNext()
     {
+#ifndef __SYMBIAN_KERNEL_HYBRID_HEAP__
     RMemSpyDriverRHeapKernelInPlace::RHeapKExtended* heap = reinterpret_cast< RMemSpyDriverRHeapKernelInPlace::RHeapKExtended* >( iKernelHeap );
     heap->FailNext();
+#endif
     }
 
 

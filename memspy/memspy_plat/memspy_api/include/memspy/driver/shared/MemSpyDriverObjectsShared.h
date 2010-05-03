@@ -19,10 +19,7 @@
 #define MEMSPYDRIVEROBJECTSSHARED_H
 
 // System includes
-#include <e32cmn.h>
-#include <e32ldr.h>
-#include <e32ldr_private.h>
-#include <e32property.h>
+#include <u32std.h>
 
 // User includes
 #include <memspy/driver/memspydriverenumerationsshared.h>

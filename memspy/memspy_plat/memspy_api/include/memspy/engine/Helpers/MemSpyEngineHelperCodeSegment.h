@@ -20,8 +20,7 @@
 
 // System includes
 #include <e32base.h>
-#include <e32ldr.h>
-#include <e32ldr_private.h>
+#include <e32svr.h>
 #include <badesca.h>
 
 // User includes
