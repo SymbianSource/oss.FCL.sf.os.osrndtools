@@ -480,6 +480,12 @@ private:
      * If the period is 0, reconnect would not happen.
      */
     TInt iReconnectDelay;
+    
+    /**
+     * Indicates reboot reason.
+     * Reason type is defined in enum RStarterSession::TResetReason value in starterclient.h
+     */
+    TInt iRebootReason;
     };
 
 

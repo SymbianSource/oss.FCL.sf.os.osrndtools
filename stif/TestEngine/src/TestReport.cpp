@@ -248,28 +248,24 @@ void CTestReport::ConstructL( CTestReportSettings& aTestReportSettings )
             {
             User::LeaveIfError( iFile.Replace( iFs, 
                            pathAndFile,
-                           EFileWrite | EFileStreamText | EFileShareAny ) );
+                           EFileWrite | EFileStreamText | EFileShareExclusive ) );
             }
         else
             {
-            TBool isOpen( EFalse );
-            TInt fileOpen = iFs.IsFileOpen( pathAndFile, isOpen );
+            TInt fileOpen = iFile.Open( iFs, 
+                                        pathAndFile, 
+                                        EFileWrite | EFileStreamText | EFileShareAny );
             if( fileOpen == KErrNotFound )
                 {
                 User::LeaveIfError( 
                     iFile.Create( iFs, 
                                   pathAndFile, 
-                                  EFileWrite | EFileStreamText | EFileShareAny ) );
+                                  EFileWrite | EFileStreamText | EFileShareExclusive ) );
                 }
             else if( fileOpen == KErrNone )
                 {
-                User::LeaveIfError( 
-                    iFile.Open( iFs, 
-                                pathAndFile, 
-                                EFileWrite | EFileStreamText | EFileShareAny ) );
                 TInt endPosOfFile = 0;
                 User::LeaveIfError( iFile.Seek( ESeekEnd, endPosOfFile ) );
-
                 }
             else
                 {

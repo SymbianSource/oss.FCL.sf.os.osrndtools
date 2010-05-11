@@ -56,7 +56,7 @@ const static TInt KDefaultStartUpDelay = 5;  // seconds
 const static TInt KHtiDefaultPriority = 3;
 const static TInt KHtiWatchDogEnabledDefault = 0;
 const static TInt KHtiConsoleEnabledDefault = 0;
-const static TInt KHtiAutoStartEnabledDefault = 0;
+const static TInt KHtiAutoStartEnabledDefault = 1;
 const static TInt KHtiShowErrorDialogsDefault = 1;
 const static TInt KHtiReconnectDelay = 0;
 

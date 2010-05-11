@@ -23,7 +23,7 @@
 
 #include "HtiMessage.h"
 
-class CHtiMessageQueue : public CBase
+NONSHARABLE_CLASS(CHtiMessageQueue)  : public CBase
     {
 public:
     /**
