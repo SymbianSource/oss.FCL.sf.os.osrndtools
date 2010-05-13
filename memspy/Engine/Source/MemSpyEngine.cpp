@@ -43,14 +43,14 @@ EXPORT_C CMemSpyEngine::~CMemSpyEngine()
     }
 
 
-void CMemSpyEngine::ConstructL( RFs& aFsSession )
+void CMemSpyEngine::ConstructL( RFs& aFsSession, TBool aStartServer )
     {
 #ifdef _DEBUG
     RDebug::Printf( "CMemSpyEngine::ConstructL() - START" );
 #endif
     
     iImp = new(ELeave) CMemSpyEngineImp( aFsSession, *this );
-    iImp->ConstructL();
+    iImp->ConstructL(aStartServer);
 
 #ifdef _DEBUG
     RDebug::Printf( "CMemSpyEngine::ConstructL() - END" );
@@ -60,9 +60,14 @@ void CMemSpyEngine::ConstructL( RFs& aFsSession )
 
 EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession )
     {
+    return NewL(aFsSession, ETrue );
+    }
+
+EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession, TBool aStartServer )
+    {
     CMemSpyEngine* self = new(ELeave) CMemSpyEngine();
     CleanupStack::PushL( self );
-    self->ConstructL( aFsSession );
+    self->ConstructL( aFsSession, aStartServer );
     CleanupStack::Pop( self );
     return self;
     }

@@ -56,7 +56,7 @@ void CMemSpyDeviceWideOperationWaiter::ExecuteL( CMemSpyDeviceWideOperations::TO
 #endif
 
     iWaiter = new(ELeave) CActiveSchedulerWait();
-    iOperation = CMemSpyDeviceWideOperations::NewL( iEngine, *this, aOperation );
+    //iOperation = CMemSpyDeviceWideOperations::NewL( iEngine, *this, aOperation );
 
 #ifdef _DEBUG
     RDebug::Printf("[MCon] CMemSpyDeviceWideOperationWaiter::ExecuteL() - starting scheduler wait..." );

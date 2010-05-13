@@ -98,6 +98,8 @@ public: // API
 public: // From MDesCArray
     IMPORT_C TInt MdcaCount() const;
     IMPORT_C TPtrC MdcaPoint(TInt aIndex) const;
+    IMPORT_C TPtrC Caption(TInt aIndex ) const;
+    IMPORT_C TPtrC Value(TInt aIndex ) const;
 
 protected:
     class CItem : public CBase

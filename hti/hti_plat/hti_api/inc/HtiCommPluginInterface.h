@@ -113,6 +113,6 @@ private:
     TUid iDtor_ID_Key;
     };
 
-#include <HTICommPluginInterface.inl>
+#include <HtiCommPluginInterface.inl>
 
 #endif

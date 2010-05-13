@@ -247,6 +247,16 @@ EXPORT_C TMemSpyDriverContainerType CMemSpyEngineGenericKernelObjectList::Type()
     {
     return iType;
     }
+
+EXPORT_C TInt CMemSpyEngineGenericKernelObjectList::Size() const
+    {
+    return iSize;
+    }
+
+EXPORT_C TInt CMemSpyEngineGenericKernelObjectList::ItemsCount() const
+	{
+	return iItems.Count();
+	}
     
 
 EXPORT_C TPtrC CMemSpyEngineGenericKernelObjectList::TypeAsString( TMemSpyDriverContainerType aType )
@@ -392,7 +402,7 @@ void CMemSpyEngineGenericKernelObjectList::AddItemL( const TMemSpyDriverHandleIn
     AddItemL( aItem.iHandle );
     iItems.AppendL( aItem );
     //
-    UpdateNameL();
+    //UpdateNameL();
     }
 
 

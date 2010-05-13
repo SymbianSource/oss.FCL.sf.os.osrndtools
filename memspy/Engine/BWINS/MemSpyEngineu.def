@@ -384,24 +384,32 @@ EXPORTS
 	?Type@CMemSpyThreadInfoItemBase@@QBE?AW4TMemSpyThreadInfoItemType@@XZ @ 383 NONAME ; enum TMemSpyThreadInfoItemType CMemSpyThreadInfoItemBase::Type(void) const
 	?TypeAsString@CMemSpyEngineGenericKernelObjectList@@SA?AVTPtrC16@@W4TMemSpyDriverContainerType@@@Z @ 384 NONAME ; class TPtrC16 CMemSpyEngineGenericKernelObjectList::TypeAsString(enum TMemSpyDriverContainerType)
 	?VID@CMemSpyProcess@@QBEKXZ @ 385 NONAME ; unsigned long CMemSpyProcess::VID(void) const
-	?MdcaCount@CMemSpyEngineWindowGroupList@@UBEHXZ @ 386 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::MdcaCount(void) const
-	?GetWindowGroupListL@CMemSpyEngineHelperWindowServer@@QAEXAAV?$RArray@VTMemSpyEngineWindowGroupInfo@@@@@Z @ 387 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::GetWindowGroupListL(class RArray<class TMemSpyEngineWindowGroupInfo> &)
-	??1CMemSpyEngineWindowGroupList@@UAE@XZ @ 388 NONAME ABSENT ; CMemSpyEngineWindowGroupList::~CMemSpyEngineWindowGroupList(void)
-	?Count@CMemSpyEngineWindowGroupList@@QBEHXZ @ 389 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::Count(void) const
-	?ItemIndex@CMemSpyEngineWindowGroupList@@QBEHABVTMemSpyEngineWindowGroupInfo@@@Z @ 390 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::ItemIndex(class TMemSpyEngineWindowGroupInfo const &) const
-	?WindowGroupListL@CMemSpyEngineHelperWindowServer@@QAEPAVCMemSpyEngineWindowGroupList@@XZ @ 391 NONAME ABSENT ; class CMemSpyEngineWindowGroupList * CMemSpyEngineHelperWindowServer::WindowGroupListL(void)
-	?HelperWindowServer@CMemSpyEngine@@QAEAAVCMemSpyEngineHelperWindowServer@@XZ @ 392 NONAME ABSENT ; class CMemSpyEngineHelperWindowServer & CMemSpyEngine::HelperWindowServer(void)
-	?MdcaPoint@CMemSpyEngineWindowGroupList@@UBE?AVTPtrC16@@H@Z @ 393 NONAME ABSENT ; class TPtrC16 CMemSpyEngineWindowGroupList::MdcaPoint(int) const
-	?At@CMemSpyEngineWindowGroupList@@QBEABVTMemSpyEngineWindowGroupInfo@@H@Z @ 394 NONAME ABSENT ; class TMemSpyEngineWindowGroupInfo const & CMemSpyEngineWindowGroupList::At(int) const
-	?ItemIndex@CMemSpyEngineWindowGroupList@@QBEHABVTMemSpyEngineWindowGroupBasicInfo@@@Z @ 395 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::ItemIndex(class TMemSpyEngineWindowGroupBasicInfo const &) const
-	?At@CMemSpyEngineWindowGroupList@@QBEABVTMemSpyEngineWindowGroupBasicInfo@@H@Z @ 396 NONAME ABSENT ; class TMemSpyEngineWindowGroupBasicInfo const & CMemSpyEngineWindowGroupList::At(int) const
-	?GetWindowGroupListL@CMemSpyEngineHelperWindowServer@@QAEXAAV?$RArray@VTMemSpyEngineWindowGroupBasicInfo@@@@@Z @ 397 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::GetWindowGroupListL(class RArray<class TMemSpyEngineWindowGroupBasicInfo> &)
-	?GetWindowGroupDetailsL@CMemSpyEngineHelperWindowServer@@QAEXHAAVTMemSpyEngineWindowGroupDetails@@@Z @ 398 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::GetWindowGroupDetailsL(int, class TMemSpyEngineWindowGroupDetails &)
-	?SwitchToL@CMemSpyEngineHelperWindowServer@@QAEXH@Z @ 399 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::SwitchToL(int)
+	__E32Dll @ 386 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::MdcaCount(void) const
+	__E32Dll @ 387 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::GetWindowGroupListL(class RArray<class TMemSpyEngineWindowGroupInfo> &)
+	__E32Dll @ 388 NONAME ABSENT ; CMemSpyEngineWindowGroupList::~CMemSpyEngineWindowGroupList(void)
+	__E32Dll @ 389 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::Count(void) const
+	__E32Dll @ 390 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::ItemIndex(class TMemSpyEngineWindowGroupInfo const &) const
+	__E32Dll @ 391 NONAME ABSENT ; class CMemSpyEngineWindowGroupList * CMemSpyEngineHelperWindowServer::WindowGroupListL(void)
+	__E32Dll @ 392 NONAME ABSENT ; class CMemSpyEngineHelperWindowServer & CMemSpyEngine::HelperWindowServer(void)
+	__E32Dll @ 393 NONAME ABSENT ; class TPtrC16 CMemSpyEngineWindowGroupList::MdcaPoint(int) const
+	__E32Dll @ 394 NONAME ABSENT ; class TMemSpyEngineWindowGroupInfo const & CMemSpyEngineWindowGroupList::At(int) const
+	__E32Dll @ 395 NONAME ABSENT ; int CMemSpyEngineWindowGroupList::ItemIndex(class TMemSpyEngineWindowGroupBasicInfo const &) const
+	__E32Dll @ 396 NONAME ABSENT ; class TMemSpyEngineWindowGroupBasicInfo const & CMemSpyEngineWindowGroupList::At(int) const
+	__E32Dll @ 397 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::GetWindowGroupListL(class RArray<class TMemSpyEngineWindowGroupBasicInfo> &)
+	__E32Dll @ 398 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::GetWindowGroupDetailsL(int, class TMemSpyEngineWindowGroupDetails &)
+	__E32Dll @ 399 NONAME ABSENT ; void CMemSpyEngineHelperWindowServer::SwitchToL(int)
 	?Capabilities@CMemSpyProcess@@QBE?AUSCapabilitySet@@XZ @ 400 NONAME ; struct SCapabilitySet CMemSpyProcess::Capabilities(void) const
 	?UIDs@CMemSpyProcess@@QBE?AVTUidType@@XZ @ 401 NONAME ; class TUidType CMemSpyProcess::UIDs(void) const
 	?HelperCondVar@CMemSpyEngine@@QAEAAVCMemSpyEngineHelperCondVar@@XZ @ 402 NONAME ; class CMemSpyEngineHelperCondVar & CMemSpyEngine::HelperCondVar(void)
 	?GetCondVarSuspendedThreadsL@CMemSpyEngineHelperCondVar@@QAEXABVTMemSpyDriverHandleInfoGeneric@@AAV?$RArray@VTMemSpyDriverCondVarSuspendedThreadInfo@@@@@Z @ 403 NONAME ; void CMemSpyEngineHelperCondVar::GetCondVarSuspendedThreadsL(class TMemSpyDriverHandleInfoGeneric const &, class RArray<class TMemSpyDriverCondVarSuspendedThreadInfo> &)
 	?HelperWindowServer@CMemSpyEngine@@QAEAAVMMemSpyEngineHelperWindowServer@@XZ @ 404 NONAME ; class MMemSpyEngineHelperWindowServer & CMemSpyEngine::HelperWindowServer(void)
 	?IsHelperWindowServerSupported@CMemSpyEngine@@QAEHXZ @ 405 NONAME ; int CMemSpyEngine::IsHelperWindowServerSupported(void)
+	__E32Dll @ 406 NONAME ABSENT ; int CMemSpyEngineGenericKernelObjectList::Size(void) const
+	__E32Dll @ 407 NONAME ABSENT ; int CMemSpyEngineGenericKernelObjectList::Size(void)
+	?Size@CMemSpyEngineGenericKernelObjectList@@QBEHXZ @ 408 NONAME ; int CMemSpyEngineGenericKernelObjectList::Size(void) const
+	?NewHeapRawInfo@CMemSpyEngineHelperHeap@@QAEAAVTMemSpyHeapData@@ABVTMemSpyHeapInfo@@@Z @ 409 NONAME ABSENT ; class TMemSpyHeapData & CMemSpyEngineHelperHeap::NewHeapRawInfo(class TMemSpyHeapInfo const &)
+	?NewHeapRawInfo@CMemSpyEngineHelperHeap@@QAE?AVTMemSpyHeapData@@ABVTMemSpyHeapInfo@@@Z @ 410 NONAME ; class TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo(class TMemSpyHeapInfo const &)
+	?ItemsCount@CMemSpyEngineGenericKernelObjectList@@QBEHXZ @ 411 NONAME ; int CMemSpyEngineGenericKernelObjectList::ItemsCount(void) const
+	?Priority@CMemSpyThread@@QBE?AW4TThreadPriority@@XZ @ 412 NONAME ; enum TThreadPriority CMemSpyThread::Priority(void) const
+	?NewL@CMemSpyEngine@@SAPAV1@AAVRFs@@H@Z @ 413 NONAME ; class CMemSpyEngine * CMemSpyEngine::NewL(class RFs &, int)
 

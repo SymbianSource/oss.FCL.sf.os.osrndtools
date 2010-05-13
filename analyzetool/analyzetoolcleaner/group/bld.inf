@@ -1,0 +1,8 @@
+PRJ_PLATFORMS
+ARMV5 WINSCW
+
+PRJ_EXPORTS
+../inc/analyzetoolcleaner.h  OS_LAYER_PLATFORM_EXPORT_PATH(analyzetool/analyzetoolcleaner.h)
+
+PRJ_MMPFILES
+analyzetoolcleaner.mmp

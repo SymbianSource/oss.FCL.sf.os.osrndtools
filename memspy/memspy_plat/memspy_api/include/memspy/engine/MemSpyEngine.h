@@ -60,11 +60,12 @@ NONSHARABLE_CLASS( CMemSpyEngine ) : public CBase
     {
 public:
     IMPORT_C static CMemSpyEngine* NewL( RFs& aFsSession );
+    IMPORT_C static CMemSpyEngine* NewL( RFs& aFsSession, TBool aStartServer );
     IMPORT_C ~CMemSpyEngine();
 
 private:
     CMemSpyEngine();
-    void ConstructL( RFs& aFsSession );
+    void ConstructL( RFs& aFsSession, TBool aStartServer );
 
 public: // API
     IMPORT_C RFs& FsSession();
