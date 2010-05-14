@@ -87,6 +87,8 @@ public: // API
     IMPORT_C static TPtrC TypeAsString( TMemSpyDriverContainerType aType );
     IMPORT_C TPtrC Name() const;
     IMPORT_C void OutputL( CMemSpyEngineOutputSink& aSink ) const;
+    IMPORT_C TInt Size() const;
+    IMPORT_C TInt ItemsCount() const;
 
 public: // But not exported
     TAny* HandleAt( TInt aIndex ) const;
@@ -138,3 +140,4 @@ private: // Data members
 
 
 #endif
+

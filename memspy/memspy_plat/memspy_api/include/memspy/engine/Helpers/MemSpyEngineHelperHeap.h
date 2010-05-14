@@ -26,6 +26,9 @@
 // Driver includes
 #include <memspy/driver/memspydriverobjectsshared.h>
 
+// MemSpyClient includes
+#include <memspy/engine/memspyheapdata.h>
+
 // Classes referenced
 class CMemSpyThread;
 class CMemSpyEngine;
@@ -61,6 +64,8 @@ public: // API - Common
     IMPORT_C void OutputHeapInfoForDeviceL( TBool aIncludeKernel = ETrue );
     IMPORT_C CMemSpyEngineOutputList* NewHeapSummaryShortLC( const TMemSpyHeapInfo& aInfo );
     IMPORT_C CMemSpyEngineOutputList* NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverFreeCell>* aFreeCells = NULL );
+    //cigasto    
+    IMPORT_C TMemSpyHeapData NewHeapRawInfo( const TMemSpyHeapInfo& aInfo ); //not formatted heap info
 
 public: // But not exported
     void OutputHeapDataKernelL( TBool aCreateDataStream );

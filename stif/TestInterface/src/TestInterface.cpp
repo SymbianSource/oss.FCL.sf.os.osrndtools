@@ -418,7 +418,7 @@ EXPORT_C TInt StartSession()
     //__UHEAP_MARK;
 
     // Get module name from command line
-	const TInt length = User().CommandLineLength();
+	const TInt length = User::CommandLineLength();
     HBufC* cmdLine = HBufC::New( length );
     
     if ( cmdLine == NULL )
@@ -428,7 +428,7 @@ EXPORT_C TInt StartSession()
         }
 
     TPtr moduleName = cmdLine->Des();
-    User().CommandLine( moduleName );
+    User::CommandLine( moduleName );
 
     RDebug::Print(_L("StartSession() Received data [%S]"), &moduleName);
 

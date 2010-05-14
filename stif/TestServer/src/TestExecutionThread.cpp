@@ -272,22 +272,7 @@ TInt CTestThreadContainer::InitializeModuleInThread ( RLibrary& aModule )
         __TRACEI (KInit, (  _L("Loaded test module[%S]"), &moduleName ) );
         }
 
-    // Verify the UID
-    TUid KUidTestModule = TUid::Uid ( 0x101FB3E7 );
-    TUidType requiredUID( KDynamicLibraryUid, KSharedLibraryUid, KUidTestModule );
-
-    TUidType moduleUID = aModule.Type();    
-    if ( moduleUID != requiredUID )
-        {
-        // New instance can't be created
-        RDebug::Print( ( _L("STIF TF: Test module has invalid UID. Aborting loading!") ) );
-        __TRACEI (KError, ( CStifLogger::EError, _L("Test module has invalid UID. Aborting loading!")));
-        tmpBuffer.Format(_L("Module [%S] has invalid UID"), &moduleName);
-        ErrorPrint( 1, tmpBuffer ); 
-        ModuleContainer().OperationErrorResult() = KErrNotSupported;
-        return KErrNotSupported;
-        }
-
+    
     // Get pointer to first exported function
     ModuleContainer().OperationText() = _L("1st EXPORTED function");
     CTestInterfaceFactory libEntry;

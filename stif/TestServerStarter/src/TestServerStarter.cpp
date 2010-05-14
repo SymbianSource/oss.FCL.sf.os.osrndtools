@@ -53,7 +53,7 @@ GLDEF_C TInt E32Main()
     RDebug::Print(_L("STIF: New process starting"));
 
     // Get module name from command line
-	const TInt length = User().CommandLineLength();
+	const TInt length = User::CommandLineLength();
 
     HBufC* cmdLine = HBufC::New( length );
     
@@ -64,7 +64,7 @@ GLDEF_C TInt E32Main()
 
     TPtr moduleName = cmdLine->Des();
 
-	User().CommandLine( moduleName );
+	User::CommandLine( moduleName );
 
     RDebug::Print(_L("STIF: Received data [%S]"), &moduleName);
 

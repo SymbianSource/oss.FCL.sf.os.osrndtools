@@ -123,7 +123,8 @@ CHtiDispatcher::CHtiDispatcher( TInt aMaxQueueMemorySize,
     iIdleOverCommAdapter( EFalse ),
     iHtiInstanceId( 0 ),
     iShowErrorDialogs( aShowErrorDialogs ),
-    iReconnectDelay (aReconnectDelay)
+    iReconnectDelay(aReconnectDelay),
+    iRebootReason(0)
     {
     HTI_LOG_FORMAT( "MaxQueueMemorySize %d", iMaxQueueMemorySize );
     iQueueSizeLowThresold = ( iMaxQueueMemorySize / 2 ) / 2;
@@ -861,7 +862,23 @@ void CHtiDispatcher::HandleSystemMessageL( const TDesC8& aMessage )
                     break;
 
                 case EHtiReboot:
+                    {
+                    if(aMessage.Length() == 2)
+                        {
+                        iRebootReason = aMessage[1];
+                        }
+                    else if(aMessage.Length() == 1)
+                        {
+                        iRebootReason = 0;
+                        }
+                    else
+                        {
+                        User::LeaveIfError(DispatchOutgoingErrorMessage( KErrArgument,
+                                      KErrDescrInvalidParameter,
+                                      KHtiSystemServiceUid ) );
+                        }
                     ShutdownAndRebootDeviceL();
+                    }
                     break;
 
                 case EHtiStop:
@@ -1022,7 +1039,16 @@ void CHtiDispatcher::Reboot()
     TInt err = KErrNone;
     RProcess rebootProcess;
     // First try the UI layer rebooter
-    err = rebootProcess.Create( KHtiDeviceRebootExeUI, KNullDesC );
+    if(iRebootReason == 0)
+        {
+        err = rebootProcess.Create( KHtiDeviceRebootExeUI, KNullDesC );
+        }
+    else
+        {
+        TBuf<8> reasonNumber;
+        reasonNumber.Num(iRebootReason);
+        err = rebootProcess.Create( KHtiDeviceRebootExeUI, reasonNumber );
+        }
     if ( err != KErrNone )
         {
         HTI_LOG_FORMAT( "UI layer rebooter failed with %d", err );

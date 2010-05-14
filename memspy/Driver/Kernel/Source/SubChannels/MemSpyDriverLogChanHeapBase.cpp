@@ -905,7 +905,7 @@ TInt DMemSpyDriverLogChanHeapBase::OpenKernelHeap( RHeapK*& aHeap, DChunk*& aChu
         // Finalise construction of heap 
         if  ( kernelHeap != NULL )
             {
-            TRACE_KH( Kern::Printf( "DMemSpyDriverLogChanHeapBase::OpenKernelHeap - kernelHeap->Base(): 0x%08x, kernelHeapChunk->Base(): 0x%08x", kernelHeap->Base(), kernelHeapChunk->Base() ) );
+            //TRACE_KH( Kern::Printf( "DMemSpyDriverLogChanHeapBase::OpenKernelHeap - kernelHeap->Base(): 0x%08x, kernelHeapChunk->Base(): 0x%08x", kernelHeap->Base(), kernelHeapChunk->Base() ) );
             aHeap = kernelHeap;
             aChunk = kernelHeapChunk;
 
@@ -1017,7 +1017,7 @@ TInt DMemSpyDriverLogChanHeapBase::OpenKernelHeap( RMemSpyDriverRHeapKernelFromC
                 NKern::LockSystem();
                 const TUint32 copyLength = heapSize; // TODO Min( heap->Size(), heapSize );
 
-                TRACE_KH( Kern::Printf("DMemSpyDriverLogChanHeapBase::OpenKernelHeap(CP) - trying to copy %d (vs orig estimate of %d) bytes from kernel allocator address: 0x%08x", copyLength, heapSize, heap->Base() ));
+                //TRACE_KH( Kern::Printf("DMemSpyDriverLogChanHeapBase::OpenKernelHeap(CP) - trying to copy %d (vs orig estimate of %d) bytes from kernel allocator address: 0x%08x", copyLength, heapSize, heap->Base() ));
                 memcpy( (TUint8*) heapCopyChunkAddress, heap, copyLength );
 
                 NKern::UnlockSystem();

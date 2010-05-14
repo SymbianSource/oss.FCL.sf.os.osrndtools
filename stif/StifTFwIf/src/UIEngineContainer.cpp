@@ -480,7 +480,6 @@ void CUIEngineContainer::PrintsDone()
         {
         // Call TestExecuted of CUIEngine interface
         iUIEngine->TestExecuted(this, iRunner->FullResult() );
-        iState = EFinished;
         }
     }
     

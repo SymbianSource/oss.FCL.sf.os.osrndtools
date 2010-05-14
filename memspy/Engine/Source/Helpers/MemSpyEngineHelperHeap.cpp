@@ -899,6 +899,55 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryExtende
     }
 
 
+//cigasto: not formatted - raw heap info 
+EXPORT_C TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo( const TMemSpyHeapInfo& aInfo )
+	{
+	TMemSpyHeapData list;
+
+	// Heap type	
+	if ( aInfo.Type() == TMemSpyHeapInfo::ETypeUnknown )
+		{
+		_LIT( KItem0_Type_Unknown, "Unknown" );
+		list.iType.Append( KItem0_Type_Unknown );
+		}
+	else if ( aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
+		{
+		const TMemSpyHeapInfoRHeap& rHeap = aInfo.AsRHeap();
+		const TMemSpyHeapMetaDataRHeap& metaData = rHeap.MetaData();
+		const TMemSpyHeapObjectDataRHeap& objectData = rHeap.ObjectData();
+		const TMemSpyHeapStatisticsRHeap& statistics = rHeap.Statistics();
+
+		_LIT( KItem0_Type_RHeap, "RHeap" );
+		list.iType.Append( KItem0_Type_RHeap );
+
+	    // Heap size is the size of the heap minus the size of the embedded (in-place) RHeap. 	    
+	    list.iSize = objectData.Size();
+	    list.iBaseAddress = (TUint) objectData.Base();	        
+	    list.iShared = metaData.IsSharedHeap();
+	    list.iChunkSize = metaData.ChunkSize();
+	    list.iAllocationsCount = statistics.StatsAllocated().TypeCount();
+	    list.iFreeCount = statistics.StatsFree().TypeCount();
+	    list.iBiggestAllocation = statistics.StatsAllocated().LargestCellSize();
+	    list.iBiggestFree = statistics.StatsFree().LargestCellSize();
+	    list.iTotalAllocations =  statistics.StatsAllocated().TypeSize();	        
+	    list.iTotalFree =  statistics.StatsFree().TypeSize();
+	    list.iSlackFreeSpace = statistics.StatsFree().SlackSpaceCellSize();
+	    list.iFragmentation = statistics.StatsFree().TypeSize() - statistics.StatsFree().SlackSpaceCellSize(); //to calculate percentage value use iSize as 100% value
+	    list.iHeaderSizeA = metaData.HeaderSizeAllocated();
+	    list.iHeaderSizeF = metaData.HeaderSizeFree();
+	    TInt allocOverhead = metaData.HeaderSizeAllocated() * statistics.StatsAllocated().TypeCount();
+	    list.iAllocationOverhead = allocOverhead;
+	    TInt freeOverhead = metaData.HeaderSizeFree() * statistics.StatsFree().TypeCount();
+	    list.iFreeOverhead = freeOverhead;
+	    list.iTotalOverhead = freeOverhead + allocOverhead;
+	    list.iOverhead = freeOverhead + allocOverhead; //to calculate percentage value use iSize as 100% value    
+	    list.iMinLength = objectData.iMinLength;
+	    list.iMaxLength = objectData.iMaxLength;
+	    list.iDebugAllocatorLibrary = metaData.IsDebugAllocator();
+		}
+
+	return list;
+	}
 
 
 

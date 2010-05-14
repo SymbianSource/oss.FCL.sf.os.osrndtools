@@ -22,6 +22,10 @@
 file=ABI_DIR\BUILD_DIR\MemSpyDriverClient.dll									SHARED_LIB_DIR\MemSpyDriverClient.dll
 file=ABI_DIR\BUILD_DIR\MemSpyEngine.dll											SHARED_LIB_DIR\MemSpyEngine.dll
 
+// Client - server
+file=ABI_DIR\BUILD_DIR\MemSpyServer.exe											SHARED_LIB_DIR\MemSpyServer.exe
+file=ABI_DIR\BUILD_DIR\MemSpyClient.dll											SHARED_LIB_DIR\MemSpyClient.dll
+
 // Commandline
 file=ABI_DIR\BUILD_DIR\MemSpy.exe									            SHARED_LIB_DIR\MemSpy.exe
 

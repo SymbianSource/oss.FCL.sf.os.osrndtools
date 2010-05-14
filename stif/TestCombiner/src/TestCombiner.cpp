@@ -2445,8 +2445,21 @@ CTestRunner::CTestRunner( CTestCombiner* aTestCombiner ):
 */
 void CTestRunner::ConstructL()
     {
+    TInt ret;
     
-    iPauseTimer.CreateLocal();
+    ret = iPauseTimer.CreateLocal();
+    if(ret != KErrNone)
+        {
+        __TRACE( KError, (_L("Unable to create RTimer: iPauseTimer [%d] "), ret));
+        User::Leave(ret);
+        }
+        
+    ret = iPauseCombTimer.CreateLocal();
+    if(ret != KErrNone)
+        {
+        __TRACE( KError, (_L("Unable to create RTimer: iPauseCombTimer [%d] "), ret));
+        User::Leave(ret);
+        }
     
     iRemoteTimer = CRemoteTimer::NewL( iTestCombiner );
     
@@ -2515,6 +2528,8 @@ CTestRunner::~CTestRunner()
     iLine = 0;
     
     iPauseTimer.Close();
+    
+    iPauseCombTimer.Close();
          
     }
 
@@ -2550,8 +2565,34 @@ void CTestRunner::RunL()
         User::Leave( KErrGeneral );
         }
         
-    TBool continueTask = EFalse; 
+    TBool continueTask = EFalse;
+    
+    // Check if there is still some time for combiner pause and we need to 
+    // continue pausing
+    if(iPauseCombRemainingTime > 0)
+        {           
+        // Maximum time for one RTimer::After request                   
+        TInt maximumTime = KMaxTInt / 1000;                       
         
+        __TRACE( KMessage, (_L("CTestRunner::RunL: Going to reissue PauseCombiner request ") ) );           
+        __TRACE( KMessage, (_L("CTestRunner::RunL: iRemainingTimeValue = %d"), iPauseCombRemainingTime ) );        
+        
+        if( iPauseCombRemainingTime < maximumTime )
+            {                           
+            iPauseCombTimer.After(iStatus, (iPauseCombRemainingTime * 1000));
+            iPauseCombRemainingTime = 0;
+            }
+        else
+            {            
+            iPauseCombRemainingTime -= maximumTime;
+            iPauseCombTimer.After(iStatus, (maximumTime * 1000));        
+            }     
+            
+        SetActive();
+        return;
+        }     
+ 
+    // Handling runner states
     switch( iState )
         {
         case ERunnerWaitTimeout:
@@ -2694,6 +2735,8 @@ void CTestRunner::DoCancel()
     __TRACEFUNC();
     __TRACE( KMessage, (_L("CTestRunner::DoCancel")));
     iTestCombiner->TestModuleIf().Printf( KPrintPriLow, _L("Runner"), _L("DoCancel"));
+    
+    iPauseCombTimer.Cancel();
     
     switch( iState )
         {
@@ -3397,7 +3440,7 @@ TBool CTestRunner::ExecuteCombinerPauseL( CStifItemParser* aItem )
 	_LIT( KErrMsgPauseTimeoutNotDefined, "PauseCombiner : No timeout value given or value has invalid format" );
 	_LIT( KErrMsgPauseTimeoutNotPositive, "PauseCombiner : Timeout value can't be <0" );
 
-    TBool continueTask = ETrue;
+    TBool continueTask = EFalse;
     TInt pauseTime;
     TInt ret = KErrNone;
     
@@ -3416,12 +3459,31 @@ TBool CTestRunner::ExecuteCombinerPauseL( CStifItemParser* aItem )
         User::Leave( KErrArgument );
         }    
     
-    //Time given by End User should be given in miliseconds
-    pauseTime*=1000;
+    
+    // Maximum time for one RTimer::After request
+    TInt maximumTime = KMaxTInt / 1000;
 
-    __TRACE( KMessage, (_L("time=%d"), pauseTime ) );
+    // Check if pause value is suitable for RTimer::After
+    if(pauseTime < maximumTime)
+        {
+        iPauseCombTimer.After(iStatus, pauseTime * 1000);
+        iPauseCombRemainingTime = 0;
+        }
+    else
+        {
+        // Given pause value after multiplication with 1000 is
+        // larger than KMaxTInt, so we need to split it and 
+        // re-request After with remaining value from RunL
 
-    User::After( pauseTime );
+        iPauseCombRemainingTime = pauseTime - maximumTime;
+        iPauseCombTimer.After(iStatus, maximumTime * 1000);
+        }
+
+    SetActive();
+
+    __TRACE(KMessage, (_L("Executing pause, time=[%d]"), pauseTime));
+    
+    iState = ERunnerRunning;
     
     return continueTask;
 }

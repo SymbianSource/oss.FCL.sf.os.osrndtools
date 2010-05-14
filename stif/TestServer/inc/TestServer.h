@@ -703,7 +703,64 @@ class CTestServer
 
     };
 
+// DESCRIPTION
+// CTestCasesList is a class, which contains list of test cases assosiated with
+// specified config file.
+NONSHARABLE_CLASS( CTestCasesList ): public CBase
+    {
+public:
+    /**
+    * NewL is first phase of two-phased constructor.
+    */
+    static CTestCasesList* NewL( const TDesC& aConfigFileName );
+public:
+    /**
+    * Destructor of CTestServer.
+    */
+    ~CTestCasesList();
 
+    /**
+     * Appends test case.
+     */
+    void AppendTestCaseL( const TDesC& aTestCaseTitle );
+    
+    /**
+     * Returns specified test case title.
+     */
+    const TDesC& GetTestCaseTitleL( TInt aIndex ) const;
+    
+    /**
+     * Returns config file name.
+     */
+    const TDesC& GetConfigFileName() const;
+    
+    /**
+     * Returns count of test cases.
+     */
+    TInt Count() const;
+    
+    /**
+     * Resets list of test cases.
+     */
+    void ResetAndDestroy();
+private:
+    /** 
+    * C++ default constructor.
+    */
+    CTestCasesList();
+    
+    /**
+    * By default Symbian OS constructor is private.
+    */
+    void ConstructL( const TDesC& aConfigFileName );
+private:
+    // Config file name
+    HBufC* iConfigFileName;
+    // List of test cases
+    RPointerArray<HBufC> iTestCases;
+    };
+
+        
 // DESCRIPTION
 // CTestModule is a session class.
 // Session for the CTestServer server, to a single client-side session
@@ -844,7 +901,7 @@ class CTestModule
         /**
         * Get title of currently running test case
         */ 
-        void GetTestCaseTitleL(TInt aTestCaseNumber, TDes& aTestCaseTitle);
+        void GetTestCaseTitleL(TInt aTestCaseNumber, const TDesC& aConfigFile, TDes& aTestCaseTitle);
 
         /**
          * Get pointer to test server
@@ -901,7 +958,7 @@ class CTestModule
 
         TBool iErrorMessageAvailable;            // Error message available?
         
-        RPointerArray<TDesC> iTestCaseTitles;    //Test case titles
+        RPointerArray<CTestCasesList> iTestCaseTitlesMap;    //Test case titles
         
     public:     // Friend classes
         // None

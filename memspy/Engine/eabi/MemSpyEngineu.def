@@ -536,4 +536,8 @@ EXPORTS
 	_ZTI49CMemSpyEngineHelperSysMemTrackerEntryWindowServer @ 535 NONAME ; #<TI>#
 	_ZTV49CMemSpyEngineHelperSysMemTrackerEntryWindowServer @ 536 NONAME ; #<VT>#
 	_ZN13CMemSpyEngine29IsHelperWindowServerSupportedEv @ 537 NONAME
+	_ZN23CMemSpyEngineHelperHeap14NewHeapRawInfoERK15TMemSpyHeapInfo @ 538 NONAME
+	_ZNK36CMemSpyEngineGenericKernelObjectList10ItemsCountEv @ 539 NONAME
+	_ZNK36CMemSpyEngineGenericKernelObjectList4SizeEv @ 540 NONAME
+	_ZNK13CMemSpyThread8PriorityEv @ 541 NONAME
 

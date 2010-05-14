@@ -92,7 +92,7 @@ public: // From RHeap
 	TInt iMinCell;
 	TInt iPageSize;
 #ifdef __SYMBIAN_KERNEL_HYBRID_HEAP__
-	struct SCell { TInt len; SCell* next };
+	struct SCell { TInt len; SCell* next; };
     SCell iFree;
 #else
     RHeap::SCell iFree;

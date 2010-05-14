@@ -655,6 +655,10 @@ NONSHARABLE_CLASS(CTestRunner)
         RTimer                      iPauseTimer;
         TName                       iPausedTestCase;
         TInt                        iPauseTime;
+        
+        // Pause combiner timer
+        RTimer                      iPauseCombTimer;
+        TInt                        iPauseCombRemainingTime;
 
         // Temporary line buffer 
         HBufC*                      iLine;

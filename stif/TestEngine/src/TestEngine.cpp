@@ -411,6 +411,8 @@ CTestEngineServer::CTestEngineServer() :
 */
 void CTestEngineServer::ConstructL()
     {
+    // Create report setting
+    iTestReportSettings = CTestReportSettings::NewL();
     // Create container
     iContainerIndex = CObjectConIx::NewL();
 
@@ -505,6 +507,8 @@ CTestEngineServer::~CTestEngineServer()
     __TRACE(KAlways, ( _L( "---------------- Log Ended ----------------" ) ) );
     delete iLogger;
 
+    delete iTestReportSettings;
+    iTestReportSettings = NULL;
     }
 
 /*
@@ -881,6 +885,7 @@ void CTestEngine::CloseSession()
         iTestCases = NULL;
         }
     
+    iTestCaseArray.Close();    
     delete iTestEngineSubSessions;
     iTestEngineSubSessions = NULL;
 
@@ -1234,14 +1239,18 @@ void CTestEngine::DispatchMessageL( const RMessage2& aMessage )
 void CTestEngine::InitTestReportAndLoggerVarL()
     {
     // Test report settings initialization
-    iTestEngineServer->iTestReportSettings.iCreateTestReport = ETrue;
+    iTestEngineServer->iTestReportSettings->iCreateTestReport = ETrue;
     _LIT( path, "C:\\LOGS\\TestFramework\\");
     _LIT( name, "TestReport");
-    iTestEngineServer->iTestReportSettings.iPath = path().AllocL();
-    iTestEngineServer->iTestReportSettings.iName = name().AllocL();
-    iTestEngineServer->iTestReportSettings.iFormat = CStifLogger::ETxt;
-    iTestEngineServer->iTestReportSettings.iOutput = CStifLogger::EFile;
-    iTestEngineServer->iTestReportSettings.iOverwrite = ETrue;
+    delete iTestEngineServer->iTestReportSettings->iPath;
+    iTestEngineServer->iTestReportSettings->iPath = NULL;
+    iTestEngineServer->iTestReportSettings->iPath = path().AllocL();
+    delete iTestEngineServer->iTestReportSettings->iName;
+    iTestEngineServer->iTestReportSettings->iName = NULL;
+    iTestEngineServer->iTestReportSettings->iName = name().AllocL();
+    iTestEngineServer->iTestReportSettings->iFormat = CStifLogger::ETxt;
+    iTestEngineServer->iTestReportSettings->iOutput = CStifLogger::EFile;
+    iTestEngineServer->iTestReportSettings->iOverwrite = ETrue;
 
     // Initializations to indicator is setting in use
     iTestEngineServer->iLoggerSettings.iIsDefined.iCreateLogDir = EFalse;
@@ -1370,10 +1379,10 @@ void CTestEngine::InitEngineL( const RMessage2& aMessage )
     Logger()->WriteDelimiter();
     
     // Create Test Reporter if allowed
-    if ( iTestEngineServer->iTestReportSettings.iCreateTestReport )
+    if ( iTestEngineServer->iTestReportSettings->iCreateTestReport )
         {
         TRAPD(err, iTestReport = 
-            CTestReport::NewL( iTestEngineServer->iTestReportSettings, 
+            CTestReport::NewL( *(iTestEngineServer->iTestReportSettings), 
                                ( CTestReport::TTestReportMode ) iReportMode ));
         if(err!=KErrNone)
             {
@@ -1476,7 +1485,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
         if ( get_ret == KErrNone )
             {
             __TRACE( KInit,( _L( "Test report creation indicator: %d"), createTestReport ) );
-            iTestEngineServer->iTestReportSettings.iCreateTestReport = createTestReport;
+            iTestEngineServer->iTestReportSettings->iCreateTestReport = createTestReport;
             }
         else
             {
@@ -1484,7 +1493,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             }
 
         // Get Test report path settings
-        if ( iTestEngineServer->iTestReportSettings.iCreateTestReport )
+        if ( iTestEngineServer->iTestReportSettings->iCreateTestReport )
             {
             __TRACE( KInit,( _L( "Parsing Test report path" ) ) );
             TPtrC path;
@@ -1494,9 +1503,9 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
                 {
                 __TRACE( KInit,( _L( "Test report path: %S"), &path ) );
                 // Delete old one before setting new one
-                delete iTestEngineServer->iTestReportSettings.iPath;
-				iTestEngineServer->iTestReportSettings.iPath = NULL;
-                iTestEngineServer->iTestReportSettings.iPath = path.AllocL();
+                delete iTestEngineServer->iTestReportSettings->iPath;
+				iTestEngineServer->iTestReportSettings->iPath = NULL;
+                iTestEngineServer->iTestReportSettings->iPath = path.AllocL();
                 }
             else
                 {
@@ -1505,7 +1514,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             }
 
         // Get Test report name settings
-        if ( iTestEngineServer->iTestReportSettings.iCreateTestReport )
+        if ( iTestEngineServer->iTestReportSettings->iCreateTestReport )
             {
             __TRACE( KInit,( _L( "Parsing Test report filename" ) ) );
             TPtrC name;
@@ -1515,9 +1524,9 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
                 {
                 __TRACE( KInit,( _L( "Test report filename: %S"), &name ) );
                 // Delete old one before setting new one
-                delete iTestEngineServer->iTestReportSettings.iName;
-				iTestEngineServer->iTestReportSettings.iName = NULL;
-                iTestEngineServer->iTestReportSettings.iName = name.AllocL();
+                delete iTestEngineServer->iTestReportSettings->iName;
+				iTestEngineServer->iTestReportSettings->iName = NULL;
+                iTestEngineServer->iTestReportSettings->iName = name.AllocL();
                 }
             else
                 {
@@ -1526,7 +1535,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             }
 
         // Get Test report format settings
-        if ( iTestEngineServer->iTestReportSettings.iCreateTestReport )
+        if ( iTestEngineServer->iTestReportSettings->iCreateTestReport )
             {
             __TRACE( KInit,( _L( "Parsing Test report format" ) ) );
             CStifLogger::TLoggerType type;
@@ -1536,8 +1545,8 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             if ( get_ret == KErrNone )
                 {
                 __TRACE( KInit,( _L( "Test report format: %d, xml: %d"), type, xml ) );
-                iTestEngineServer->iTestReportSettings.iFormat = type;
-                iTestEngineServer->iTestReportSettings.iXML = xml;
+                iTestEngineServer->iTestReportSettings->iFormat = type;
+                iTestEngineServer->iTestReportSettings->iXML = xml;
                 }
             else
                 {
@@ -1546,7 +1555,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             }
 
         // Get Test report output settings
-        if ( iTestEngineServer->iTestReportSettings.iCreateTestReport )
+        if ( iTestEngineServer->iTestReportSettings->iCreateTestReport )
             {
             __TRACE( KInit,( _L( "Parsing Test report output" ) ) );
             CStifLogger::TOutput output;
@@ -1555,7 +1564,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             if ( get_ret == KErrNone )
                 {
                 __TRACE( KInit,( _L( "Test report output: %d"), output ) );
-                iTestEngineServer->iTestReportSettings.iOutput = output;
+                iTestEngineServer->iTestReportSettings->iOutput = output;
                 }
             else
                 {
@@ -1564,7 +1573,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             }
 
         // Get Test report file creation mode (overwrite settings)
-        if ( iTestEngineServer->iTestReportSettings.iCreateTestReport )
+        if ( iTestEngineServer->iTestReportSettings->iCreateTestReport )
             {
             __TRACE( KInit,( _L( "Parsing Test report file writing mode" ) ) );
             TBool overwrite;
@@ -1573,7 +1582,7 @@ void CTestEngine::ReadEngineDefaultsL( CStifParser* aParser,
             if ( get_ret == KErrNone )
                 {
                 __TRACE( KInit,( _L( "Test report file creation mode: %d"), overwrite ) );
-                iTestEngineServer->iTestReportSettings.iOverwrite = overwrite;
+                iTestEngineServer->iTestReportSettings->iOverwrite = overwrite;
                 }
             else
                 {
@@ -5564,6 +5573,74 @@ void CTestCase::ResetRealModuleController(CTestModuleController* aRealModuleCont
     {
     iRealModuleController = aRealModuleController;
     }
+
+/*
+-------------------------------------------------------------------------------
+
+    DESCRIPTION
+
+    Default constructor
+
+-------------------------------------------------------------------------------
+*/
+CTestReportSettings::CTestReportSettings()
+    {
+    iCreateTestReport = ETrue;
+    iPath = NULL;
+    iName = NULL;
+    iFormat = CStifLogger::ETxt;
+    iOutput = CStifLogger::EFile;
+    iOverwrite = ETrue; 
+    iXML = EFalse;
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    DESCRIPTION
+
+    Two-phased constructor.
+
+-------------------------------------------------------------------------------
+*/
+CTestReportSettings* CTestReportSettings::NewL()
+    {
+    CTestReportSettings* self = new ( ELeave ) CTestReportSettings();
+    CleanupStack::PushL( self );
+    self->ConstructL();
+    CleanupStack::Pop();
+    return self;
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    DESCRIPTION
+
+    Symbian OS second phase constructor
+
+-------------------------------------------------------------------------------
+*/
+void CTestReportSettings::ConstructL()
+    {
+    
+    }
+/*
+-------------------------------------------------------------------------------
+
+    DESCRIPTION
+
+    Destructor
+
+-------------------------------------------------------------------------------
+*/
+CTestReportSettings::~CTestReportSettings()
+    { 
+    delete iPath; 
+    iPath = NULL;
+    delete iName;
+    iName = NULL;
+    } 
 
 /*
 -------------------------------------------------------------------------------
