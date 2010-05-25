@@ -1,0 +1,27 @@
+EXPORTS
+	_ZN16RATStorageServer11StopSubTestERK6TDesC8 @ 1 NONAME
+	_ZN16RATStorageServer11StopSubTestEjRK6TDesC8i @ 2 NONAME
+	_ZN16RATStorageServer12LogDllLoadedERK6TDesC8mm @ 3 NONAME
+	_ZN16RATStorageServer12StartSubTestERK6TDesC8 @ 4 NONAME
+	_ZN16RATStorageServer12StartSubTestEjRK6TDesC8i @ 5 NONAME
+	_ZN16RATStorageServer13CancelLoggingEj @ 6 NONAME
+	_ZN16RATStorageServer13GetMaxAllocsLEjRmS0_ @ 7 NONAME
+	_ZN16RATStorageServer13GetProcessesLER6RArrayI14TATProcessInfoE @ 8 NONAME
+	_ZN16RATStorageServer13IsMemoryAddedEm @ 9 NONAME
+	_ZN16RATStorageServer14GetLoadedDllsLEjR6RArrayI5TBuf8ILi60EEE @ 10 NONAME
+	_ZN16RATStorageServer14LogDllUnloadedERK6TDesC8mm @ 11 NONAME
+	_ZN16RATStorageServer14LogMemoryFreedEmR11TFixedArrayImLi256EE @ 12 NONAME
+	_ZN16RATStorageServer15GetLoggingFileLEjR5TDes8 @ 13 NONAME
+	_ZN16RATStorageServer15GetLoggingModeLEjR12TATLogOption @ 14 NONAME
+	_ZN16RATStorageServer15LogProcessEndedEjj @ 15 NONAME
+	_ZN16RATStorageServer17GetCurrentAllocsLEjRmS0_ @ 16 NONAME
+	_ZN16RATStorageServer17LogProcessStartedERK7TDesC16RK6TDesC8jmm @ 17 NONAME
+	_ZN16RATStorageServer18LogMemoryAllocatedEmR11TFixedArrayImLi256EEi @ 18 NONAME
+	_ZN16RATStorageServer5CloseEv @ 19 NONAME
+	_ZN16RATStorageServer7ConnectEv @ 20 NONAME
+	_ZN16RATStorageServer8GetUdebLEjRm @ 21 NONAME
+	_ZN16RATStorageServerC1Ev @ 22 NONAME
+	_ZN16RATStorageServerC2Ev @ 23 NONAME
+	_ZNK16RATStorageServer18CheckMemoryAddressEm @ 24 NONAME
+	_ZNK16RATStorageServer7VersionEv @ 25 NONAME
+
