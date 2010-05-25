@@ -35,7 +35,7 @@ SOURCEPATH      ../src
 
 SOURCE      ProfilerEshell.cpp 
 
-LIBRARY     C32.LIB
-LIBRARY     EUSER.LIB 
+LIBRARY     c32.lib
+LIBRARY     euser.lib 
 LIBRARY     bafl.lib 
 LIBRARY		efsrv.lib 

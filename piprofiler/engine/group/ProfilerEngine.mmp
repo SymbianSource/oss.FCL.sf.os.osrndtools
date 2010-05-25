@@ -42,13 +42,13 @@ SOURCE      WriterPluginLoader.cpp
 SOURCE		ProfilerTimer.cpp 
 
 LIBRARY		sysutil.lib 
-LIBRARY     EFSRV.LIB
-LIBRARY     C32.LIB
-LIBRARY     EUSER.LIB 
+LIBRARY     efsrv.lib
+LIBRARY     c32.lib
+LIBRARY     euser.lib 
 LIBRARY     estor.lib 
 LIBRARY     fbscli.lib
 LIBRARY     ws32.lib
 LIBRARY     bafl.lib 
 LIBRARY     charconv.lib
 LIBRARY     ecom.lib
-LIBRARY		PlatformEnv.lib
+LIBRARY		platformenv.lib
