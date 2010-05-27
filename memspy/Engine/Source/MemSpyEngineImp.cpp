@@ -127,7 +127,7 @@ CMemSpyEngineImp::~CMemSpyEngineImp()
     }
 
 
-void CMemSpyEngineImp::ConstructL()
+void CMemSpyEngineImp::ConstructL( TBool aStartServer )
     {
 #ifdef _DEBUG
     RDebug::Printf( "CMemSpyEngineImp::ConstructL() - START" );
@@ -138,8 +138,11 @@ void CMemSpyEngineImp::ConstructL()
     // Starting the server before the driver connection is made
     // ensures that only one instance of MemSpy can run (either the S60
     // UI or the console UI ).
-    // DONE: MK: Removing server from engine. iServer = CMemSpyEngineServer::NewL( iEngine );
-    //
+    if (aStartServer)
+    	{
+		iServer = CMemSpyEngineServer::NewL( iEngine );
+    	}
+    
     iMemSpyDriver = new(ELeave) RMemSpyDriverClient();
     const TInt error = Driver().Open();
     User::LeaveIfError( error );

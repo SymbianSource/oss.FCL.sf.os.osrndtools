@@ -61,7 +61,7 @@ NONSHARABLE_CLASS( CMemSpyEngineImp ) : public CBase, public MMemSpyEngineUndert
 public:
     CMemSpyEngineImp( RFs& aFsSession, CMemSpyEngine& aEngine );
     ~CMemSpyEngineImp();
-    void ConstructL();
+    void ConstructL( TBool aStartServer );
 
 private: // Construction support
     void ConstructHelpersL();

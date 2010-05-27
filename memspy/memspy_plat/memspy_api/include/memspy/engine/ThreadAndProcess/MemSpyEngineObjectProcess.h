@@ -65,7 +65,11 @@ public: // API - query
     IMPORT_C TBool IsDead() const;
     IMPORT_C TUint32 SID() const;
     IMPORT_C TUint32 VID() const;
-
+    IMPORT_C TProcessPriority Priority() const;
+    IMPORT_C TExitCategoryName ExitCategory() const;
+    IMPORT_C TInt ExitReason() const;
+    IMPORT_C TExitType ExitType() const;
+    
 public: // API - misc
     IMPORT_C void KillL();
     IMPORT_C void TerminateL();

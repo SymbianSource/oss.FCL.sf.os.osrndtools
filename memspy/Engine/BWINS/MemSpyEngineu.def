@@ -411,4 +411,5 @@ EXPORTS
 	?NewHeapRawInfo@CMemSpyEngineHelperHeap@@QAE?AVTMemSpyHeapData@@ABVTMemSpyHeapInfo@@@Z @ 410 NONAME ; class TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo(class TMemSpyHeapInfo const &)
 	?ItemsCount@CMemSpyEngineGenericKernelObjectList@@QBEHXZ @ 411 NONAME ; int CMemSpyEngineGenericKernelObjectList::ItemsCount(void) const
 	?Priority@CMemSpyThread@@QBE?AW4TThreadPriority@@XZ @ 412 NONAME ; enum TThreadPriority CMemSpyThread::Priority(void) const
+	?NewL@CMemSpyEngine@@SAPAV1@AAVRFs@@H@Z @ 413 NONAME ; class CMemSpyEngine * CMemSpyEngine::NewL(class RFs &, int)
 

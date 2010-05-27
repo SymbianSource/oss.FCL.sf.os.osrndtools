@@ -23,7 +23,7 @@ EXPORTS
 	_ZN14CMemSpyApiHeap9TotalFreeEv @ 22 NONAME
 	_ZN14CMemSpyApiHeapD1Ev @ 23 NONAME
 	_ZN14CMemSpyApiHeapD2Ev @ 24 NONAME
-	_ZN14RMemSpySession10EndProcessE10TProcessId8TEndType @ 25 NONAME
+	_ZN14RMemSpySession10EndProcessE10TProcessId14TMemSpyEndType @ 25 NONAME
 	_ZN14RMemSpySession11GetThreadsLE10TProcessIdR6RArrayIP16CMemSpyApiThreadE9TSortType @ 26 NONAME
 	_ZN14RMemSpySession13GetProcessesLER6RArrayIP17CMemSpyApiProcessE9TSortType @ 27 NONAME
 	_ZN14RMemSpySession14SwitchToThreadE9TThreadIdi @ 28 NONAME
@@ -34,7 +34,7 @@ EXPORTS
 	_ZN14RMemSpySession32ProcessSystemPermanentOrCriticalE10TProcessIdi @ 33 NONAME
 	_ZN14RMemSpySession7ConnectEv @ 34 NONAME
 	_ZN14RMemSpySession7GetHeapEv @ 35 NONAME
-	_ZN14RMemSpySession9EndThreadE9TThreadId8TEndType @ 36 NONAME
+	_ZN14RMemSpySession9EndThreadE9TThreadId14TMemSpyEndType @ 36 NONAME
 	_ZN14RMemSpySessionC1Ev @ 37 NONAME
 	_ZN14RMemSpySessionC2Ev @ 38 NONAME
 	_ZN16CMemSpyApiThreadD1Ev @ 39 NONAME
@@ -117,4 +117,22 @@ EXPORTS
 	_ZNK26CMemSpyApiKernelObjectItem9UnitsMaskEv @ 116 NONAME
 	_ZNK26CMemSpyApiKernelObjectItem9WaitCountEv @ 117 NONAME
 	_ZN14RMemSpySession18SetThreadPriorityLE9TThreadIdi @ 118 NONAME
+	_ZN14RMemSpySession19GetProcessIdByNameLERK7TDesC16 @ 119 NONAME
+	_ZN14RMemSpySession20OutputKernelObjectsLE17TMemSpyOutputType @ 120 NONAME
+	_ZN14RMemSpySession21OutputKernelHeapDataLE17TMemSpyOutputType @ 121 NONAME
+	_ZN14RMemSpySession21OutputThreadCellListLE17TMemSpyOutputType9TThreadId @ 122 NONAME
+	_ZN14RMemSpySession21OutputThreadHeapDataLE17TMemSpyOutputType9TThreadId @ 123 NONAME
+	_ZN14RMemSpySession22OutputCompactHeapInfoLE17TMemSpyOutputType @ 124 NONAME
+	_ZN14RMemSpySession23OutputCompactStackInfoLE17TMemSpyOutputType @ 125 NONAME
+	_ZN14RMemSpySession14DumpKernelHeapEv @ 126 NONAME
+	_ZN14RMemSpySession15GetInfoItemTypeEi9TThreadIdR25TMemSpyThreadInfoItemType @ 127 NONAME
+	_ZN14RMemSpySession18GetThreadInfoItemsER6RArrayIP24CMemSpyApiThreadInfoItemE9TThreadId25TMemSpyThreadInfoItemType @ 128 NONAME
+	_ZN14RMemSpySession26OutputAllContainerContentsEv @ 129 NONAME
+	_ZN24CMemSpyApiThreadInfoItemD1Ev @ 130 NONAME
+	_ZN24CMemSpyApiThreadInfoItemD2Ev @ 131 NONAME
+	_ZNK17CMemSpyApiProcess3SIDEv @ 132 NONAME
+	_ZNK17CMemSpyApiProcess3VIDEv @ 133 NONAME
+	_ZNK17CMemSpyApiProcess8PriorityEv @ 134 NONAME
+	_ZNK24CMemSpyApiThreadInfoItem5ValueEv @ 135 NONAME
+	_ZNK24CMemSpyApiThreadInfoItem7CaptionEv @ 136 NONAME
 

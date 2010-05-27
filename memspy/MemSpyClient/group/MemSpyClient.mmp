@@ -31,7 +31,9 @@ SOURCE 		memspysession.cpp
 SOURCE 		memspyapiprocess.cpp 
 SOURCE 		memspyapikernelobject.cpp 
 SOURCE		memspyapiheap.cpp 
-SOURCE 		memspyapikernelobjectitem.cpp memspyapithread.cpp
+SOURCE 		memspyapikernelobjectitem.cpp 
+SOURCE		memspyapithread.cpp 
+SOURCE		memspyapithreadinfoitem.cpp
 
 USERINCLUDE ../inc
 
@@ -50,4 +52,4 @@ LIBRARY 		PlatformEnv.lib
 
 LIBRARY         MemSpyEngine.lib
 
-//EXPORTUNFROZEN
+EXPORTUNFROZEN

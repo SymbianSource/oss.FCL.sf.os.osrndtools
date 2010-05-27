@@ -26,6 +26,7 @@
 
 // Engine includes
 #include <memspy/engine/memspyengine.h>
+#include <memspysession.h>
 
 // User includes
 #include "ConsoleMenu.h"
@@ -54,11 +55,12 @@ static void DoMainL()
 	CleanupStack::PushL( console );
 
     // Engine
-    CMemSpyEngine* engine = CMemSpyEngine::NewL( fsSession );
-    CleanupStack::PushL( engine );
+    RMemSpySession session;
+    User::LeaveIfError(session.Connect());
+    CleanupClosePushL(session);
 
     // Menu & event handler AO
-    CMemSpyConsoleMenu::NewLC( *engine, *console );
+    CMemSpyConsoleMenu::NewLC( session, *console );
 
     // Play nicely with external processes
     RProcess::Rendezvous( KErrNone );

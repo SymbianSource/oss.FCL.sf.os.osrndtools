@@ -21,15 +21,17 @@
 
 TARGETTYPE EXE
 TARGET MemSpyServer.exe
-EPOCSTACKSIZE 0x4000
-EPOCHEAPSIZE 0x100000 0x4000000
 UID 0 0x2002EA8D
 SECUREID     0xE5883BC2
 VENDORID	 0x101FB657 // Nokia
 
+EPOCSTACKSIZE 0x4000
+EPOCHEAPSIZE 0x100000 0x4000000
+
+
 SOURCEPATH ../Source
-SOURCE 		MemSpyServer.cpp 
-SOURCE		MemSpyServerSession.cpp 
+//SOURCE 		MemSpyServer.cpp 
+//SOURCE		MemSpyServerSession.cpp 
 SOURCE		MemSpyServerMain.cpp 
 
 USERINCLUDE ../Include
@@ -37,6 +39,8 @@ USERINCLUDE ../Include
 CAPABILITY ReadUserData WriteUserData ReadDeviceData WriteDeviceData
 
 OS_LAYER_SYSTEMINCLUDE
+
+APP_LAYER_SYSTEMINCLUDE
 
 LIBRARY         MemSpyDriverClient.lib
 LIBRARY         MemSpyEngine.lib
@@ -52,5 +56,5 @@ LIBRARY			eikcore.lib
 LIBRARY			fbscli.lib 
 LIBRARY 		PlatformEnv.lib
 LIBRARY 		flogger.lib
-LIBRARY			apgrfx.lib	
-LIBRARY			apparc.lib	
+LIBRARY			apgrfx.lib
+

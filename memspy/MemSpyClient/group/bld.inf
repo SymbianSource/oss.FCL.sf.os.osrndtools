@@ -23,12 +23,15 @@ PRJ_EXPORTS
 ../inc/memspyprocessdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspyprocessdata.h)
 ../inc/memspykernelobjectdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspykernelobjectdata.h)
 ../inc/memspyheapdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspyheapdata.h)
+../inc/memspythreaddata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspythreaddata.h)
+../inc/memspythreadinfoitemdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspythreadinfoitemdata.h)
+
 ../inc/memspyapiprocess.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiprocess.h)
 ../inc/memspyapikernelobject.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapikernelobject.h)
 ../inc/memspyapikernelobjectitem.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapikernelobjectitem.h)
 ../inc/memspyapiheap.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiheap.h)
-../inc/memspythreaddata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspythreaddata.h)
 ../inc/memspyapithread.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapithread.h)
+../inc/memspyapithreadinfoitem.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapithreadinfoitem.h)
 
 PRJ_MMPFILES
 MemSpyClient.mmp

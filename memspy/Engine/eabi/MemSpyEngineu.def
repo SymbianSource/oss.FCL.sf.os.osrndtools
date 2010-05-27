@@ -540,4 +540,11 @@ EXPORTS
 	_ZNK36CMemSpyEngineGenericKernelObjectList10ItemsCountEv @ 539 NONAME
 	_ZNK36CMemSpyEngineGenericKernelObjectList4SizeEv @ 540 NONAME
 	_ZNK13CMemSpyThread8PriorityEv @ 541 NONAME
+	_ZN13CMemSpyEngine4NewLER3RFsi @ 542 NONAME
+	_ZNK14CMemSpyProcess10ExitReasonEv @ 543 NONAME
+	_ZNK14CMemSpyProcess12ExitCategoryEv @ 544 NONAME
+	_ZNK14CMemSpyProcess8ExitTypeEv @ 545 NONAME
+	_ZNK14CMemSpyProcess8PriorityEv @ 546 NONAME
+	_ZNK25CMemSpyThreadInfoItemBase5ValueEi @ 547 NONAME
+	_ZNK25CMemSpyThreadInfoItemBase7CaptionEi @ 548 NONAME
 

@@ -46,6 +46,8 @@ private: // From CSession2
 
 private: // Internal methods
     void DoServiceL( const RMessage2& aMessage );
+    void DoUiServiceL( const RMessage2& aMessage );
+    void DoCmdServiceL( const RMessage2& aMessage );
     static TInt ValidateFunction( TInt aFunction, TBool aIncludesThreadId, TBool aIncludesThreadName );
     void HandleThreadSpecificOpL( TInt aFunction, const TThreadId& aThreadId );
     void HandleThreadSpecificOpL( TInt aFunction, const TDesC& aThreadName );

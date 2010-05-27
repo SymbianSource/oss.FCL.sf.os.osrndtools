@@ -26,22 +26,22 @@
 // Engine includes
 #include <memspy/engine/memspyengine.h>
 #include <memspy/engine/memspyengineobserver.h>
-
+#include <memspysession.h>
 // User includes
 #include "ConsoleConstants.h"
 
 // Classes referenced
 class CConsoleBase;
-
+class RMemSpySession;
 
 class CMemSpyConsoleMenu : public CActive, public MMemSpyEngineObserver
     {
 public:
-    static CMemSpyConsoleMenu* NewLC( CMemSpyEngine& aEngine, CConsoleBase& aConsole );
+    static CMemSpyConsoleMenu* NewLC( RMemSpySession& aSession, CConsoleBase& aConsole );
     ~CMemSpyConsoleMenu();
 
 private:
-    CMemSpyConsoleMenu( CMemSpyEngine& aEngine, CConsoleBase& aConsole );
+    CMemSpyConsoleMenu( RMemSpySession& aEngine, CConsoleBase& aConsole );
     void ConstructL();
 
 public: // API
@@ -74,8 +74,10 @@ private: // Internal methods
     void InitiateMemSpyClientServerOperationL( TInt aOpCode );
 
 private: // Data members
-    CMemSpyEngine& iEngine;
+    RMemSpySession& iSession;
     CConsoleBase& iConsole;
+    
+    TMemSpyOutputType iOutputType;
     //
     TBuf<KMemSpyMaxInputBufferLength> iCommandBuffer;
     TPoint iCommandPromptPos;

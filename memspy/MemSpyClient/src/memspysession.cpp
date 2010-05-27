@@ -17,9 +17,12 @@
 
 
 #include "memspysession.h"
+#include <memspyengineclientinterface.h>
+
 #include <memspy/api/memspyapiprocess.h>
 #include <memspy/api/memspyapikernelobject.h>
 #include <memspy/api/memspyapikernelobjectitem.h>
+#include <memspy/api/memspyapithreadinfoitem.h>
 //KernelObjects
 #include <memspy/driver/memspydriverenumerationsshared.h>
 // IMPLEMENTATION
@@ -35,7 +38,7 @@ EXPORT_C TInt RMemSpySession::Connect()
 	
 	for (TInt i=0; i<2; i++) // Two retries max
 		{
-		TInt error = CreateSession(KMemSpyServer2, TVersion(KMemSpyVersion, 0, 0));
+		TInt error = CreateSession(KMemSpyServerName, TVersion(KMemSpyVersion, 0, 0));
 		
 		if (error != KErrNotFound && error != KErrServerTerminated)
 			return error;
@@ -54,7 +57,7 @@ TInt RMemSpySession::StartServer()
 	RProcess server;
 	_LIT(KCommand, "start");
 	const TUid KServerUid3 = {0xE5883BC2};
-	TInt error = server.Create(KMemSpyServer2, KCommand);//, KServerUid3);
+	TInt error = server.Create(KMemSpyServerName, KCommand);//, KServerUid3);
 	
 	if (error != KErrNone)
 		return error;
@@ -176,13 +179,13 @@ TInt RMemSpySession::StartServer()
 EXPORT_C void RMemSpySession::GetProcessesL(RArray<CMemSpyApiProcess*> &aProcesses, TSortType aSortType)
 	{
 	TPckgBuf<TInt> count;
-	User::LeaveIfError(SendReceive(EGetProcessCount, TIpcArgs(&count)));
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetProcessCount, TIpcArgs(&count)));
 	
 	TInt requestedCount = count();
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyProcessData));
 	TPtr8 bufferPtr(buffer->Des());
 	
-	User::LeaveIfError(SendReceive(EGetProcesses, TIpcArgs(&count, &bufferPtr)));
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetProcesses, TIpcArgs(&count, &bufferPtr)));
 	aProcesses.Reset();
 	
 	TInt receivedCount = Min(count(), requestedCount);
@@ -196,24 +199,33 @@ EXPORT_C void RMemSpySession::GetProcessesL(RArray<CMemSpyApiProcess*> &aProcess
 	CleanupStack::PopAndDestroy(buffer);
 	}
 
+EXPORT_C TProcessId RMemSpySession::GetProcessIdByNameL(const TDesC& aProcessName)
+	{
+	TPckgBuf<TProcessId> procId;
+	User::LeaveIfError(SendReceive(EMemSpyClienServerOpGetProcessIdByName, 
+			TIpcArgs(&aProcessName, &procId)));
+	
+	return procId();
+	}
+
 EXPORT_C TInt RMemSpySession::ProcessSystemPermanentOrCritical( TProcessId aId, TBool aValue )
 	{
 	TPckgBuf<TProcessId> arg1( aId );
 	TPckgBuf<TBool> arg2( aValue );
 	TIpcArgs args( &arg1, &arg2 );
 		
-	TInt error = SendReceive( EProcessSystemPermanentOrCritical, args );
+	TInt error = SendReceive( EMemSpyClientServerOpProcessSystemPermanentOrCritical, args );
 	
 	return error;
 	}
 
-EXPORT_C TInt RMemSpySession::EndProcess( TProcessId aId, TEndType aType )
+EXPORT_C TInt RMemSpySession::EndProcess( TProcessId aId, TMemSpyEndType aType )
 	{
 	TPckgBuf<TProcessId> arg1( aId );
-	TPckgBuf<TEndType> arg2( aType );
+	TPckgBuf<TMemSpyEndType> arg2( aType );
 	TIpcArgs args( &arg1, &arg2 );
 	
-	TInt error = SendReceive( EEndProcess, args );
+	TInt error = SendReceive( EMemSpyClientServerOpEndProcess, args );
 	
 	return error;
 	}
@@ -224,7 +236,7 @@ EXPORT_C TInt RMemSpySession::SwitchToProcess( TProcessId aId, TBool aBrought )
 	TPckgBuf<TBool> arg2( aBrought );
 	TIpcArgs args( &arg1, &arg2 );
 	
-	TInt error = SendReceive( ESwitchToProcess, args );
+	TInt error = SendReceive( EMemSpyClientServerOpSwitchToProcess, args );
 	
 	return error;	
 	}
@@ -233,13 +245,13 @@ EXPORT_C void RMemSpySession::GetThreadsL(TProcessId aProcessId, RArray<CMemSpyA
 	{
 	TPckgBuf<TInt> count;
 	TPckgBuf<TProcessId> pid(aProcessId);
-	User::LeaveIfError(SendReceive(EGetThreadCount, TIpcArgs(&count, &pid)));
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetThreadCount, TIpcArgs(&count, &pid)));
 	
 	TInt requestedCount = count();
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyThreadData));
 	TPtr8 bufferPtr(buffer->Des());
 	
-	User::LeaveIfError(SendReceive(EGetThreads, TIpcArgs(&count, &bufferPtr, &pid)));
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetThreads, TIpcArgs(&count, &bufferPtr, &pid)));
 	aThreads.Reset();
 	
 	TInt receivedCount = Min(count(), requestedCount);
@@ -258,7 +270,7 @@ EXPORT_C void RMemSpySession::SetThreadPriorityL(TThreadId aId, TInt aPriority)
 	TPckgBuf<TThreadId> arg1( aId );
 	TPckgBuf<TInt> arg2( aPriority );
 	
-	User::LeaveIfError(SendReceive( ESetThreadPriority, TIpcArgs(&arg1, &arg2)));
+	User::LeaveIfError(SendReceive( EMemSpyClientServerOpSetThreadPriority, TIpcArgs(&arg1, &arg2)));
 	}
 
 EXPORT_C TInt RMemSpySession::ThreadSystemPermanentOrCritical( TThreadId aId, TBool aValue )
@@ -267,58 +279,89 @@ EXPORT_C TInt RMemSpySession::ThreadSystemPermanentOrCritical( TThreadId aId, TB
 	TPckgBuf<TBool> arg2( aValue );
 	TIpcArgs args( &arg1, &arg2 );
 	
-	TInt error = SendReceive( EThreadSystemPermanentOrCritical, args );
+	TInt error = SendReceive( EMemSpyClientServerOpThreadSystemPermanentOrCritical, args );
 	
 	return error;
 	}
 
-EXPORT_C TInt RMemSpySession::EndThread( TThreadId aId, TEndType aType )
+EXPORT_C TInt RMemSpySession::EndThread( TThreadId aId, TMemSpyEndType aType )
 	{
 	TPckgBuf<TThreadId> arg1( aId );
-	TPckgBuf<TEndType> arg2( aType );
+	TPckgBuf<TMemSpyEndType> arg2( aType );
 	TIpcArgs args( &arg1, &arg2 );
 	
-	TInt error = SendReceive( EEndThread, args );
+	TInt error = SendReceive( EMemSpyClientServerOpEndThread, args );
 	
 	return error;
 	}
 
 EXPORT_C TInt RMemSpySession::SwitchToThread( TThreadId aId, TBool aBrought )
 	{
+	TPckgBuf<TThreadId> arg1( aId );
+	TPckgBuf<TBool> arg2( aBrought );
+	TIpcArgs args( &arg1, &arg2 );
 	
+	TInt error = SendReceive( EMemSpyClientServerOpSwitchToThread, args );
+	
+	return error;	
 	}
-/*
-EXPORT_C TInt RMemSpySession::TerminateThread( TThreadId aId )
+
+EXPORT_C TInt RMemSpySession::GetInfoItemType( TInt aIndex, TThreadId aId, TMemSpyThreadInfoItemType &aType )
 	{
-	TPckgBuf<TThreadId> arg( aId );
-	TIpcArgs args( &arg );
+	TPckgBuf<TInt> arg1( aIndex );
+	TPckgBuf<TThreadId> arg2( aId );
+	TPckgBuf<TMemSpyThreadInfoItemType> arg3;
+	TIpcArgs args( &arg1, &arg2, &arg3 );
+		
+	TInt error = SendReceive( EMemSpyClientServerOpGetInfoItemType, args );
 	
-	TInt error = SendReceive( ETerminateThread, args );
+	aType = arg3();
 	
 	return error;
 	}
-*/
 
-//inline void RMemSpySession::SortProcessesBy( TSortType aType )
-//	{
-//	TPckgBuf<TSortType> In( aType );
-//	TIpcArgs args( &In );
-//	SendReceive( ESortProcessesBy, args );
-//	}
-
-//inline void RMemSpySession::OpenCloseCurrentProcess( TProcessId aId, TBool  aOpen )
-//	{
-//	TPckgBuf<TProcessId> In1( aId );
-//	TPckgBuf<TBool> In2( aOpen );
-//	TIpcArgs args( &In1, &In2 );
-//	SendReceive( EOpenCloseCurrentProcess, args );
-//	}
+EXPORT_C void RMemSpySession::GetThreadInfoItems( RArray<CMemSpyApiThreadInfoItem*> &aInfoItems, TThreadId aId, TMemSpyThreadInfoItemType aType )
+	{
+	TPckgBuf<TThreadId> id( aId );	
+	TPckgBuf<TMemSpyThreadInfoItemType> type( aType );
+	TPckgBuf<TInt> count;	
+	
+	TInt error = SendReceive( EMemSpyClientServerOpGetThreadInfoItemsCount, TIpcArgs( &id, &type, &count ) );
+	TInt itemCount = count();
+	
+	if( error == KErrNone )
+		{		
+		if( itemCount == 0 )
+			{
+			aInfoItems.Reset();
+			}
+		else
+			{
+			HBufC8* buffer = HBufC8::NewLC( itemCount * sizeof(TMemSpyThreadInfoItemData) );
+			TPtr8 bufferPtr(buffer->Des());
+			
+			TPckgBuf<TInt> requestedCount( itemCount );
+			
+			TIpcArgs args( &requestedCount, &id, &type, &bufferPtr );
+			TInt error = SendReceive( EMemSpyClientServerOpGetThreadInfoItems, args );
+		
+			for(TInt i=0, offset = 0; i < itemCount; i++, offset+=sizeof(TMemSpyThreadInfoItemData))
+				{
+				TPckgBuf<TMemSpyThreadInfoItemData> data;
+				data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyThreadInfoItemData));
+				aInfoItems.AppendL(CMemSpyApiThreadInfoItem::NewL(data()));
+				}
+						
+			CleanupStack::PopAndDestroy(buffer);
+			}
+		}		
+	}
 
 //Kernel Objects specific operations
 EXPORT_C TInt RMemSpySession::GetKernelObjects( RArray<CMemSpyApiKernelObject*> &aKernelObjects )
 	{		
 	TPckgBuf<TInt> count;
-	TInt error = SendReceive( EGetKernelObjectTypeCount, TIpcArgs(&count) );
+	TInt error = SendReceive( EMemSpyClientServerOpGetKernelObjectCount, TIpcArgs(&count) );
 	
 	if( error == KErrNone )
 		{			
@@ -328,7 +371,7 @@ EXPORT_C TInt RMemSpySession::GetKernelObjects( RArray<CMemSpyApiKernelObject*> 
 			
 		TPckgBuf<TInt> count(requestedCount);
 		TIpcArgs args( &count, &bufferPtr );
-		TInt error = SendReceive( EGetKernelObjects, args );
+		TInt error = SendReceive( EMemSpyClientServerOpGetKernelObjects, args );
 			
 		for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyKernelObjectData))
 			{
@@ -346,7 +389,7 @@ EXPORT_C TInt RMemSpySession::GetKernelObjectItems( RArray<CMemSpyApiKernelObjec
 	{
 	TPckgBuf<TInt> count;
 	TPckgBuf<TMemSpyDriverContainerType> type(aForContainer);
-	TInt error = SendReceive( EGetKernelObjectItemsCount, TIpcArgs(&count, &type) );
+	TInt error = SendReceive( EMemSpyClientServerOpGetKernelObjectItemCount, TIpcArgs(&count, &type) );
 		
 	if (error == KErrNone)
 		{
@@ -356,7 +399,7 @@ EXPORT_C TInt RMemSpySession::GetKernelObjectItems( RArray<CMemSpyApiKernelObjec
 		
 		TPckgBuf<TInt> count(requestedCount);
 		TIpcArgs args( &count, &type, &bufferPtr );
-		TInt error = SendReceive( EGetKernelObjectItems, args );
+		TInt error = SendReceive( EMemSpyClientServerOpGetKernelObjectItems, args );
 		
 		for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyDriverHandleInfoGeneric))
 			{
@@ -370,6 +413,12 @@ EXPORT_C TInt RMemSpySession::GetKernelObjectItems( RArray<CMemSpyApiKernelObjec
 	return KErrNone;
 	}
 
+EXPORT_C void RMemSpySession::OutputAllContainerContents()
+	{
+	SendReceive( EMemSpyClientServerOpOutputAllContainerContents );
+	}
+
+
 //Heap specific operations
 EXPORT_C CMemSpyApiHeap* RMemSpySession::GetHeap()
 	{
@@ -380,7 +429,7 @@ EXPORT_C CMemSpyApiHeap* RMemSpySession::GetHeap()
 	TPtr8 bufferPtr(buffer->Des());
 	TIpcArgs args( &bufferPtr );
 	
-	error = SendReceive( EGetHeap, args );
+	error = SendReceive( EMemSpyClientServerOpGetHeap, args );
 	
 	if( error == KErrNone )
 		{
@@ -391,4 +440,62 @@ EXPORT_C CMemSpyApiHeap* RMemSpySession::GetHeap()
 	CleanupStack::PopAndDestroy(buffer);
 		
 	return aHeap;
+	}
+
+EXPORT_C void RMemSpySession::DumpKernelHeap()
+	{
+	SendReceive( EMemSpyClientServerOpDumpKernelHeap );
+	}
+
+EXPORT_C void RMemSpySession::OutputKernelHeapDataL(TMemSpyOutputType aOutputType)
+	{
+	SetOutputTypeL(aOutputType);
+	
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpHeapData | KMemSpyOpFlagsIncludesThreadId,
+			TIpcArgs(KMemSpyClientServerThreadIdKernel)));
+	
+	}
+EXPORT_C void RMemSpySession::OutputThreadHeapDataL(TMemSpyOutputType aOutputType, TThreadId aThreadId)
+	{
+	SetOutputTypeL(aOutputType);
+		
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpHeapData | KMemSpyOpFlagsIncludesThreadId,
+			TIpcArgs(aThreadId)));
+	}
+EXPORT_C void RMemSpySession::OutputThreadCellListL(TMemSpyOutputType aOutputType, TThreadId aThreadId)
+	{
+	SetOutputTypeL(aOutputType);
+			
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpHeapCellListing | KMemSpyOpFlagsIncludesThreadId,
+			TIpcArgs(aThreadId)));
+	}
+
+EXPORT_C void RMemSpySession::OutputKernelObjectsL(TMemSpyOutputType aOutputType)
+	{
+	SetOutputTypeL(aOutputType);
+				
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpEnumerateKernelContainerAll));
+	}
+
+EXPORT_C void RMemSpySession::OutputCompactStackInfoL(TMemSpyOutputType aOutputType)
+	{
+	SetOutputTypeL(aOutputType);
+					
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpStackInfoCompact)); 
+	}
+
+EXPORT_C void RMemSpySession::OutputCompactHeapInfoL(TMemSpyOutputType aOutputType)
+	{
+	SetOutputTypeL(aOutputType);
+						
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpHeapInfoCompact)); 
+	}
+
+void RMemSpySession::SetOutputTypeL(TMemSpyOutputType aOutputType)
+	{
+	TInt operation = aOutputType == EOutputTypeFile ?
+			EMemSpyClientServerOpSwitchOutputSinkFile :
+			EMemSpyClientServerOpSwitchOutputSinkTrace;
+	
+	User::LeaveIfError(SendReceive(operation));
 	}

@@ -135,10 +135,10 @@ void CMemSpyServerSession::ServiceL( const RMessage2& aMessage )
 	}
 
 // ---------------------------------------------------------
-// DoServiceL( const RMessage2& aMessage )
+// DoCmdServiceL( const RMessage2& aMessage )
 // ---------------------------------------------------------
 //
-void CMemSpyServerSession::DoServiceL( const RMessage2& aMessage )
+void CMemSpyServerSession::DoCmdServiceL( const RMessage2& aMessage )
     {
     TInt error = KErrNone;
 
@@ -408,8 +408,7 @@ void CMemSpyServerSession::DoServiceL( const RMessage2& aMessage )
 		// --- KernelObjects related functions ---
 		case EGetKernelObjectTypeCount:
 			{
-			TInt iCount = EMemSpyDriverContainerTypeChunk - EMemSpyDriverContainerTypeFirst;
-			//TInt iCount = EMemSpyDriverContainerTypeLast - EMemSpyDriverContainerTypeFirst;
+			TInt iCount = EMemSpyDriverContainerTypeLast - EMemSpyDriverContainerTypeFirst;
 			TPckgBuf<TInt> ret( iCount );
 			aMessage.WriteL(0, ret);			
 			break;
@@ -424,9 +423,14 @@ void CMemSpyServerSession::DoServiceL( const RMessage2& aMessage )
 			
 			for( TInt i=0, offset = 0; i<count(); i++, offset += sizeof( TMemSpyKernelObjectData ) )
 				{
-				TMemSpyKernelObjectData data;								
+				TMemSpyKernelObjectData data;
+				
+				TPtrC name(model->At(i).Name().Mid(1));
+				TInt tabPos = name.Locate('\t');
+				if (tabPos != KErrNotFound)
+					name.Set(name.Left(tabPos));
 												
-				data.iName.Append( model->At(i).Name() );
+				data.iName.Copy(name);
 				data.iType = model->At(i).Type();
 				data.iCount = model->At(i).Count();											
 				data.iSize = model->At(i).Count() * model->At(i).Count();

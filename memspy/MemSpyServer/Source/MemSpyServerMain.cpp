@@ -24,7 +24,7 @@
 #include <memspy/engine/memspyengine.h>
 
 // User includes
-#include "MemSpyServer.h"
+//#include "MemSpyServer.h"
 
 static void RunServerL()
     {
@@ -42,9 +42,6 @@ static void RunServerL()
     CMemSpyEngine* engine = CMemSpyEngine::NewL(fsSession);
     CleanupStack::PushL(engine);
     
-    // MemSpyServer initialization
-    CMemSpyServer::NewLC(*engine);
-
     // Play nicely with external processes
     RProcess::Rendezvous( KErrNone );       
 
@@ -52,7 +49,7 @@ static void RunServerL()
     CActiveScheduler::Start();
     
     // Tidy up
-    CleanupStack::PopAndDestroy( 4, scheduler );
+    CleanupStack::PopAndDestroy( 3, scheduler );
     }
 
 TInt E32Main()

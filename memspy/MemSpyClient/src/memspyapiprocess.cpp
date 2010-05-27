@@ -57,6 +57,20 @@ EXPORT_C TInt CMemSpyApiProcess::ThreadCount() const
 	return iProcessData->iThreadCount;
 	}
 
+EXPORT_C TUint32 CMemSpyApiProcess::SID() const
+	{
+	return iProcessData->iSID;
+	}
+
+EXPORT_C TUint32 CMemSpyApiProcess::VID() const
+	{
+	return iProcessData->iSID;
+	}
+
+EXPORT_C TProcessPriority CMemSpyApiProcess::Priority() const
+	{
+	return iProcessData->iPriority;
+	}
 
 CMemSpyApiProcess::CMemSpyApiProcess() : iProcessData(0)
 	{

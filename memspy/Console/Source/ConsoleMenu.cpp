@@ -39,18 +39,17 @@
 #include "ConsoleDWOperation.h"
 
 
-CMemSpyConsoleMenu::CMemSpyConsoleMenu( CMemSpyEngine& aEngine, CConsoleBase& aConsole )
-:   CActive( EPriorityHigh ), iEngine( aEngine ), iConsole( aConsole )
+CMemSpyConsoleMenu::CMemSpyConsoleMenu( RMemSpySession& aSession, CConsoleBase& aConsole )
+:   CActive( EPriorityHigh ), iSession( aSession ), iConsole( aConsole ), iOutputType(EOutputTypeDebug)
     {
     CActiveScheduler::Add( this );
-    iEngine.SetObserver( this );
+    // TODO: iEngine.SetObserver( this );
     }
 
 
 CMemSpyConsoleMenu::~CMemSpyConsoleMenu()
     {
     Cancel();
-    iEngine.SetObserver( NULL );
     }
 
 
@@ -61,9 +60,9 @@ void CMemSpyConsoleMenu::ConstructL()
     }
 
 
-CMemSpyConsoleMenu* CMemSpyConsoleMenu::NewLC( CMemSpyEngine& aEngine, CConsoleBase& aConsole )
+CMemSpyConsoleMenu* CMemSpyConsoleMenu::NewLC( RMemSpySession& aSession, CConsoleBase& aConsole )
     {
-    CMemSpyConsoleMenu* self = new(ELeave) CMemSpyConsoleMenu( aEngine, aConsole );
+    CMemSpyConsoleMenu* self = new(ELeave) CMemSpyConsoleMenu( aSession, aConsole );
     CleanupStack::PushL( self );
     self->ConstructL();
     return self;
@@ -76,7 +75,7 @@ void CMemSpyConsoleMenu::DrawMenuL()
    
     // First line - sink type (defaults to file)
     _LIT( KLine1, "1 or T. Toggle output mode between file or trace [%S]" );
-    if  ( iEngine.SinkType() == ESinkTypeDebug )
+    if  ( iOutputType == EOutputTypeDebug )
         {
         _LIT( KLine1Trace, "Trace" );
         iConsole.Printf( KLine1, &KLine1Trace );
@@ -204,14 +203,7 @@ void CMemSpyConsoleMenu::DoCancel()
 
 void CMemSpyConsoleMenu::OnCmdSinkTypeToggleL()
     {
-    if  ( iEngine.SinkType() == ESinkTypeDebug )
-        {
-        iEngine.InstallSinkL( ESinkTypeFile );
-        }
-    else
-        {
-        iEngine.InstallSinkL( ESinkTypeDebug );
-        }
+	iOutputType = iOutputType == EOutputTypeFile ? EOutputTypeDebug : EOutputTypeFile;
     }
 
 
@@ -224,7 +216,7 @@ void CMemSpyConsoleMenu::OnCmdHeapDataKernelL()
     _LIT( KMsg, "Ouputting Kernel data..." );
     RedrawStatusMessage( KMsg );
 
-    iEngine.HelperHeap().OutputHeapDataKernelL();
+    iSession.OutputKernelHeapDataL( iOutputType );
 
     RedrawStatusMessage( KNullDesC );
     }
@@ -239,14 +231,7 @@ void CMemSpyConsoleMenu::OnCmdKernelObjectListingL()
     _LIT( KMsg, "Ouputting Kernel Object listing..." );
     RedrawStatusMessage( KMsg );
     //
-    CMemSpyEngineHelperKernelContainers& kernelContainerManager = iEngine.HelperKernelContainers();
-    CMemSpyEngineGenericKernelObjectContainer* model = kernelContainerManager.ObjectsAllL();
-    CleanupStack::PushL( model );
-    //
-    CMemSpyEngineOutputSink& sink = iEngine.Sink();
-    model->OutputL( sink );
-    //
-    CleanupStack::PopAndDestroy( model );
+    iSession.OutputKernelObjectsL( iOutputType );
 
     RedrawStatusMessage( KNullDesC );
     }
@@ -258,7 +243,7 @@ void CMemSpyConsoleMenu::OnCmdCSVListingStackL()
     RDebug::Printf( "[MCon] CMemSpyConsoleMenu::OnCmdCSVListingStackL() - START" );
 #endif
 
-    iEngine.HelperStack().OutputStackInfoForDeviceL();
+    iSession.OutputCompactStackInfoL( iOutputType );
     }
 
 
@@ -268,7 +253,7 @@ void CMemSpyConsoleMenu::OnCmdCSVListingHeapL()
     RDebug::Printf( "[MCon] CMemSpyConsoleMenu::OnCmdCSVListingHeapL() - START" );
 #endif
 
-    iEngine.HelperHeap().OutputHeapInfoForDeviceL();
+    iSession.OutputCompactHeapInfoL( iOutputType );
     }
 
 
@@ -296,44 +281,34 @@ void CMemSpyConsoleMenu::OnCmdHeapDataUserL()
         TPtr pCmdBuf( cmdBuf->Des() );
         pCmdBuf.Copy( iCommandBuffer );
         pCmdBuf.Append( KMemSpyConsoleWildcardCharacter );
+        
+        TInt err;
+        TProcessId procId;
+        TRAP(err, procId = iSession.GetProcessIdByNameL(pCmdBuf));
         //
-        CMemSpyEngineObjectContainer& container = iEngine.Container();
-        const TInt count = container.Count();
-        TFullName fullThreadName;
-        //
-        TInt index = 0;
-#ifdef _DEBUG
-        RDebug::Printf( "[MCon] CMemSpyConsoleMenu::OnCmdHeapDataUserL() - procCount: %d", count );
-#endif
-
-        while( index < count )
-            {
-            CMemSpyProcess& process = container.At( index );
-            const TPtrC processName( process.Name() );
-#ifdef _DEBUG
-            RDebug::Print( _L("[MCon] CMemSpyConsoleMenu::OnCmdHeapDataUserL() - procName: 0x%08x %S"), &process, &processName );
-#endif
-
-            //
-            if  ( processName.MatchF( pCmdBuf ) >= 0 )
-                {
-                _LIT( KProcessingRequest, "** Dumping Heap Data for thread: %S" );
-                const TInt threadCount = process.Count();
-                for( TInt i=0; i<threadCount; i++ )
+        if (err == KErrNone) 
+        	{
+        	RArray<CMemSpyApiThread*> threads;
+        	
+        	TRAP(err, iSession.GetThreadsL(procId, threads));
+        	if (err == KErrNone)
+        		{
+				_LIT( KProcessingRequest, "** Dumping Heap Data for thread: %S" );     	
+				TFullName fullThreadName;
+				
+                for( TInt i=0; i<threads.Count(); i++ )
                     {
-                    CMemSpyThread& thread = process.At( i );
+                    CMemSpyApiThread* thread = threads[i];
                     //
-                    fullThreadName = thread.FullName();
+                    fullThreadName = thread->Name();
                     iConsole.Printf( KProcessingRequest, &fullThreadName );
                     iConsole.Write( KMemSpyConsoleNewLine );
                     //
-                    TRAP_IGNORE( iEngine.HelperHeap().OutputHeapDataUserL( thread ) );
+                    TRAP_IGNORE( iSession.OutputThreadHeapDataL(iOutputType, thread->Id()) );
+                    
+                    delete thread;
                     }
-
-                break;
                 }
-            
-            ++index;
             }
 
         CleanupStack::PopAndDestroy( cmdBuf );
@@ -369,38 +344,36 @@ void CMemSpyConsoleMenu::OnCmdHeapCellListUserL()
         TPtr pCmdBuf( cmdBuf->Des() );
         pCmdBuf.Copy( iCommandBuffer );
         pCmdBuf.Append( KMemSpyConsoleWildcardCharacter );
-        //
-        CMemSpyEngineObjectContainer& container = iEngine.Container();
-        const TInt count = container.Count();
-        TFullName fullThreadName;
-        //
-        TInt index = 0;
-        while( index < count )
-            {
-            CMemSpyProcess& process = container.At( index );
-            const TPtrC processName( process.Name() );
-            //
-            if  ( processName.MatchF( pCmdBuf ) >= 0 )
-                {
-                _LIT( KProcessingRequest, "** Dumping Heap Cell List for thread: %S" );
-                const TInt threadCount = process.Count();
-                for( TInt i=0; i<threadCount; i++ )
-                    {
-                    CMemSpyThread& thread = process.At( i );
-                    //
-                    fullThreadName = thread.FullName();
-                    iConsole.Printf( KProcessingRequest, &fullThreadName );
-                    iConsole.Write( KMemSpyConsoleNewLine );
-                    //
-                    TRAP_IGNORE( iEngine.HelperHeap().OutputCellListingUserL( thread ) );
-                    }
-
-                break;
-                }
-            
-            ++index;
-            }
-
+        
+        TInt err;
+		TProcessId procId;
+		TRAP(err, procId = iSession.GetProcessIdByNameL(pCmdBuf));
+		//
+		if (err == KErrNone) 
+			{
+			RArray<CMemSpyApiThread*> threads;
+			
+			TRAP(err, iSession.GetThreadsL(procId, threads));
+			if (err == KErrNone)
+				{
+				_LIT( KProcessingRequest, "** Dumping Heap Cell List for thread: %S" );     	
+				TFullName fullThreadName;
+				
+				for( TInt i=0; i<threads.Count(); i++ )
+					{
+					CMemSpyApiThread* thread = threads[i];
+					//
+					fullThreadName = thread->Name();
+					iConsole.Printf( KProcessingRequest, &fullThreadName );
+					iConsole.Write( KMemSpyConsoleNewLine );
+					//
+					TRAP_IGNORE( iSession.OutputThreadCellListL(iOutputType, thread->Id()) );
+					
+					delete thread;
+					}
+				}
+			}
+        
         CleanupStack::PopAndDestroy( cmdBuf );
         DrawMenuL();
         }
@@ -604,71 +577,72 @@ void CMemSpyConsoleMenu::HandleMemSpyEngineEventL( MMemSpyEngineObserver::TEvent
 
 void CMemSpyConsoleMenu::InitiateMemSpyClientServerOperationL( TInt aOpCode )
     {
-#ifdef _DEBUG
-    RDebug::Printf( "[MCon] CMemSpyConsoleMenu::InitiateMemSpyClientServerOperationL() - START - aOpCode: %d, iRunningDeviceWideOperation: %d", aOpCode, iRunningDeviceWideOperation );
-#endif
-    //
-    if ( aOpCode == EMemSpyClientServerOpExit )
-        {
-        // Exit console app UI
-        CActiveScheduler::Stop();
-        }
-    else
-        {
-        CMemSpyDeviceWideOperations::TOperation op = CMemSpyDeviceWideOperations::EPerEntityGeneralSummary;
-        switch( aOpCode )
-            {
-        case EMemSpyClientServerOpSummaryInfo:
-            op = CMemSpyDeviceWideOperations::EPerEntityGeneralSummary;
-            break;
-        case EMemSpyClientServerOpSummaryInfoDetailed:
-            op = CMemSpyDeviceWideOperations::EPerEntityGeneralDetailed;
-            break;
-        //
-        case EMemSpyClientServerOpHeapInfo:
-            op = CMemSpyDeviceWideOperations::EPerEntityHeapInfo;
-            break;
-        case EMemSpyClientServerOpHeapCellListing:
-            op = CMemSpyDeviceWideOperations::EPerEntityHeapCellListing;
-            break;
-        case EMemSpyClientServerOpHeapData:
-            op = CMemSpyDeviceWideOperations::EPerEntityHeapData;
-            break;
-        //
-        case EMemSpyClientServerOpStackInfo:
-            op = CMemSpyDeviceWideOperations::EPerEntityStackInfo;
-            break;
-        case EMemSpyClientServerOpStackDataUser:
-            op = CMemSpyDeviceWideOperations::EPerEntityStackDataUser;
-            break;
-        case EMemSpyClientServerOpStackDataKernel:
-            op = CMemSpyDeviceWideOperations::EPerEntityStackDataKernel;
-            break;
-        
-        // These are not supported by the console UI
-        default:
-        case EMemSpyClientServerOpBitmapsSave:
-        case EMemSpyClientServerOpSendToBackground:
-        case EMemSpyClientServerOpBringToForeground:
-            User::Leave( KErrNotSupported );
-            break;
-            }
-
-        if  ( iRunningDeviceWideOperation )
-            {
-            User::Leave( KErrInUse );
-            }
-        else
-            {
-            iRunningDeviceWideOperation = ETrue;
-            TRAP_IGNORE( CMemSpyDeviceWideOperationWaiter::ExecuteLD( iEngine, op ) );
-            iRunningDeviceWideOperation = EFalse;
-            }
-        }
-
-#ifdef _DEBUG
-    RDebug::Printf( "[MCon] CMemSpyConsoleMenu::InitiateMemSpyClientServerOperationL() - END - aOpCode: %d", aOpCode );
-#endif
+	// TODO: ....
+//#ifdef _DEBUG
+//    RDebug::Printf( "[MCon] CMemSpyConsoleMenu::InitiateMemSpyClientServerOperationL() - START - aOpCode: %d, iRunningDeviceWideOperation: %d", aOpCode, iRunningDeviceWideOperation );
+//#endif
+//    //
+//    if ( aOpCode == EMemSpyClientServerOpExit )
+//        {
+//        // Exit console app UI
+//        CActiveScheduler::Stop();
+//        }
+//    else
+//        {
+//        CMemSpyDeviceWideOperations::TOperation op = CMemSpyDeviceWideOperations::EPerEntityGeneralSummary;
+//        switch( aOpCode )
+//            {
+//        case EMemSpyClientServerOpSummaryInfo:
+//            op = CMemSpyDeviceWideOperations::EPerEntityGeneralSummary;
+//            break;
+//        case EMemSpyClientServerOpSummaryInfoDetailed:
+//            op = CMemSpyDeviceWideOperations::EPerEntityGeneralDetailed;
+//            break;
+//        //
+//        case EMemSpyClientServerOpHeapInfo:
+//            op = CMemSpyDeviceWideOperations::EPerEntityHeapInfo;
+//            break;
+//        case EMemSpyClientServerOpHeapCellListing:
+//            op = CMemSpyDeviceWideOperations::EPerEntityHeapCellListing;
+//            break;
+//        case EMemSpyClientServerOpHeapData:
+//            op = CMemSpyDeviceWideOperations::EPerEntityHeapData;
+//            break;
+//        //
+//        case EMemSpyClientServerOpStackInfo:
+//            op = CMemSpyDeviceWideOperations::EPerEntityStackInfo;
+//            break;
+//        case EMemSpyClientServerOpStackDataUser:
+//            op = CMemSpyDeviceWideOperations::EPerEntityStackDataUser;
+//            break;
+//        case EMemSpyClientServerOpStackDataKernel:
+//            op = CMemSpyDeviceWideOperations::EPerEntityStackDataKernel;
+//            break;
+//        
+//        // These are not supported by the console UI
+//        default:
+//        case EMemSpyClientServerOpBitmapsSave:
+//        case EMemSpyClientServerOpSendToBackground:
+//        case EMemSpyClientServerOpBringToForeground:
+//            User::Leave( KErrNotSupported );
+//            break;
+//            }
+//
+//        if  ( iRunningDeviceWideOperation )
+//            {
+//            User::Leave( KErrInUse );
+//            }
+//        else
+//            {
+//            iRunningDeviceWideOperation = ETrue;
+//            TRAP_IGNORE( CMemSpyDeviceWideOperationWaiter::ExecuteLD( iEngine, op ) );
+//            iRunningDeviceWideOperation = EFalse;
+//            }
+//        }
+//
+//#ifdef _DEBUG
+//    RDebug::Printf( "[MCon] CMemSpyConsoleMenu::InitiateMemSpyClientServerOperationL() - END - aOpCode: %d", aOpCode );
+//#endif
     }
 
 

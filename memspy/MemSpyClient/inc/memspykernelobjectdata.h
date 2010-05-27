@@ -35,7 +35,7 @@ public:
 	
 public:    
     TMemSpyDriverContainerType iType;
-    TBuf<KBufSize> iName;
+    TFullName iName;
     TInt iCount;
     TInt64 iSize;
 	};

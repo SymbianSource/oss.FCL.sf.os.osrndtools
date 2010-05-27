@@ -45,6 +45,13 @@ public:
 	
 	IMPORT_C TInt ThreadCount() const;
 	
+	IMPORT_C TUint32 SID() const;
+	
+	IMPORT_C TUint32 VID() const;
+	
+	IMPORT_C TProcessPriority Priority() const;
+	
+	
 private:
 	CMemSpyApiProcess();
 	

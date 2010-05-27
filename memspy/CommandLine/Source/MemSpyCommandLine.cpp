@@ -390,26 +390,49 @@ void CMemSpyCommandLine::LaunchMemSpyL()
 
     TInt err = KErrGeneral;
     RProcess proc;
+    
+    // Try to run server first
+    err = proc.Create( KMemSpyProcessName0, KNullDesC );
+    if ( err == KErrNone )
+    	{
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create server process successfully... - this: 0x%08x", this ) );
 
-    // First try with s60 UI
-    err = proc.Create( KMemSpyProcessName1, KNullDesC );
-    if  ( err == KErrNone )
-        {
-        TFullName fullName;
-        proc.FullName( fullName );
-        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create S60 UI process successfully... - this: 0x%08x, name: %S"), this, &fullName ) );
+		TRequestStatus status;
+		proc.Rendezvous( status );
+		proc.Resume();
 
-        TRequestStatus status;
-        proc.Rendezvous( status );
-        proc.Resume();
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
 
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
-        User::WaitForRequest( status );
-        err = status.Int();
-        proc.Close();
+		User::WaitForRequest( status );
+		err = status.Int();
+		proc.Close();
 
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
-        }
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
+    	}
+
+    // If server is not available, try with s60 UI
+    if ( err != KErrNone )
+    	{
+		err = proc.Create( KMemSpyProcessName1, KNullDesC );
+		if  ( err == KErrNone )
+			{
+			TFullName fullName;
+			proc.FullName( fullName );
+			TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create S60 UI process successfully... - this: 0x%08x, name: %S"), this, &fullName ) );
+	
+			TRequestStatus status;
+			proc.Rendezvous( status );
+			proc.Resume();
+	
+			TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
+			User::WaitForRequest( status );
+			err = status.Int();
+			proc.Close();
+	
+			TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
+			}
+    	}
+    
     if  ( err != KErrNone )
         {
         // Try console UI

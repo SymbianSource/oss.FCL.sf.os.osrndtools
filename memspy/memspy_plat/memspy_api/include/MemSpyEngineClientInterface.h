@@ -48,6 +48,7 @@ const TInt KMemSpyOpFlagsIncludesThreadName     = 0x00020000;
 
 // Literal constants
 _LIT( KMemSpyServerName, "MemSpyServer" );
+_LIT( KMemSpyProcessName0, "MemSpyServer.exe" );
 _LIT( KMemSpyProcessName1, "MemSpyUI.exe" );
 _LIT( KMemSpyProcessName2, "MemSpyConsole.exe" );
 
@@ -258,12 +259,72 @@ enum TMemSpyClientServerOp
     EMemSpyClientServerOpSystemWideMemoryTrackingHeapDumpSet,
     
     /**
+	 * [INTERNAL REQUEST]
+	 */
+	EMemSpyClientServerOpMarkerUiFirst,
+	
+	EMemSpyClientServerOpGetProcessCount = EMemSpyClientServerOpMarkerUiFirst,
+	
+	EMemSpyClientServerOpGetProcesses,
+	
+	EMemSpyClienServerOpGetProcessIdByName,
+	
+	EMemSpyClientServerOpGetThreadCount,
+	
+	EMemSpyClientServerOpGetThreads,
+	
+	EMemSpyClientServerOpSetThreadPriority,
+	
+	EMemSpyClientServerOpProcessSystemPermanentOrCritical,
+	
+	EMemSpyClientServerOpEndProcess,
+	
+	EMemSpyClientServerOpSwitchToProcess,
+	
+	//Threads operations
+	EMemSpyClientServerOpThreadSystemPermanentOrCritical,
+	
+	EMemSpyClientServerOpEndThread,
+	
+	EMemSpyClientServerOpSwitchToThread,
+	
+	EMemSpyClientServerOpGetInfoItemType,
+	
+	EMemSpyClientServerOpGetThreadInfoItemsCount,
+	
+	EMemSpyClientServerOpGetThreadInfoItems,
+		
+	
+	//Kernel Objects operations
+	EMemSpyClientServerOpGetKernelObjectCount,
+	
+	EMemSpyClientServerOpGetKernelObjects,
+	
+	EMemSpyClientServerOpGetKernelObjectItemCount,
+	
+	EMemSpyClientServerOpGetKernelObjectItems,
+	
+	EMemSpyClientServerOpGetHeap,
+	
+	EMemSpyClientServerOpMarkerUiLast,
+	
+	EMemSpyClientServerOpOutputAllContainerContents,
+    
+	EMemSpyClientServerOpDumpKernelHeap,
+	
+    /**
      * [INTERNAL REQUEST]
      */
     EMemSpyClientServerOpMarkerLast,
     };
 
 
+enum TMemSpyEndType
+	{
+	ETerminate,
+	EKill,
+	EPanic
+	};
 
 
 
