@@ -124,7 +124,7 @@ CHtiDispatcher::CHtiDispatcher( TInt aMaxQueueMemorySize,
     iHtiInstanceId( 0 ),
     iShowErrorDialogs( aShowErrorDialogs ),
     iReconnectDelay(aReconnectDelay),
-    iRebootReason(0)
+    iRebootReason(-1)
     {
     HTI_LOG_FORMAT( "MaxQueueMemorySize %d", iMaxQueueMemorySize );
     iQueueSizeLowThresold = ( iMaxQueueMemorySize / 2 ) / 2;
@@ -869,7 +869,7 @@ void CHtiDispatcher::HandleSystemMessageL( const TDesC8& aMessage )
                         }
                     else if(aMessage.Length() == 1)
                         {
-                        iRebootReason = 0;
+                        iRebootReason = -1;
                         }
                     else
                         {
@@ -1039,7 +1039,7 @@ void CHtiDispatcher::Reboot()
     TInt err = KErrNone;
     RProcess rebootProcess;
     // First try the UI layer rebooter
-    if(iRebootReason == 0)
+    if(iRebootReason == -1)
         {
         err = rebootProcess.Create( KHtiDeviceRebootExeUI, KNullDesC );
         }
