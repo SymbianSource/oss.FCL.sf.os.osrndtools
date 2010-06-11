@@ -4067,17 +4067,6 @@ CMenu* CTestSetMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
                     User::InfoPrint( _L("Test set saving failed at saving test set") );
                     } 
                 
-                ret = iMain->UIStore().RemoveTestSet( currSetName );
-                if( ret != KErrNone )
-                    {
-                    User::InfoPrint( _L("Test set saving failed at removing old test set") );
-                    }             
-                
-                ret = iMain->UIStore().LoadTestSet( iTestSetName );
-                if( ret != KErrNone )
-                    {
-                    User::InfoPrint( _L("Test set saving failed at reloding test set") );
-                    }   
                 break;
   
   			default:          

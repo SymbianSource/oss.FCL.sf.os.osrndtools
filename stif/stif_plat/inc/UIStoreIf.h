@@ -221,6 +221,10 @@ class CTestSetInfo
         * Gets the info which test case has been started lately.
         */
         TUint GetLastStartedCaseIndex(void);
+        /**
+        * rename test set
+        */
+        void RenameTestSet(const TDesC& aTestSetName);
                 
     public: // Functions from base classes
 

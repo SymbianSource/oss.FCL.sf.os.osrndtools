@@ -45,7 +45,7 @@ SOURCE			DebOutWriterPlugin.cpp
 SOURCE 			DebOutWriterPluginImplementationTable.cpp
 
 LIBRARY		    euser.lib
-LIBRARY         ECom.lib
-LIBRARY         EFSRV.LIB
-LIBRARY         commonengine.lib
+LIBRARY         ecom.lib
+LIBRARY         efsrv.lib
+LIBRARY         CommonEngine.lib
 LIBRARY			flogger.lib

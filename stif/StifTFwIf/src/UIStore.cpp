@@ -46,7 +46,6 @@ _LIT( KUIStoreIf, "CUiStoreIf" );
 
 _LIT( KUIStoreSetStart, "[TestSetStart]" );
 _LIT( KUIStoreSetEnd, "[TestSetEnd]" );
-_LIT( KUIStoreSetName, "TestSetName=" );
 _LIT( KUIStoreSetCaseStart, "[TestSetCaseStart]" );
 _LIT( KUIStoreSetCaseEnd, "[TestSetCaseEnd]" );
 _LIT( KUIStoreCaseModuleName, "ModuleName=" );
@@ -1071,7 +1070,23 @@ EXPORT_C TInt CUIStore::RemoveTestSet( const TDesC& aSetName )
         }
     
     delete setInfo;
-
+    TFileName setfile;
+    setfile.Append(KUIStoreDefaultDir);
+    setfile.Append(aSetName);
+    RFs fs;
+    TInt err=fs.Connect();
+    if(err!=KErrNone)
+    {
+    fs.Close();
+    return err;
+    }
+    err=fs.Delete(setfile);
+    if(err!=KErrNone)
+    {
+    fs.Close();
+    return err;    
+    }
+    
     return KErrNone;
     
     }
@@ -1321,27 +1336,65 @@ EXPORT_C TInt CUIStore::SaveTestSet( const TDesC& /* aSetName */ )
 EXPORT_C TInt CUIStore::SaveTestSet2( TDes& aSetName )
     {
     
+    RRefArray<TDesC> testsets;
+    
+    GetTestSetsList(testsets);
+    TBool isexist(EFalse);
+    for(TInt i=0;i<testsets.Count();i++)
+    {
+       if(testsets[i]==aSetName)
+           {
+           isexist=ETrue;
+           break;
+           }
+    
+    }
+    testsets.Reset();
+    if(!isexist)
+    {
+        TTime current;
+        TDateTime date_rep;
+        current.HomeTime();
+        date_rep = current.DateTime();
+        TBuf<32> currSetName;
+        _LIT(f_ext,".set");
+        
+        //create "test set name" string
+        currSetName.AppendNum(date_rep.Year());
+        currSetName.Append('_');
+        currSetName.AppendNum(date_rep.Month()+1); // Incrimination necessary, because Day and Month fields of TDateTime class are 0 based
+        currSetName.Append('_');
+        currSetName.AppendNum(date_rep.Day()+1);
+        currSetName.Append('_');
+        currSetName.AppendNum(date_rep.Hour());
+        currSetName.Append('_');
+        currSetName.AppendNum(date_rep.Minute());
+        currSetName.Append('_');
+        currSetName.AppendNum(date_rep.Second());
+        currSetName.Append(f_ext);
+        
+        for(TInt i=0;i<iTestSets.Count();i++)
+        {
+            if(iTestSets[i]->Name()==aSetName)
+                {
+                iTestSets[i]->RenameTestSet(currSetName);
+                
+                }
+        
+        }
+        
+        
+        
+        aSetName.Zero();
+        aSetName.Copy(currSetName);
+       
+        
+    
+    }
     TPtrC setName;
     TFileName tmp;
 
-    TTime current;
-    TDateTime date_rep;
-    current.HomeTime();
-    date_rep = current.DateTime();
-    TBuf<32> currSetName;
-    _LIT(f_ext,".set");
     
-    //create "test set name" string
-     currSetName.AppendNum(date_rep.Year());
-     currSetName.Append('_');
-     currSetName.AppendNum(date_rep.Month()+1); // Incrimination necessary, because Day and Month fields of TDateTime class are 0 based
-     currSetName.Append('_');
-     currSetName.AppendNum(date_rep.Day()+1);
-     currSetName.Append('_');
-     currSetName.AppendNum(date_rep.Hour());
-     currSetName.Append('_');
-     currSetName.AppendNum(date_rep.Minute());
-     currSetName.Append(f_ext);
 
     TInt ret = ParseTestSetName( aSetName, setName, tmp );
     if( ret != KErrNone )
@@ -1357,10 +1410,10 @@ EXPORT_C TInt CUIStore::SaveTestSet2( TDes& aSetName )
         }
      
     TRAPD( err,
-        SaveTestSetL( *setInfo, currSetName );
+        SaveTestSetL( *setInfo, aSetName );
         );
     
-    aSetName.Copy(currSetName);
+   
     
     return err;
     
@@ -1387,7 +1440,6 @@ EXPORT_C TInt CUIStore::SaveTestSet2( TDes& aSetName )
 */
 EXPORT_C TInt CUIStore::LoadTestSet( const TDesC& aSetName )
     {
-    
     TPtrC setName;
     TFileName tmp;
     TInt ret = ParseTestSetName( aSetName, setName, tmp );
@@ -1395,8 +1447,28 @@ EXPORT_C TInt CUIStore::LoadTestSet( const TDesC& aSetName )
         {
         return ret;
         }
-        
-    TRAPD( err,
+    CTestSetInfo* setInfo= NULL;
+    
+    FindSetByName( setName, setInfo );
+    if(setInfo != NULL)
+        {
+        return KErrNone;
+        }
+    
+    TRAPD( err, 
+        setInfo = CTestSetInfo::NewL( aSetName );
+        );
+    if( err != KErrNone )
+        {
+        return err;
+        }
+    if( iTestSets.Append( setInfo ) != KErrNone )
+        {
+        delete setInfo;
+        return KErrNoMemory;
+        }
+
+    TRAP( err,
         LoadTestSetL( setName, aSetName );
         );
     
@@ -1848,7 +1920,7 @@ TInt CUIStore::FindStartedSetByCase( const CStartedTestCase* aTestCase,
 
 -------------------------------------------------------------------------------
 */
-void CUIStore::LoadTestSetL( const TDesC& aSetName, const TDesC& aSetFileName )
+void CUIStore::LoadTestSetL( const TDesC& aSetName, const TDesC& /*aSetFileName*/ )
     {
     
     TPtrC tmp;
@@ -1856,15 +1928,8 @@ void CUIStore::LoadTestSetL( const TDesC& aSetName, const TDesC& aSetFileName )
     TInt high;
     TInt64 interval;
     
-    CStifParser* parser = NULL;
-    
-    TRAPD( err,
-        parser = CStifParser::NewL( _L(""), aSetFileName );
-        );
-    if( err != KErrNone )
-        {
-        parser = CStifParser::NewL( KUIStoreDefaultDir, aSetName );
-        }
+    CStifParser* parser = CStifParser::NewL( KUIStoreDefaultDir, aSetName );
+
         
     CleanupStack::PushL( parser );
     
@@ -1872,24 +1937,8 @@ void CUIStore::LoadTestSetL( const TDesC& aSetName, const TDesC& aSetFileName )
         parser->SectionL( KUIStoreSetStart, KUIStoreSetEnd );
     CleanupStack::PushL( section );
     
-    CStifItemParser* item = section->GetItemLineL( KUIStoreSetName );
-    CleanupStack::PushL( item );
-    
-    User::LeaveIfError( item->GetString( KUIStoreSetName, tmp ) );
-    
-	// get the standard method
-	TCollationMethod method = *Mem::CollationMethodByIndex(0);
-	// ignore case
-    method.iFlags |= TCollationMethod::EFoldCase;
-    
-	TInt compare = aSetName.CompareC( tmp, 3, &method );
-	if( compare != KErrNone )
-        {
-        User::LeaveIfError( KErrNotFound );
-        }
-        
-    CleanupStack::PopAndDestroy( item );
-        
+    CStifItemParser* item;
+
     // Get started test case (if possible)
     TUint lastStartedCaseIndex = 0;
     item = section->GetItemLineL(KUIStoreLastStartedCaseIndex);
@@ -1908,7 +1957,6 @@ void CUIStore::LoadTestSetL( const TDesC& aSetName, const TDesC& aSetFileName )
         __TRACE(KInit, (_L("Could not find [%S] from test set file."), &KUIStoreLastStartedCaseIndex));
         }
 
-    User::LeaveIfError( CreateTestSet( aSetName ) );
     
     CTestSetInfo* setInfo = NULL;
     User::LeaveIfError( FindSetByName( aSetName, setInfo ) );
@@ -2047,8 +2095,6 @@ void CUIStore::SaveTestSetL( CTestSetInfo& aSetInfo, const TDesC& aSetFileName )
         
         // Saving
         buffer.Format(_L("%S"), &KUIStoreSetStart);
-        WriteLineL(file, buffer);
-        buffer.Format(_L("%S %S"), &KUIStoreSetName,&aSetFileName);
         WriteLineL(file, buffer);
 
         // Saving test set causes reset of index
@@ -4737,6 +4783,31 @@ TUint CTestSetInfo::GetLastStartedCaseIndex(void)
     return iLastStartedCaseIndex;
     }    
 
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestSetInfo
+
+    Method: RenameTestSet
+
+    Description:  rename test set
+        
+    Parameters: aTestSetName : new TestSetName
+
+    Return Values: TInt: KErrNone if success.
+
+    Errors/Exceptions: None
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+void CTestSetInfo::RenameTestSet(const TDesC& aTestSetName)
+    {
+    delete iName;
+    iName=NULL;
+    iName=aTestSetName.AllocL();
+    }
 // ================= OTHER EXPORTED FUNCTIONS =================================
 
 // End of File
