@@ -110,4 +110,5 @@ EXPORTS
 	_ZTV21CTestEngineSubSession @ 109 NONAME ; #<VT>#
 	_ZN26CSTIFTestFrameworkSettings10GetFormatLEP18CStifSectionParser7TPtrC16RN11CStifLogger11TLoggerTypeERi @ 110 NONAME
 	_ZN11RTestEngine29AddTestCaseResultToTestReportERK9TTestInfoRK15TFullTestResulti @ 111 NONAME
+	_ZN9RTestCase11RunTestCaseER5TPckgI15TFullTestResultERK7TDesC16R14TRequestStatus @ 112 NONAME
 

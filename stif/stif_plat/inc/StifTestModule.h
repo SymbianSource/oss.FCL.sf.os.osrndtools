@@ -787,6 +787,11 @@ class CTestModuleIf
         TInt Command(TCommand aCommand, const TDesC8& aParamsPckg);
 
         /**
+         * Get test case execution arguments
+         */
+        IMPORT_C const TDesC& GetTestCaseArguments() const;        
+
+        /**
         * GetTestCaseTitleL function is used to obtain test case title.
         */
         IMPORT_C void GetTestCaseTitleL(TDes& aTestCaseTitle);

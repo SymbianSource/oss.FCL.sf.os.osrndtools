@@ -250,6 +250,11 @@ void CTestModuleController::InitL( TFileName& aIniFile,
 
     if ( r != KErrNone )
         {
+        if ( r == KErrBadName )
+            {
+            __TRACE( KError, ( CStifLogger::ERed, _L( "Test Module name or Configuration File name is too long: [%S]" ), &name) );
+            LeaveWithNotifyL( r,  _L( "Test Module name or Configuration File name is too long." ) );
+            }
         __TRACE( KError, ( CStifLogger::ERed, _L( "Can't connect to test module [%S], IniFile [%S]" ), &name, &aIniFile ) );
         LeaveWithNotifyL( r,  _L( "Can't connect to test module" ) );
         }
@@ -393,10 +398,11 @@ CTestModuleController::~CTestModuleController()
     iTestCaseArray.Close();
 
     // Release the config file array
+    iConfigFiles.ResetAndDestroy();
     iConfigFiles.Close();
 
     // Release the config file array
-    iFailedEnumerateConfig.Reset();
+    iFailedEnumerateConfig.ResetAndDestroy();
     iFailedEnumerateConfig.Close();
     
     // Release the children array

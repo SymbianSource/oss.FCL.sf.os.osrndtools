@@ -561,12 +561,12 @@ void CATSInterface::ParseCommandLineL()
     _LIT( KEngineIniFile, "-engineini" );
     _LIT( KModuleIniFile, "-moduleini" );
 
-	const TInt length = User().CommandLineLength();
+	const TInt length = User::CommandLineLength();
 
     HBufC* cmdLine = HBufC::NewLC( length );
     TPtr ptr = cmdLine->Des();
 
-	User().CommandLine( ptr );
+	User::CommandLine( ptr );
 
     TBool moduleFound( EFalse );
     TLex lex( ptr );

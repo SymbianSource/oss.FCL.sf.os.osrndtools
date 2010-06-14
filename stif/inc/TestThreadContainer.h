@@ -222,9 +222,15 @@ class CTestThreadContainer
         virtual void DoNotifyCommand(TCommand aCommand, const TDesC8& aParamsPckg);
 
         /**
+         * Get test case execution arguments
+         */
+        virtual const TDesC& GetTestCaseArguments() const;        
+        
+        
+        /**
         * Obtain title of currently running test case.
         */
-        virtual void GetTestCaseTitleL(TDes& aTestCaseTitle);
+        virtual void GetTestCaseTitleL(TDes& aTestCaseTitle);        
 
         /**
          * Sets thread logger.
@@ -308,7 +314,7 @@ class CTestThreadContainer
         /**
         * Check that server is alive.
         */ 
-        void IsServerAlive();
+        void IsServerAlive() const;
 
         /**
         * Exception handler
@@ -360,13 +366,17 @@ class CTestThreadContainer
         /** 
         * C++ default constructor.
         */
-        CTestThreadContainer( CTestModuleContainer* aModuleContainer );
-                              
+        CTestThreadContainer( CTestModuleContainer* aModuleContainer );                              
+
+        /**
+         * Get module container.
+         */
+        CTestModuleContainer& ModuleContainer();        
+
         /**
         * Handles to parent.
         */
-        CTestExecution& TestExecution();
-        CTestModuleContainer& ModuleContainer();
+        CTestExecution& TestExecution() const;
         
     public:     // Data
         

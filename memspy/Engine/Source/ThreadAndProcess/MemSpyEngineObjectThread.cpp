@@ -387,6 +387,11 @@ EXPORT_C TBool CMemSpyThread::IsDead() const
     return  isDead;
     }
 
+EXPORT_C TThreadPriority CMemSpyThread::Priority() const
+	{
+	return iPriority;
+	}
+
 
 void CMemSpyThread::RefreshL()
     {

@@ -28,7 +28,7 @@ const TInt KPriorityMask = 0x2;
 const TInt KHtiMsgServiceUidLen = 4;
 
 
-class CHtiMessage  : public CBase
+NONSHARABLE_CLASS(CHtiMessage)  : public CBase
     {
 public:
     /**

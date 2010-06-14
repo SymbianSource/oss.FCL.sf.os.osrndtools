@@ -376,6 +376,19 @@ class RTestCase
                                     TRequestStatus& aStatus );
 
         /**
+        * RunTestCase is asynchronous method and it is completed when the test
+        * case is completed. Result of the test case is returned to 
+        * aTestResult. The aTestResult is TFullTestResultPckg that is a
+        * packaged TFullTestResult.
+        * The aStatus will have the completion result of this function. If the
+        * test case could be run (despite of succesfully or not) the KErrNone 
+        * is returned to aStatus.
+        */
+        IMPORT_C void RunTestCase( TFullTestResultPckg& aTestResult,
+                                   const TDesC& aTestCaseArgs,
+                                   TRequestStatus& aStatus );        
+
+        /**
         * Pause suspends the execution of the test case. The subsession where
         * the test case is run is suspended and thus the test case execution is
         * suspended. Test case execution can be later resumed by calling 

@@ -219,7 +219,7 @@ CTestCaseController::~CTestCaseController()
 
     delete iRDebugLogger;
     delete iTimeout;
-
+    delete iTestCaseArguments;
     }
 
 /*
@@ -253,9 +253,22 @@ void CTestCaseController::StartL( const RMessage2& aMessage )
 
     iState = ETestCaseRunning;
     
+    delete iTestCaseArguments;
+    iTestCaseArguments = NULL;
+    
+    TInt testCaseArgumentsLength = iMessage.GetDesLength( 1 );
+    if ( ( testCaseArgumentsLength != KErrArgument ) && ( testCaseArgumentsLength != KErrBadDescriptor ) )
+        {
+        iTestCaseArguments = HBufC::NewL( testCaseArgumentsLength );
+        TPtr testCaseArgumentsPtr( iTestCaseArguments->Des() );
+        User::LeaveIfError( iMessage.Read( 1, testCaseArgumentsPtr ) );
+        iTestExecution.RunTestCase( iResultPckg, *iTestCaseArguments, iStatus );        
+        }
+    else
+        {    
+        iTestExecution.RunTestCase( iResultPckg, iStatus );
+        }
     SetActive();
-
-    iTestExecution.RunTestCase( iResultPckg, iStatus );    
 
     // If testcase has timeout (handler), then start it
     if ( iTimeout )
@@ -2567,18 +2580,7 @@ TInt CTestRemoteCmdNotifier::DynamicResetModule(
         __TRACE( KInit, (  _L("Loaded reset module[%S]"), &dllName ) );
         }
 
-    // Verify the UID
-    TUid KUidTestModule = TUid::Uid ( 0x101FB3E7 );
-    TUidType requiredUID( KDynamicLibraryUid, KSharedLibraryUid, KUidTestModule );
-
-    TUidType moduleUID = resetModule.Type();    
-    if ( moduleUID != requiredUID )
-        {
-        // New instance can't be created
-        RDebug::Print( ( _L("STIF TF: Reset module has invalid UID. Aborting loading!") ) );
-        __TRACE ( KError, ( CStifLogger::EError, _L("Reset module has invalid UID. Aborting loading!" ) ) );
-        return KErrNotSupported;
-        }
+    
 
     // Get pointer to first exported function
     CTestInterfaceFactory libEntry;

@@ -682,15 +682,33 @@ void CHtiFtpServicePlugin::HandleCopyL( const TDesC8& aMessage, TBool aUnicode )
     TInt newNameLength = aMessage[newNamePos];
     GetFileNameL( aMessage.Mid( newNamePos, newNameLength + 1 ), aUnicode );
 
+    TInt msglen = aMessage.Length();
+    TInt recurse = 1;
+    if(msglen>originalLenngth+newNameLength+3)        
+        {
+        recurse = aMessage[newNamePos+1+newNameLength];
+        }
+    
+    TInt err=0;
     if ( IsFileTcb( origName ) || IsFileTcb( iFileName ) )
         {
         HandleTcbCopyL( origName, iFileName );
         }
     else{
         iHandlerAO = new ( ELeave ) CFtpHandlerAO( this );
-        TInt err = iFileMan->Copy( origName, iFileName,
+        
+        if (recurse)
+            {
+            err = iFileMan->Copy( origName, iFileName,
                 ( CFileMan::EOverWrite | CFileMan::ERecurse ),
                 iHandlerAO->iStatus );
+            }
+        else
+            {
+            err = iFileMan->Copy( origName, iFileName,
+                ( CFileMan::EOverWrite ),
+                iHandlerAO->iStatus );
+            }
 
         if ( err == KErrNone)
             {

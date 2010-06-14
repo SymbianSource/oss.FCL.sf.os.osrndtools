@@ -56,6 +56,7 @@ public: // API - query
     IMPORT_C TBool IsSystemPermanent() const;
     IMPORT_C TBool IsSystemCritical() const;
     IMPORT_C TBool IsDead() const;
+    IMPORT_C TThreadPriority Priority() const;
 
 public: // API - misc
     IMPORT_C void KillL();

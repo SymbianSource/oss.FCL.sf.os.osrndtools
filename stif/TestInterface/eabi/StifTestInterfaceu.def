@@ -183,4 +183,5 @@ EXPORTS
 	_ZN11CScriptBase13SetLocalValueERK7TDesC16S2_ @ 182 NONAME
 	_ZN11CScriptBase13SetLocalValueERK7TDesC16d @ 183 NONAME
 	_ZN11CScriptBase13SetLocalValueERK7TDesC16i @ 184 NONAME
+	_ZNK13CTestModuleIf20GetTestCaseArgumentsEv @ 185 NONAME
 

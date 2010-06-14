@@ -156,7 +156,7 @@ class CTestReport
         /**
         * Two-phased constructor.
         */
-        static CTestReport* NewL( TTestReportSettings& aTestReportSettings,
+        static CTestReport* NewL( CTestReportSettings& aTestReportSettings,
                                   const TTestReportMode aReportMode );
         
         /**
@@ -199,7 +199,7 @@ class CTestReport
         /**
         * By default Symbian OS constructor is private.
         */
-        void ConstructL(  TTestReportSettings& aTestReportSettings );
+        void ConstructL(  CTestReportSettings& aTestReportSettings );
 
         /**
         * Default C++ constructor.

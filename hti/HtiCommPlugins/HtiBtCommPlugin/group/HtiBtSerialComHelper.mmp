@@ -39,7 +39,6 @@ SOURCE          sdpattributeparser.cpp
 USERINCLUDE     ../BtEngine/inc
 OS_LAYER_SYSTEMINCLUDE
 
-LIBRARY         apparc.lib
 LIBRARY         bafl.lib
 LIBRARY         bluetooth.lib
 LIBRARY         btdevice.lib
@@ -47,7 +46,6 @@ LIBRARY         btextnotifiers.lib
 LIBRARY         btmanclient.lib
 LIBRARY         btpowercontrol.lib
 LIBRARY         c32.lib
-LIBRARY         cone.lib
 LIBRARY         efsrv.lib
 LIBRARY         esock.lib
 LIBRARY         euser.lib

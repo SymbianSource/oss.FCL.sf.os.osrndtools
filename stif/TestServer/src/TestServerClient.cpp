@@ -120,6 +120,15 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
     do
         {
         semName.Format(_L("%S%d"), &semaphoreName, x);
+        if (semName.Length() > KMaxKernelName)
+            {
+            // if the cfg file name is larger than maximum length of acceptable length of semaphore .
+            RDebug::Print(_L("Test Module name or Configuration File name is too long."));
+            
+            semName.Close();
+            return KErrBadName;
+            }
+        
         ret = startSemaphore.CreateGlobal(semName, 0);
         RDebug::Print(_L("RTestServer::Connect() Creating global semaphore [%S] with result [%d]"), &semName, ret);
         if(ret != KErrAlreadyExists)
@@ -153,7 +162,7 @@ EXPORT_C TInt RTestServer::Connect( const TFileName& aModuleName,
     // Data to be passed to new process. It will contain module name and synchronization semaphore name separated with space.
     // I.e. it will be: "mymodule startupSemaphore0"
     RBuf data; 
-    ret = data.Create(KMaxName);
+    ret = data.Create(KMaxFileName);
     if(ret != KErrNone)
         {
         RDebug::Print(_L("RTestServer::Connect() Could not create buffer for data to be passed to process [%d]"), ret);
@@ -810,6 +819,36 @@ EXPORT_C void RTestExecution::RunTestCase( TFullTestResultPckg& aResult,
                                          )
     {
     TIpcArgs args( &aResult, TIpcArgs::ENothing, TIpcArgs::ENothing );
+    SendReceive( ETestExecutionRunTestCase, args, aStatus );
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: RTestExecution
+
+    Method: RunTestCase
+
+    Description: Runs a test case
+
+    Parameters: TFullTestResultPckg& aResult  :out: Case result
+                const TDesC& aTestCaseArgs: Test case arguments
+                TRequestStatus& aStatus       :out: Request to be completed
+
+    Return Values: None
+
+    Errors/Exceptions: None
+
+    Status: Approved
+    
+-------------------------------------------------------------------------------
+*/
+EXPORT_C void RTestExecution::RunTestCase( TFullTestResultPckg& aResult,
+                                           const TDesC& aTestCaseArgs,
+                                           TRequestStatus& aStatus 
+                                         )
+    {
+    TIpcArgs args( &aResult, &aTestCaseArgs, TIpcArgs::ENothing );
     SendReceive( ETestExecutionRunTestCase, args, aStatus );
     }
 

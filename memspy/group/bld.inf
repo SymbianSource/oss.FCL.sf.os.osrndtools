@@ -32,6 +32,11 @@
 // Console UI
 #include "../Console/group/bld.inf"
 
+// MemSpyServer
+#include "../MemSpyServer/group/bld.inf"
+
+// MemSpyClient
+#include "../MemSpyClient/group/bld.inf"
 
 PRJ_EXPORTS
 ../rom/memspy.iby      CORE_IBY_EXPORT_PATH(tools,memspy.iby)
