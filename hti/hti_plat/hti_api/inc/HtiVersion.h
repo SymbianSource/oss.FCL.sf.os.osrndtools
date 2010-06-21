@@ -25,13 +25,13 @@
 // CONSTANTS
 
 const TUint8 KHtiVersionMajor = 2;
-const TUint8 KHtiVersionMinor = 23;
+const TUint8 KHtiVersionMinor = 24;
 const TUint8 KHtiVersionBuild = 0;
 
 const TUint16 KHtiVersionYear  = 2010;
 const TUint8  KHtiVersionMonth = 5;
-const TUint8  KHtiVersionWeek  = 19;
-const TUint8  KHtiVersionDay   = 14;
+const TUint8  KHtiVersionWeek  = 21;
+const TUint8  KHtiVersionDay   = 28;
 
 //  MACROS
 

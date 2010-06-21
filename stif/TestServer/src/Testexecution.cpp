@@ -191,7 +191,10 @@ CTestExecution::~CTestExecution()
     // Delete name buffer
     delete iConfigNameBuffer;
     iConfigNameBuffer = NULL;
-    
+
+    delete iTestCaseArgs;
+    iTestCaseArgs = NULL;
+        
     iStateEvents.ResetAndDestroy();
     iStateEvents.Close();
 
@@ -338,15 +341,51 @@ TInt CTestExecution::RunTestCase( const RMessage2& aMessage )
 
     __TRACE ( KInit, ( _L( "CTestExecution::RunTestCase in" ) ) );
 
+    TInt ret = KErrNone;
+    
     // Store message to be completed when case is finished
     iTestExeMessage = aMessage;
 
     iFullResult.iStartTime.HomeTime();
 
+    delete iTestCaseArgs;
+    iTestCaseArgs = NULL;
+    
+    TInt testCaseArgsLength = iTestExeMessage.GetDesLength( 1 );
+    if ( ( testCaseArgsLength != KErrArgument ) && ( testCaseArgsLength != KErrBadDescriptor ) )
+        {
+        iTestCaseArgs = HBufC::New( testCaseArgsLength );
+        if ( iTestCaseArgs == NULL )
+            {
+            _LIT(KRunError,"Can't allocate memory for test case arguments");
+            __TRACE ( KError, ( CStifLogger::ERed, KRunError() ) );
+            CompleteTestExecution( KErrNone,
+                                   TFullTestResult::ECaseException,
+                                   KErrNoMemory,
+                                   KErrGeneral,
+                                   KRunError );
+            return KErrNone;        
+            }
+            
+        TPtr testCaseArgsPtr( iTestCaseArgs->Des() );
+        TRAP( ret, iTestExeMessage.Read( 1, testCaseArgsPtr ) );
+        if ( ret != KErrNone )
+            {
+            _LIT(KRunError,"Can't read test case arguments");
+            __TRACE ( KError, ( CStifLogger::ERed, KRunError() ) );
+            CompleteTestExecution( KErrNone,
+                                   TFullTestResult::ECaseException,
+                                   ret,
+                                   KErrGeneral,
+                                   KRunError );
+            return KErrNone;
+            }
+        }
+
     // Get a test module, which executes the test case.
     // The test module will be freed either when the test case
     // completes, or the test case is aborted.
-    TInt ret = iModuleSession->GetTestModule( iModuleContainer, iConfig );
+    ret = iModuleSession->GetTestModule( iModuleContainer, iConfig );
     if ( ret != KErrNone || iModuleContainer == NULL )
         {
         _LIT(KRunError,"Can't get test module");
@@ -2110,6 +2149,34 @@ TInt CTestExecution::CancelCommandRequest()
         }
 
     return KErrNone;
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestExecution
+
+    Method: GetTestCaseArguments
+
+    Description: Get test case arguments
+
+    Parameters: None
+
+    Return Values: Test case arguments
+
+    Errors/Exceptions: None
+
+    Status: Proposal
+
+-------------------------------------------------------------------------------
+*/
+const TDesC& CTestExecution::GetTestCaseArguments() const
+    {
+    if ( iTestCaseArgs != NULL )
+        {
+        return *iTestCaseArgs;
+        }
+    return KNullDesC;
     }
 
 /*

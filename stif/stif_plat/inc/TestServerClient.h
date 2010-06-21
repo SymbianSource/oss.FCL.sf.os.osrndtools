@@ -351,6 +351,16 @@ class RTestExecution
                                    TRequestStatus& aStatus );
 
         /**
+       * RunTestCase is used to execute the test case previously initialized by
+       * Open method. RunTestCase is asynchronous method and it is completed
+       * when the test case is completed.
+       * The result of the test case is returned to aStatus.
+       */
+       IMPORT_C void RunTestCase( TFullTestResultPckg& aResult,
+                                  const TDesC& aTestCaseArgs,
+                                  TRequestStatus& aStatus );
+
+        /**
         * Pause suspends the execution of the test case. The subsession where
         * the test case is run will be suspended and thus the test case
         * execution is suspended. The test case execution can be later resumed

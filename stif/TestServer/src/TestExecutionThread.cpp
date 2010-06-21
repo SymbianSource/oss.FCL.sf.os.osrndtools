@@ -2141,7 +2141,7 @@ void CTestThreadContainer::Panic( TPanicReason aReason )
 
 -------------------------------------------------------------------------------
 */
-void CTestThreadContainer::IsServerAlive()
+void CTestThreadContainer::IsServerAlive() const
     {
         
     if( iServerThread.ExitType() != EExitPending ) 
@@ -2172,7 +2172,7 @@ void CTestThreadContainer::IsServerAlive()
 
 -------------------------------------------------------------------------------
 */
-CTestExecution& CTestThreadContainer::TestExecution()
+CTestExecution& CTestThreadContainer::TestExecution() const
     { 
     
     IsServerAlive();
@@ -2184,7 +2184,32 @@ CTestExecution& CTestThreadContainer::TestExecution()
     return *execution;
     
     };
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestThreadContainer
+
+    Method: GetTestCaseArguments
+
+    Description: Get test case arguments
+
+    Parameters: None
     
+    Return Values: test case arguments
+
+    Errors/Exceptions: 
+
+    Status: Proposal
+
+-------------------------------------------------------------------------------
+*/
+const TDesC& CTestThreadContainer::GetTestCaseArguments() const
+    {
+    return TestExecution().GetTestCaseArguments();
+    }
+
+
 /*
 -------------------------------------------------------------------------------
 

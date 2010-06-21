@@ -91,6 +91,11 @@ NONSHARABLE_CLASS(CStartInfo)
         */
         void SetTitleL(TDesC& aTitle);
 
+        /**
+         * Sets test case arguments.
+         */
+        void SetTestCaseArgumentsL( const TDesC& aTestCaseArguments );
+
     private:
         /**
         * C++ default constructor.
@@ -112,6 +117,7 @@ NONSHARABLE_CLASS(CStartInfo)
         TFullTestResult::TCaseExecutionResult iCategory;
         TInt    iTimeout;
         TPtrC   iTitle;
+		TPtrC   iTestCaseArguments;
         
     private:
         HBufC*  iModuleBuf;
@@ -119,7 +125,7 @@ NONSHARABLE_CLASS(CStartInfo)
         HBufC*  iConfigBuf;
         HBufC*  iTestIdBuf;
         HBufC*  iTitleBuf;
-    
+        HBufC*  iTestCaseArgumentsBuf;
     };
     
 // CLASS DECLARATION
