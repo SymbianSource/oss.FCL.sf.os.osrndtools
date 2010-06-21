@@ -432,7 +432,7 @@ EXPORTS
 	_ZTI48CMemSpyEngineHelperSysMemTrackerEntryHandlePAndS @ 431 NONAME ; #<TI>#
 	_ZTI50CMemSpyEngineHelperSysMemTrackerEntryHandleGeneric @ 432 NONAME ; #<TI>#
 	_ZTI52CMemSpyEngineHelperSysMemTrackerEntryFileServerCache @ 433 NONAME ; #<TI>#
-	_ZTIN25CMemSpyThreadInfoItemBase5CItemE @ 434 NONAME ; #<TI>#
+	_ZTIN25CMemSpyThreadInfoItemBase5CItemE @ 434 NONAME ABSENT ; #<TI>#
 	_ZTV23CMemSpyEngineDriveEntry @ 435 NONAME ; #<VT>#
 	_ZTV41CMemSpyEngineHelperSysMemTrackerEntryCode @ 436 NONAME ; #<VT>#
 	_ZTV41CMemSpyEngineHelperSysMemTrackerEntryHeap @ 437 NONAME ; #<VT>#
@@ -447,7 +447,7 @@ EXPORTS
 	_ZTV48CMemSpyEngineHelperSysMemTrackerEntryHandlePAndS @ 446 NONAME ; #<VT>#
 	_ZTV50CMemSpyEngineHelperSysMemTrackerEntryHandleGeneric @ 447 NONAME ; #<VT>#
 	_ZTV52CMemSpyEngineHelperSysMemTrackerEntryFileServerCache @ 448 NONAME ; #<VT>#
-	_ZTVN25CMemSpyThreadInfoItemBase5CItemE @ 449 NONAME ; #<VT>#
+	_ZTVN25CMemSpyThreadInfoItemBase5CItemE @ 449 NONAME ABSENT ; #<VT>#
 	_ZThn16_NK14CMemSpyProcess9MdcaCountEv @ 450 NONAME ; #<thunk>#
 	_ZThn16_NK14CMemSpyProcess9MdcaPointEi @ 451 NONAME ; #<thunk>#
 	_ZThn16_NK22CMemSpyThreadInfoChunk9MdcaCountEv @ 452 NONAME ; #<thunk>#
