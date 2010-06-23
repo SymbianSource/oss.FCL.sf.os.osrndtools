@@ -29,4 +29,5 @@ EXPORTS
 	?StartNewServer@@YAHABV?$TBuf@$0BAA@@@AAV1@HVRSemaphore@@HPAVCTestThreadContainerRunnerFactory@@@Z @ 28 NONAME ; int StartNewServer(class TBuf<256> const &, class TBuf<256> &, int, class RSemaphore, int, class CTestThreadContainerRunnerFactory *)
 	?UITesting@CTestThreadContainer@@QAEHXZ @ 29 NONAME ; int CTestThreadContainer::UITesting(void)
 	?NotifyCommand2@RTestExecution@@QAEHAAV?$TPckg@W4TCommand@@@@AAVTDes8@@AAVTRequestStatus@@H@Z @ 30 NONAME ; int RTestExecution::NotifyCommand2(class TPckg<enum TCommand> &, class TDes8 &, class TRequestStatus &, int)
+	?RunTestCase@RTestExecution@@QAEXAAV?$TPckg@VTFullTestResult@@@@ABVTDesC16@@AAVTRequestStatus@@@Z @ 31 NONAME ; void RTestExecution::RunTestCase(class TPckg<class TFullTestResult> &, class TDesC16 const &, class TRequestStatus &)
 

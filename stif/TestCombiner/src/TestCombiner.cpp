@@ -1652,6 +1652,7 @@ TInt CTestCombiner::StartTestL(  CStartInfo& aStartInfo )
                            aStartInfo.iTestId, 
                            aStartInfo.iExpectedResult, 
                            aStartInfo.iCategory,
+                           aStartInfo.iTestCaseArguments,
                            module ); //--PYTHON--
 
     CleanupStack::PushL( tc );
@@ -1694,7 +1695,14 @@ TInt CTestCombiner::StartTestL(  CStartInfo& aStartInfo )
          &aStartInfo.iTestId, &aStartInfo.iModule, &aStartInfo.iIniFile, 
          &aStartInfo.iConfig, aStartInfo.iCaseNum, aStartInfo.iExpectedResult );
 
-    tc->TestExecution().RunTestCase( tc->iResultPckg, tc->iStatus );
+    if ( tc->TestCaseArguments().Length() > 0 )
+        {
+        tc->TestExecution().RunTestCase( tc->iResultPckg, tc->TestCaseArguments(), tc->iStatus );
+        }
+    else
+        {
+        tc->TestExecution().RunTestCase( tc->iResultPckg, tc->iStatus );
+        }
 
     iRunningTests++;
 
@@ -3286,6 +3294,12 @@ void CTestRunner::ParseRunParamsL( CStifItemParser* aItem,
                 aStartInfo.SetTitleL(val);
                 break;
            	    }
+            case TTCKeywords::EArgs:
+                {
+                __TRACE( KMessage, (_L("case arguments=%S"), &val));
+                aStartInfo.SetTestCaseArgumentsL( val );
+                }
+                break;				
             default:
 				{
                 __TRACE( KError, (_L("Unknown or illegal keyword")));

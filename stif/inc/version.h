@@ -20,9 +20,9 @@
 
 #define STIF_MAJOR_VERSION 7
 #define STIF_MINOR_VERSION 3
-#define STIF_BUILD_VERSION 33
+#define STIF_BUILD_VERSION 34
 
-#define STIF_REL_DATE "18th May 2010"
+#define STIF_REL_DATE "1st June 2010"
 
 #define TO_UNICODE(text) _L(text) 
 

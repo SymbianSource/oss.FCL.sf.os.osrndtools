@@ -60,4 +60,5 @@ EXPORTS
 	_ZN14RTestExecution14NotifyCommand2ER5TPckgI8TCommandER5TDes8R14TRequestStatusi @ 59 NONAME
 	_ZTI11CCommandDef @ 60 NONAME ; #<TI>#
 	_ZTV11CCommandDef @ 61 NONAME ; #<VT>#
+	_ZN14RTestExecution11RunTestCaseER5TPckgI15TFullTestResultERK7TDesC16R14TRequestStatus @ 62 NONAME
 

@@ -661,6 +661,37 @@ EXPORT_C void RTestCase::RunTestCase( TFullTestResultPckg& aTestResult,
 
     Class: RTestCase
 
+    Method: RunTestCase
+
+    Description: Run a test case asynchronously.
+
+    Parameters: TFullTestResultPckg& aTestResult : TFullTestResult :
+                 Test Result package
+                const TDesC& aTestCaseArgs: Test case arguments
+                TRequestStatus& aStatus : Request status
+
+    Return Values: TInt KErrNone : Test case could be run
+                        Other error code : Reason the test case couldn't be run
+
+    Errors/Exceptions: None
+
+    Status: Approved
+
+-------------------------------------------------------------------------------
+*/
+EXPORT_C void RTestCase::RunTestCase( TFullTestResultPckg& aTestResult,
+                                      const TDesC& aTestCaseArgs,
+                                      TRequestStatus& aStatus )
+    {
+    TIpcArgs args( &aTestResult, &aTestCaseArgs, TIpcArgs::ENothing );
+    SendReceive( ETestCaseRunTestCase, args, aStatus );
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: RTestCase
+
     Method: Pause
 
     Description: Pause suspends the execution of the test case.

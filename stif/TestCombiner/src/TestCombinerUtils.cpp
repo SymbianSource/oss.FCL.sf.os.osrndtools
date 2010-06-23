@@ -86,7 +86,8 @@ CStartInfo::CStartInfo():
     iIniFileBuf(0),
     iConfigBuf(0),
     iTestIdBuf(0),
-    iTitleBuf(0)
+    iTitleBuf(0),
+	iTestCaseArgumentsBuf(0)
     {
 
     iCategory = TFullTestResult::ECaseExecuted; 
@@ -177,6 +178,7 @@ CStartInfo::~CStartInfo()
     delete iConfigBuf;
     delete iTestIdBuf;
     delete iTitleBuf;
+	delete iTestCaseArgumentsBuf;
     }
 
 /*
@@ -351,6 +353,34 @@ void CStartInfo::SetTitleL(TDesC& aTitle)
     iTitleBuf = aTitle.AllocL();
     iTitle.Set(iTitleBuf->Des());
     }
+
+/*
+-------------------------------------------------------------------------------
+
+     Class: CStartInfo
+
+     Method: SetTestCaseArguments
+
+     Description: Sets test case arguments
+     
+     Parameters:  const TDesC& aTestCaseArguments: in: test case arguments.
+     
+     Return Values: None
+
+     Errors/Exceptions: None
+
+     Status: Proposal
+    
+-------------------------------------------------------------------------------
+*/        
+void CStartInfo::SetTestCaseArgumentsL( const TDesC& aTestCaseArguments )
+    {
+    delete iTestCaseArgumentsBuf;
+	iTestCaseArgumentsBuf = NULL;
+    iTestCaseArgumentsBuf = aTestCaseArguments.AllocL();
+	iTestCaseArguments.Set( iTestCaseArgumentsBuf->Des() );
+    }
+
 
 /*
 -------------------------------------------------------------------------------

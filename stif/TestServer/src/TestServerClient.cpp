@@ -827,6 +827,36 @@ EXPORT_C void RTestExecution::RunTestCase( TFullTestResultPckg& aResult,
 
     Class: RTestExecution
 
+    Method: RunTestCase
+
+    Description: Runs a test case
+
+    Parameters: TFullTestResultPckg& aResult  :out: Case result
+                const TDesC& aTestCaseArgs: Test case arguments
+                TRequestStatus& aStatus       :out: Request to be completed
+
+    Return Values: None
+
+    Errors/Exceptions: None
+
+    Status: Approved
+    
+-------------------------------------------------------------------------------
+*/
+EXPORT_C void RTestExecution::RunTestCase( TFullTestResultPckg& aResult,
+                                           const TDesC& aTestCaseArgs,
+                                           TRequestStatus& aStatus 
+                                         )
+    {
+    TIpcArgs args( &aResult, &aTestCaseArgs, TIpcArgs::ENothing );
+    SendReceive( ETestExecutionRunTestCase, args, aStatus );
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: RTestExecution
+
     Method: NotifyProgress
 
     Description: Notify about test case progress, i.e test case prints.

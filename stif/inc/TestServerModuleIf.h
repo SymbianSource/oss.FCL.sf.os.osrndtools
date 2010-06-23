@@ -415,6 +415,11 @@ class CTestExecution
         */
         TInt CancelCommandRequest();
 
+        /**
+         * Get test case arguments.
+         */
+        const TDesC& GetTestCaseArguments() const;
+
     public: // Functions that are called from test thread
 
         /**
@@ -574,6 +579,8 @@ class CTestExecution
         TInt iCaseNumber;                        // Case to be executed
         TPtr iConfig;                            // Configuration file name
         HBufC* iConfigNameBuffer;                // HBuffer for configuration file;
+        HBufC* iTestCaseArgs;                    // HBuffer for test case arguments
+		
         RMessage2 iTestExeMessage;               // Test execution message
         TTestState iThreadState;                 // Thread state
 

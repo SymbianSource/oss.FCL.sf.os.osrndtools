@@ -207,8 +207,8 @@ NONSHARABLE_CLASS(CTCTestCase)
                                   TDesC& aModuleName,
                                   TDesC& aTestId,
                                   TInt aExpectedResult,
-                                  TFullTestResult::TCaseExecutionResult
-                                        aCategory,
+                                  TFullTestResult::TCaseExecutionResult aCategory,
+                                  const TDesC& aTestCaseArguments,
                                   CTCTestModule* aModule ); //--PYTHON--
 
         /**
@@ -227,6 +227,11 @@ NONSHARABLE_CLASS(CTCTestCase)
         */
         const TDesC& ModuleName(){ return *iModuleName; }
 
+        /**
+         * Get test case arguments
+         */
+        const TDesC& TestCaseArguments() const;
+        
         /**
         * Get reference to RTestExecution.
         */
@@ -269,12 +274,13 @@ NONSHARABLE_CLASS(CTCTestCase)
         CTCTestCase( CTestCombiner* testCombiner,
                      TInt aExpectedResult,
                      TFullTestResult::TCaseExecutionResult aCategory,
+                     const TDesC& aTestCaseArguments,
                      CTCTestModule* aModule ); //--PYTHON--
 
         /**
         * By default Symbian OS constructor is private.
         */
-        void ConstructL( TDesC& aModuleName, TDesC& aTestId );
+        void ConstructL( TDesC& aModuleName, TDesC& aTestId, const TDesC& aTestCaseArguments );
 
         /**
         * Start complete the testcase(Complete2 make the final complete).
@@ -298,6 +304,9 @@ NONSHARABLE_CLASS(CTCTestCase)
         // Module name
         HBufC*                  iModuleName;
 
+        // Test case arguments
+        HBufC*                  iTestCaseArguments;
+        
         // Handle to test case execution
         RTestExecution          iTestExecution;
 
