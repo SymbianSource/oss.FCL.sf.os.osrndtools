@@ -22,7 +22,8 @@
 #include <e32base.h>
 
 // Constants
-const TInt KMemSpySysMemTrackerConfigMinTimerPeriod = 30; // Seconds
+const TInt KMemSpySysMemTrackerConfigMinTimerPeriod = 5; // Seconds
+const TInt KMemSpySysMemTrackerConfigMaxTimerPeriod = 60; // Seconds
 
 
 NONSHARABLE_CLASS( TMemSpyEngineHelperSysMemTrackerConfig )

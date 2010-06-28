@@ -41,6 +41,8 @@ CMemSpyEngineOutputSinkFile::CMemSpyEngineOutputSinkFile( CMemSpyEngine& aEngine
 CMemSpyEngineOutputSinkFile::~CMemSpyEngineOutputSinkFile()
     {
     TRACE( RDebug::Printf( "CMemSpyEngineOutputSinkFile::~CMemSpyEngineOutputSinkFile() - START" ) );
+    
+    delete iRoot;
 
     TRACE( RDebug::Printf( "CMemSpyEngineOutputSinkFile::~CMemSpyEngineOutputSinkFile() - destroying normal logs..." ) );
     iLogs.ResetAndDestroy();
@@ -56,9 +58,11 @@ CMemSpyEngineOutputSinkFile::~CMemSpyEngineOutputSinkFile()
     }
 
 
-void CMemSpyEngineOutputSinkFile::ConstructL()
+void CMemSpyEngineOutputSinkFile::ConstructL( const TDesC& aRootFolder )
     {
     TRACE( RDebug::Printf( "CMemSpyEngineOutputSinkFile::ConstructL() - START" ) );
+    
+    iRoot = aRootFolder.AllocL();
 
     BaseConstructL();
 
@@ -78,11 +82,11 @@ void CMemSpyEngineOutputSinkFile::ConstructL()
     }
 
 
-CMemSpyEngineOutputSinkFile* CMemSpyEngineOutputSinkFile::NewL( CMemSpyEngine& aEngine )
+CMemSpyEngineOutputSinkFile* CMemSpyEngineOutputSinkFile::NewL( CMemSpyEngine& aEngine, const TDesC& aRootFolder )
     {
     CMemSpyEngineOutputSinkFile* self = new(ELeave) CMemSpyEngineOutputSinkFile( aEngine );
     CleanupStack::PushL( self );
-    self->ConstructL();
+    self->ConstructL( aRootFolder );
     CleanupStack::Pop( self );
     return self;
     }
@@ -154,7 +158,7 @@ void CMemSpyEngineOutputSinkFile::DataStreamBeginL( const TDesC& aContext, const
 
 void CMemSpyEngineOutputSinkFile::DataStreamBeginL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseTimeStamp )
     {
-    CMemSpyEngineSinkMetaData* meta = CMemSpyEngineSinkMetaData::NewL( aContext, aFolder, aExtension, aOverwrite, aUseTimeStamp );
+    CMemSpyEngineSinkMetaData* meta = CMemSpyEngineSinkMetaData::NewL( iRoot->Des(), aContext, aFolder, aExtension, aOverwrite, aUseTimeStamp );
     CleanupStack::PushL( meta );
 
     TRACE( RDebug::Printf( "CMemSpyEngineOutputSinkFile::DataStreamBeginL() - START - log count: %d, iFileServerSuspended: %d", iLogs.Count(), iFileServerSuspended ) );
@@ -409,7 +413,7 @@ void CMemSpyEngineFileHolder::ConstructL()
 
     // Make emtpy meta data
     ASSERT( !iMetaData );
-    iMetaData = CMemSpyEngineSinkMetaData::NewL( KNullDesC, KNullDesC, KNullDesC, ETrue, ETrue );
+    iMetaData = CMemSpyEngineSinkMetaData::NewL( KNullDesC, KNullDesC, KNullDesC, KNullDesC, ETrue, ETrue );
 
     // Prepare common details
     CommonConstructL();

@@ -58,9 +58,10 @@ public: // API
     //
     IMPORT_C const RPointerArray< CMemSpyEngineHelperSysMemTrackerCycle >& CompletedCycles() const;
 
+    IMPORT_C void CheckForChangesNowL();
+
 public: // But not exported
     void Reset();
-    void CheckForChangesNowL();
 
 public: // From MDesCArray
     IMPORT_C TInt MdcaCount() const;

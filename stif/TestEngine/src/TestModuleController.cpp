@@ -3104,4 +3104,4 @@ TInt GenerateModuleName(const TDesC& aModuleName,
 
 // None
 
-//  End of File
+// End of File

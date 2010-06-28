@@ -370,6 +370,17 @@ void CHtiFtpServicePlugin::HandleControlMessageL(const TDesC8& aMessage)
                     }
                 }
                 break;
+            case EFtpListDetail:
+            case EFtpListDetail_u:
+                {
+                if ( GetDirectoryL( aMessage.Mid( 1 ),
+                                   unicode ) )
+                    {
+                    HandleListDetailL( unicode,
+                        KEntryAttHidden| KEntryAttSystem|KEntryAttNormal);
+                    }
+                }
+                break;
             case EFtpLISTDIR:
             case EFtpLISTDIR_u:
                 {
@@ -380,6 +391,18 @@ void CHtiFtpServicePlugin::HandleControlMessageL(const TDesC8& aMessage)
                                 (KEntryAttMatchExclusive|
                                 KEntryAttHidden|KEntryAttSystem|
                                 KEntryAttDir), EFalse );
+                    }
+                }
+                break;
+            case EFtpListDirDetail:
+            case EFtpListDirDetail_u:
+                {
+                if ( GetDirectoryL( aMessage.Mid( 1 ),
+                                   unicode ) )
+                    {
+                    HandleListDetailL( unicode,
+                            KEntryAttMatchExclusive|KEntryAttHidden|
+                            KEntryAttSystem|KEntryAttDir);
                     }
                 }
                 break;
@@ -988,6 +1011,82 @@ void CHtiFtpServicePlugin::HandleListL( TBool aUnicodText,
 
     CleanupStack::PopAndDestroy();//dir
     HTI_LOG_FUNC_OUT("HandleListL");
+    }
+
+void CHtiFtpServicePlugin::HandleListDetailL( TBool aUnicodText, TUint aReadingAtt)
+    {
+    HTI_LOG_FUNC_IN("HandleListDetailL");
+    CDir* dir;
+    TInt err = iFs.GetDir( iFileName, aReadingAtt, ESortNone, dir );
+    if ( err != KErrNone )
+        {
+        User::LeaveIfError( SendErrorMsg( err, KErrDescrFailedGetDir ) );
+        return;
+        }
+
+    CleanupStack::PushL( dir );
+    //build list
+    delete iSendBuffer;
+    iSendBuffer = NULL;
+    TInt bufferLen = dir->Count()*KMaxFileName;
+    if ( aUnicodText )
+        {
+        bufferLen *= 2;
+        }
+    // 1 bytes for name length, 4 bytes for file size, 
+    // 6 bytes for date time, 3 bytes for attributes(hide, readonly and system)
+    bufferLen += (1 + 4 + 6 + 3) * dir->Count();
+
+    iSendBuffer = HBufC8::NewL( bufferLen );
+    TInt dirNameLen = 0;
+    for ( TInt i = 0; i < dir->Count(); ++i)
+        {
+        dirNameLen = (*dir)[i].iName.Length();
+        iSendBuffer->Des().Append( dirNameLen );
+        if ( aUnicodText )
+            {
+            iSendBuffer->Des().Append( (TUint8*)((*dir)[i].iName.Ptr()),
+                                       dirNameLen*2 );
+            }
+        else
+            {
+            iSendBuffer->Des().Append( (*dir)[i].iName );
+            }
+        TInt year = (*dir)[i].iModified.DateTime().Year();
+        iSendBuffer->Des().Append((TUint8*)(&year), 2 );
+        iSendBuffer->Des().Append( (*dir)[i].iModified.DateTime().Month()+1);
+        iSendBuffer->Des().Append( (*dir)[i].iModified.DateTime().Day()+1);
+        iSendBuffer->Des().Append( (*dir)[i].iModified.DateTime().Hour());
+        iSendBuffer->Des().Append( (*dir)[i].iModified.DateTime().Minute());
+        iSendBuffer->Des().Append( (*dir)[i].iModified.DateTime().Second());
+        iSendBuffer->Des().Append( (*dir)[i].IsHidden());
+        iSendBuffer->Des().Append( (*dir)[i].IsReadOnly());
+        iSendBuffer->Des().Append( (*dir)[i].IsSystem());
+        if((*dir)[i].IsDir() == EFalse)
+            {
+            TInt size = (*dir)[i].iSize;
+            iSendBuffer->Des().Append( (TUint8*)(&size), 4 );
+            }
+        }
+
+    err = iDispatcher->DispatchOutgoingMessage(iSendBuffer,
+                        KFtpServiceUid,
+                        EFalse,
+                        EHtiPriorityControl);
+
+    if (  err != KErrNone )
+        {
+        //wait for a memory
+        iState = EListBusy;
+        iDispatcher->AddMemoryObserver( this );
+        }
+    else
+        {
+        iSendBuffer = NULL;
+        }
+
+    CleanupStack::PopAndDestroy();//dir
+    HTI_LOG_FUNC_OUT("HandleListDetailL");
     }
 
 void CHtiFtpServicePlugin::HandleDataMessageL( const TDesC8& aMessage )

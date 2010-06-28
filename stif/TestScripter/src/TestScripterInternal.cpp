@@ -387,4 +387,4 @@ EXPORT_C TInt CScriptBase::GetLocalValue(const TDesC& aName, TReal& aValue )
     return ret;
     }
 
-//  End of File
+// End of File

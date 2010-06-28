@@ -1307,4 +1307,4 @@ TBool CTestInfo::operator== ( const CTestInfo& aTestInfo ) const
     
 // ================= OTHER EXPORTED FUNCTIONS ================================= 
 
-//  End of File
+// End of File

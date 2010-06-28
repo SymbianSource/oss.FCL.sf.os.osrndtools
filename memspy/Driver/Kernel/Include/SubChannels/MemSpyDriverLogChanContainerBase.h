@@ -42,8 +42,8 @@ public:
 protected: // Internal methods
     static TObjectType ObjectTypeFromMemSpyContainerType( TMemSpyDriverContainerType aType );
 
-    /** Returns with System Locked */
-    DObject* CheckIfObjectIsInContainer( TMemSpyDriverContainerType aContainerType, DObject* aSearchFor, TBool aQuick = EFalse );
+	// Must be in critical section to call
+	DObject* CheckedOpen(TMemSpyDriverContainerType aContainerType, DObject* aObject, TBool aQuick=EFalse);
 
 protected: // Internal methods
     void ResetTempHandles();

@@ -29,23 +29,15 @@
 #include "MemSpyDriverHeap.h"
 #include "MemSpyDriverHeapStatistics.h"
 
+#include "heaputils.h"
+using namespace LtkUtils;
 
 // Heap walker observer interface - can be used to make a record of each cell
 class MMemSpyHeapWalkerObserver
     {
 public:
-    virtual TBool HandleHeapCell( TInt aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber ) = 0;
+    virtual TBool HandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber) = 0;
     virtual void HandleHeapWalkInit() = 0;
-    };
-
-
-
-// A null observer that is used to collect basic statistics
-class TMemSpyHeapWalkerNullObserver : public MMemSpyHeapWalkerObserver
-    {
-public:
-    TBool HandleHeapCell( TInt /*aCellType*/, TAny* /*aCellAddress*/, TInt /*aLength*/, TInt /*aNestingLevel*/, TInt /*aAllocNumber*/ ) { return ETrue; }
-    void HandleHeapWalkInit() { }
     };
 
 
@@ -53,8 +45,7 @@ public:
 class RMemSpyDriverHeapWalker
     {
 public:
-    RMemSpyDriverHeapWalker( RMemSpyDriverRHeapBase& aHeap, TBool aDebugAllocator );
-    RMemSpyDriverHeapWalker( RMemSpyDriverRHeapBase& aHeap, TBool aDebugAllocator, MMemSpyHeapWalkerObserver& aObserver );
+	RMemSpyDriverHeapWalker(RMemSpyDriverRHeapBase& aHeap, MMemSpyHeapWalkerObserver* aObserver=NULL);
 		
 public: // API
     TInt Traverse();
@@ -63,12 +54,9 @@ public: // API
     inline void SetPrintDebug() { iPrintDebug = ETrue; }
     inline const TMemSpyHeapWalkStatistics& Stats() const { return iStats; }
 
-public: // Utility functions
-    static TAny* KernelAddress( TAny* aUserAddress, TUint aDelta );
-    static TAny* UserAddress( TAny* aKernelAddress, TUint aDelta );
-    static RMemSpyDriverRHeapBase::SCell* CellByUserAddress( TAny* aAddress, TUint aDelta );
-
 private: // Internal methods
+	static TBool CellCallback(RAllocatorHelper& aHelper, TAny* aContext, RAllocatorHelper::TExtendedCellType aCellType, TLinAddr aCellAddress, TInt aLength);
+	TBool DoCellCallback(RAllocatorHelper& aHelper, RAllocatorHelper::TExtendedCellType aCellType, TLinAddr aCellAddress, TInt aLength);
     TBool NotifyCell( TMemSpyDriverCellType aType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel = -1, TInt aAllocNumber = -1 );
     //
     void UpdateStats( TMemSpyDriverCellType aType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
@@ -76,14 +64,10 @@ private: // Internal methods
     void FinaliseStats();
     void PrintStats();
     //
-    TAny* KernelAddress( TAny* aUserAddress ) const;
-    TAny* UserAddress( TAny* aKernelAddress ) const;
-    //
     inline TBool PrintDebug() const { return iPrintDebug; }
 
 private:
     RMemSpyDriverRHeapBase& iHeap;
-    TBool iIsDebugAllocator;
     TBool iPrintDebug;
     MMemSpyHeapWalkerObserver* iObserver;
     TMemSpyHeapWalkStatistics iStats;

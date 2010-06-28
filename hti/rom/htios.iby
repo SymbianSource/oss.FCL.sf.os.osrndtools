@@ -57,6 +57,9 @@ file=ABI_DIR\BUILD_DIR\HtiFileHlp.exe               SHARED_LIB_DIR\HtiFileHlp.ex
  // HTI Watchdog
 file=ABI_DIR\BUILD_DIR\HtiWatchDog.exe              SHARED_LIB_DIR\HtiWatchDog.exe
 
+ // HTI Restart
+file=ABI_DIR\BUILD_DIR\HtiRestart.exe               SHARED_LIB_DIR\HtiRestart.exe
+
 
 #endif // __HTIOS_IBY__
 

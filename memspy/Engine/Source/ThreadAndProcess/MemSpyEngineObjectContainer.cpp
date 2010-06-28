@@ -773,9 +773,9 @@ TInt CMemSpyEngineObjectContainer::CompareByHeapUsage( CMemSpyProcess* const & a
         for( TInt i=0; i<leftCount; i++ )
             {
             const TMemSpyHeapInfo& info = leftInfos[ i ];
-            if ( info.Type() == TMemSpyHeapInfo::ETypeRHeap )
+            if ( info.Type() != TMemSpyHeapInfo::ETypeUnknown )
                 {
-                leftSize += (TInt) info.AsRHeap().ObjectData().Size();
+                leftSize += (TInt) info.AsRHeap().MetaData().iHeapSize;
                 }
             }
         CleanupStack::PopAndDestroy( &leftInfos );
@@ -789,9 +789,9 @@ TInt CMemSpyEngineObjectContainer::CompareByHeapUsage( CMemSpyProcess* const & a
         for( TInt i=0; i<rightCount; i++ )
             {
             const TMemSpyHeapInfo& info = rightInfos[ i ];
-            if ( info.Type() == TMemSpyHeapInfo::ETypeRHeap )
+            if ( info.Type() == TMemSpyHeapInfo::ETypeUnknown )
                 {
-                rightSize += (TInt) info.AsRHeap().ObjectData().Size();
+                rightSize += (TInt) info.AsRHeap().MetaData().iHeapSize;
                 }
             }
         CleanupStack::PopAndDestroy( &rightInfos );

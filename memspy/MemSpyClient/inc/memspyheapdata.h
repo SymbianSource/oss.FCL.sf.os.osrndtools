@@ -39,7 +39,7 @@ public:
 public:
 	TBuf<KBuf> iType;
 	TUint iSize;
-	TUint8 iBaseAddress;
+	TLinAddr iBaseAddress;
 	TBool iShared;
 	TUint iChunkSize;
 	TUint iAllocationsCount;

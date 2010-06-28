@@ -129,7 +129,7 @@ void CMemSpyEngineHelperSysMemTracker::Reset()
     }
 
 
-void CMemSpyEngineHelperSysMemTracker::CheckForChangesNowL()
+EXPORT_C void CMemSpyEngineHelperSysMemTracker::CheckForChangesNowL()
     {
     iImp->CheckForChangesNowL();
     }

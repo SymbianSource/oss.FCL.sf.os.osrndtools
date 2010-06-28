@@ -577,3 +577,5 @@ class CAtsLogger : public CBase
 };
 
 #endif// End of File
+
+// End of File

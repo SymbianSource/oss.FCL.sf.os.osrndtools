@@ -71,4 +71,4 @@ TInt GetNewIndexForThreadL(void)
 //
 // ============================ MEMBER FUNCTIONS ===============================
 
-//  End of File
+// End of File

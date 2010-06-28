@@ -25,7 +25,7 @@ UID             0x1000008d 0x2002129D
 VENDORID		VID_DEFAULT
 SMPSAFE
 
-CAPABILITY			none
+CAPABILITY		WriteDeviceData
 
 SOURCEPATH      ../Source
 SOURCE          MemSpyCommandLine.cpp
@@ -37,6 +37,12 @@ USERINCLUDE     ../Include
 
 OS_LAYER_SYSTEMINCLUDE
 
-LIBRARY					euser.lib efsrv.lib bafl.lib 
+APP_LAYER_SYSTEMINCLUDE
+
+LIBRARY         MemSpyClient.lib
+
+LIBRARY					euser.lib 
+LIBRARY 				efsrv.lib 
+LIBRARY 				bafl.lib 
 
 

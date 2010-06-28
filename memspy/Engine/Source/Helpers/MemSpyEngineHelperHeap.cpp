@@ -45,6 +45,7 @@ _LIT( KCellTypeBadAllocatedCellSize,     "[Bad Allocated Cell Size]   ");
 _LIT( KCellTypeBadAllocatedCellAddress,  "[Bad Allocated Cell Address]");
 _LIT( KCellTypeBadFreeCellAddress,       "[Bad Free Cell Address]     ");
 _LIT( KCellTypeBadFreeCellSize,          "[Bad Free Cell Size]        ");
+_LIT( KCellTypeBad,                      "[Bad Cell]                  ");
 _LIT( KCellTypeUnknown,                  "[Unknown!]                  ");
 _LIT( KCellListLineFormat, "%S cell: 0x%08x, cellLen: %8d, allocNum: %8d, nestingLev: %8d, cellData: 0x%08x, cellDataAddr: 0x%08x, headerSize: %02d");
 _LIT( KMemSpyMarkerHeapData, "<%SMEMSPY_HEAP_DATA_%03d>" );
@@ -104,7 +105,7 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputCellListingUserL( const CMemSpyThre
         {
         UpdateSharedHeapInfoL( aThread.Process().Id(), aThread.Id(), heapInfo );
         }
-    if  ( error == KErrNone && heapInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
+    if  ( error == KErrNone && heapInfo.Type() != TMemSpyHeapInfo::ETypeUnknown )
         {
         // Get thread name for context
         const TFullName pName( aThread.FullName() );
@@ -159,36 +160,43 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputCellListingUserL( const CMemSpyThre
                 TUint fourByteCellData = 0;
                 TPtrC pType(KNullDesC);
                 //
-                switch(cellType)
-                    {
-                case EMemSpyDriverGoodAllocatedCell:
-                    {
+				if (cellType & EMemSpyDriverAllocatedCellMask)
+					{
                     r = iEngine.Driver().WalkHeapReadCellData( cellAddress, cellData, 4 );
                     if  ( r == KErrNone )
                         {
                         fourByteCellData = DescriptorAsDWORD( cellData );
                         }
                     pType.Set(KCellTypeGoodAllocatedCell);
-                    break;
                     }
-                case EMemSpyDriverGoodFreeCell:
+				else if (cellType & EMemSpyDriverFreeCellMask)
+					{
                     pType.Set(KCellTypeGoodFreeCell);
-                    break;
-                case EMemSpyDriverBadAllocatedCellSize:
-                    pType.Set(KCellTypeBadAllocatedCellSize);
-                    break;
-                case EMemSpyDriverBadAllocatedCellAddress:
-                    pType.Set(KCellTypeBadAllocatedCellAddress);
-                    break;
-                case EMemSpyDriverBadFreeCellAddress:
-                    pType.Set(KCellTypeBadFreeCellAddress);
-                    break;
-                case EMemSpyDriverBadFreeCellSize:
-                    pType.Set(KCellTypeBadFreeCellSize);
-                    break;
-                default:
+					}
+				else if (cellType & EMemSpyDriverBadCellMask)
+					{
+					switch (cellType)
+						{
+					case EMemSpyDriverHeapBadAllocatedCellSize:
+						pType.Set(KCellTypeBadAllocatedCellSize);
+						break;
+					case EMemSpyDriverHeapBadAllocatedCellAddress:
+						pType.Set(KCellTypeBadAllocatedCellAddress);
+						break;
+					case EMemSpyDriverHeapBadFreeCellAddress:
+						pType.Set(KCellTypeBadFreeCellAddress);
+						break;
+					case EMemSpyDriverHeapBadFreeCellSize:
+						pType.Set(KCellTypeBadFreeCellSize);
+						break;
+					default:
+						pType.Set(KCellTypeBad);
+						break;
+						}
+					}
+				else
+					{
                     pType.Set(KCellTypeUnknown);
-                    break;
                     }
 
                 if  ( r == KErrNone )
@@ -241,31 +249,30 @@ void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const CMemSpyThread& aThread,
     // Make sure the process is suspended for the entire time we are manipulating it's heap
     iEngine.ProcessSuspendLC( aThread.Process().Id() );
 
-    // Get the heap info, including free cell information
-    RArray<TMemSpyDriverFreeCell> freeCells;
-    CleanupClosePushL( freeCells );
+    // Get the heap info, including cell information
+    RArray<TMemSpyDriverCell> cells;
+    CleanupClosePushL( cells );
     TMemSpyHeapInfo heapInfo;
     TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::OutputHeapDataUserL() - checksum1: 0x%08x", heapInfo.AsRHeap().Statistics().StatsFree().Checksum() ) );
-    GetHeapInfoUserL( aThread.Process().Id(), aThread.Id(), heapInfo, &freeCells );
+    GetHeapInfoUserL(aThread.Process().Id(), aThread.Id(), heapInfo, &cells, ETrue);
     TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::OutputHeapDataUserL() - checksum2: 0x%08x", heapInfo.AsRHeap().Statistics().StatsFree().Checksum() ) );
 
     // Get the heap data
     const TFullName pName( aThread.FullName() );
-    OutputHeapDataUserL( aThread.Process().Id(), aThread.Id(), pName, heapInfo, aCreateDataStream, &freeCells );
-    CleanupStack::PopAndDestroy( &freeCells );
+    OutputHeapDataUserL( aThread.Process().Id(), aThread.Id(), pName, heapInfo, aCreateDataStream, &cells );
+    CleanupStack::PopAndDestroy( &cells );
 
     // Resume process
     CleanupStack::PopAndDestroy();
     }
 
 
-EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const TThreadId& aTid, const TDesC& aThreadName, const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverFreeCell>* aFreeCells )
+EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapDataUserL(const TProcessId& aPid, const TThreadId& aTid, const TDesC& aThreadName, const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverCell>* aCells)
     {
-    OutputHeapDataUserL( aPid, aTid, aThreadName, aInfo, ETrue, aFreeCells );
+    OutputHeapDataUserL(aPid, aTid, aThreadName, aInfo, ETrue, aCells);
     }
 
-
-void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const TThreadId& aTid, const TDesC& aThreadName, const TMemSpyHeapInfo& aInfo, TBool aCreateDataStream, const RArray<TMemSpyDriverFreeCell>* aFreeCells )
+void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const TThreadId& aTid, const TDesC& aThreadName, const TMemSpyHeapInfo& aInfo, TBool aCreateDataStream, const RArray<TMemSpyDriverCell>* aCells )
     {
     TBuf<KMaxFullName + 100> printFormat;
 
@@ -291,7 +298,7 @@ void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const
     iEngine.Sink().OutputPrefixSetFormattedLC( KMemSpyPrefixHeapData, &aThreadName );
 
     // Info section
-    OutputHeapInfoL( aInfo, aThreadName, aFreeCells );
+    OutputHeapInfoL( aInfo, aThreadName, aCells );
 
     // Code segments (needed for map file reading...)
     _LIT(KCellListCodeSegInfoFormat, "CodeSegs - ");
@@ -315,14 +322,25 @@ void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const
     TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::OutputHeapDataUserL() - checksum: 0x%08x", checksum ) );
 
     TInt r = iEngine.Driver().GetHeapData( aTid, checksum, pData, readAddress, remaining );
-    if  ( r == KErrNone )
+	TUint prevEndAddress = readAddress + pData.Length();
+    if (r == KErrNone)
         {
-        while ( r == KErrNone )
+        while (r == KErrNone)
             {
+			if (readAddress > prevEndAddress)
+				{
+				// We've hit a discontinuity, ie one or more unmapped pages
+				_LIT(KBreak, "........");
+				iEngine.Sink().OutputLineL(KBreak);
+				}
             _LIT(KHeapDumpDataFormat, "%S");
-            iEngine.Sink().OutputBinaryDataL( KHeapDumpDataFormat, pData.Ptr(), (const TUint8*) readAddress, pData.Length() );
-            if  ( remaining > 0 )
-                r = iEngine.Driver().GetHeapDataNext( aTid, pData, readAddress, remaining );
+            iEngine.Sink().OutputBinaryDataL(KHeapDumpDataFormat, pData.Ptr(), (const TUint8*) readAddress, pData.Length());
+			readAddress += pData.Length();
+            if (remaining > 0)
+				{
+				prevEndAddress = readAddress;
+                r = iEngine.Driver().GetHeapDataNext(aTid, pData, readAddress, remaining);
+				}
             else
                 break;
             }
@@ -365,11 +383,9 @@ void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const
 
 
 
-
-
-EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoL( const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const RArray<TMemSpyDriverFreeCell>* aFreeCells )
-    {
-    CMemSpyEngineOutputList* list = NewHeapSummaryExtendedLC( aInfo, aFreeCells );
+EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoL( const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const RArray<TMemSpyDriverCell>* aCells )
+	{
+    CMemSpyEngineOutputList* list = NewHeapSummaryExtendedLC(aInfo, aCells);
 
     // Format the thread name according to upper/lower case request parameters
     _LIT( KOverallCaption1, "HEAP INFO FOR THREAD '%S'");
@@ -416,7 +432,6 @@ void CMemSpyEngineHelperHeap::OutputCSVEntryL( TInt aIndex, const TMemSpyHeapInf
     {
     const TMemSpyHeapInfoRHeap& rHeapInfo = aInfo.AsRHeap();
     const TMemSpyHeapMetaDataRHeap& rHeapMetaData = rHeapInfo.MetaData();
-    const TMemSpyHeapObjectDataRHeap& rHeapObjectData = rHeapInfo.ObjectData();
     const TMemSpyHeapStatisticsRHeap& rHeapStats = rHeapInfo.Statistics();
 
     // Example:
@@ -456,20 +471,20 @@ void CMemSpyEngineHelperHeap::OutputCSVEntryL( TInt aIndex, const TMemSpyHeapInf
                                          aIndex,
                                          aInfo.Tid(),
                                          rHeapMetaData.ChunkHandle(),
-                                         rHeapObjectData.Base(),
-                                         rHeapObjectData.Size(),
-                                         rHeapObjectData.iMinLength,
-                                         rHeapObjectData.iMaxLength,
-                                         rHeapObjectData.iFree.next,
-                                         rHeapObjectData.iFree.len,
+                                         /*rHeapObjectData.Base(),*/ rHeapMetaData.iAllocatorAddress,
+                                         /*rHeapObjectData.Size(),*/ rHeapMetaData.iHeapSize,
+                                         /*rHeapObjectData.iMinLength,*/ rHeapMetaData.iMinHeapSize,
+                                         /*rHeapObjectData.iMaxLength,*/ rHeapMetaData.iMaxHeapSize,
+                                         /*rHeapObjectData.iFree.next,*/ NULL,
+                                         /*rHeapObjectData.iFree.len,*/ 0,
                                          rHeapStats.StatsFree().TypeCount(),
                                          rHeapStats.StatsFree().TypeSize(),
                                          rHeapStats.StatsFree().SlackSpaceCellSize(),
                                          rHeapStats.StatsFree().LargestCellSize(),
                                          rHeapStats.StatsAllocated().LargestCellSize(),
-                                         rHeapObjectData.iCellCount,
-                                         rHeapObjectData.iMinCell,
-                                         rHeapObjectData.iTotalAllocSize,
+                                         /*rHeapObjectData.iCellCount,*/ rHeapStats.StatsAllocated().TypeCount(),
+                                         /*rHeapObjectData.iMinCell,*/ 0,
+                                         /*rHeapObjectData.iTotalAllocSize,*/ rHeapStats.StatsAllocated().TypeSize(),
                                          rHeapMetaData.IsSharedHeap(),
                                          &KFmtFields,
                                          aIndex
@@ -519,7 +534,7 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoForDeviceL( TBool aIncludeK
         // Get kernel heap info
         GetHeapInfoKernelL( info );
 
-        if ( info.Type() == TMemSpyHeapInfo::ETypeRHeap )
+        if ( info.Type() != TMemSpyHeapInfo::ETypeUnknown )
             {
             TName threadName;
             MemSpyEngineUtils::GetKernelHeapThreadAndProcessNames( threadName, processName );
@@ -546,7 +561,7 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoForDeviceL( TBool aIncludeK
                     {
                     UpdateSharedHeapInfoL( process.Id(), thread.Id(), info );
                     }
-                if  ( error == KErrNone && info.Type() == TMemSpyHeapInfo::ETypeRHeap )
+                if  ( error == KErrNone && info.Type() != TMemSpyHeapInfo::ETypeUnknown )
                     {
                     OutputCSVEntryL( index++, info, threadName, processName );
                     }
@@ -577,16 +592,21 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoForDeviceL( TBool aIncludeK
 
 
 
-EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL( const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverFreeCell>* aFreeCells )
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverFreeCell>* aFreeCells)
+    {
+	GetHeapInfoUserL(aProcess, aThread, aInfo, aFreeCells, EFalse);
+	}
+
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverCell>* aCells, TBool aCollectAllocatedCellsAsWellAsFree)
     {
     iEngine.ProcessSuspendLC( aProcess );
     TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::GetHeapInfoUserL() - checksum1: 0x%08x", aInfo.AsRHeap().Statistics().StatsFree().Checksum() ) );
     
     TInt r = KErrNone;
     //
-    if  ( aFreeCells )
+    if  (aCells)
         {
-        r = iEngine.Driver().GetHeapInfoUser( aInfo, aThread, *aFreeCells );
+        r = iEngine.Driver().GetHeapInfoUser( aInfo, aThread, *aCells, aCollectAllocatedCellsAsWellAsFree);
         }
     else
         {
@@ -736,9 +756,11 @@ void CMemSpyEngineHelperHeap::OutputHeapDataKernelL( TBool aCreateDataStream )
     _LIT(KHeaderDump, "Heap Data");
     iEngine.Sink().OutputSectionHeadingL( KHeaderDump, '-' );
 
-    _LIT(KHeapDumpDataFormat, "%S");
+    /*TOMSCI TODO this stuff needs fixing
+	_LIT(KHeapDumpDataFormat, "%S");
     const TUint8* heapBaseAddress = info.AsRHeap().ObjectData().Base();
     iEngine.Sink().OutputBinaryDataL( KHeapDumpDataFormat, data->Ptr(), heapBaseAddress, data->Length() );
+	*/
 
     CleanupStack::PopAndDestroy(); // clear prefix
     CleanupStack::PopAndDestroy( data );
@@ -795,22 +817,29 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryShortLC
         _LIT( KItem0_Type_Unknown, "Unknown" );
         list->AddItemL( KItem0, KItem0_Type_Unknown );
         }
-    else if ( aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
+    else
         {
         const TMemSpyHeapInfoRHeap& rHeap = aInfo.AsRHeap();
         const TMemSpyHeapMetaDataRHeap& metaData = rHeap.MetaData();
-        const TMemSpyHeapObjectDataRHeap& objectData = rHeap.ObjectData();
         const TMemSpyHeapStatisticsRHeap& statistics = rHeap.Statistics();
 
         _LIT( KItem0_Type_RHeap, "RHeap" );
-        list->AddItemL( KItem0, KItem0_Type_RHeap );
+        _LIT( KItem0_Type_RHybridHeap, "RHybridHeap" );
+		if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap)
+			{
+	        list->AddItemL( KItem0, KItem0_Type_RHeap );
+			}
+		else
+			{
+	        list->AddItemL( KItem0, KItem0_Type_RHybridHeap );
+			}
 
         // Heap size is the size of the heap minus the size of the embedded (in-place) RHeap. 
         _LIT( KItem1, "Heap size" );
-        list->AddItemL( KItem1, objectData.Size() );
+        list->AddItemL(KItem1, metaData.iHeapSize);
 
-        _LIT( KItem8b, "Heap base address" );
-        list->AddItemHexL( KItem8b, (TUint) objectData.Base() );
+        _LIT( KItem8b, "Allocator address" );
+        list->AddItemHexL( KItem8b, (TUint)metaData.iAllocatorAddress );
         
         _LIT( KItem1b, "Shared" );
         list->AddItemYesNoL( KItem1b, metaData.IsSharedHeap() );
@@ -845,34 +874,21 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryShortLC
         // Fragmentation is a measurement of free space scattered throughout the heap, but ignoring
         // any slack space at the end (which can often be recovered, to the granularity of one page of ram)
         _LIT( KItem8a, "Fragmentation" );
-        list->AddItemPercentageL( KItem8a, objectData.Size(), ( statistics.StatsFree().TypeSize()  - statistics.StatsFree().SlackSpaceCellSize() ) );
+        list->AddItemPercentageL( KItem8a, metaData.iHeapSize, ( statistics.StatsFree().TypeSize()  - statistics.StatsFree().SlackSpaceCellSize() ) );
 
-        _LIT( KItem13, "Header size (A)" );
-        list->AddItemL( KItem13, metaData.HeaderSizeAllocated() );
-
-        _LIT( KItem14, "Header size (F)" );
-        list->AddItemL( KItem14, metaData.HeaderSizeFree() );
-
-        _LIT( KItem9a, "Overhead (alloc)" );
-        const TInt allocOverhead = metaData.HeaderSizeAllocated() * statistics.StatsAllocated().TypeCount();
-        list->AddItemL( KItem9a, allocOverhead );
-
-        _LIT( KItem9b, "Overhead (free)" );
-        const TInt freeOverhead = metaData.HeaderSizeFree() * statistics.StatsFree().TypeCount();
-        list->AddItemL( KItem9b, freeOverhead );
 
         _LIT( KItem9c, "Overhead (total)" );
-        const TInt totalOverhead = freeOverhead + allocOverhead;
+		const TInt totalOverhead = metaData.iHeapSize - statistics.StatsAllocated().TypeSize();
         list->AddItemL( KItem9c, totalOverhead );
 
         _LIT( KItem9d, "Overhead" );
-        list->AddItemPercentageL( KItem9d, objectData.Size(), totalOverhead  );
+        list->AddItemPercentageL( KItem9d, metaData.iHeapSize, totalOverhead  );
 
         _LIT( KItem10, "Min. length" );
-        list->AddItemL( KItem10, objectData.iMinLength );
+        list->AddItemL( KItem10, metaData.iMinHeapSize );
 
         _LIT( KItem11, "Max. length" );
-        list->AddItemL( KItem11, objectData.iMaxLength );
+        list->AddItemL( KItem11, metaData.iMaxHeapSize );
 
         _LIT( KItem12, "Debug Allocator Library" );
         list->AddItemYesNoL( KItem12, metaData.IsDebugAllocator() );
@@ -882,17 +898,16 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryShortLC
     }
 
 
-EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverFreeCell>* aFreeCells )
-    {
+EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverCell>* aCells )
+	{
     CMemSpyEngineOutputList* list = CMemSpyEngineOutputList::NewLC( iEngine.Sink() );
     //
     AppendMetaDataL( aInfo, *list );
-    AppendObjectDataL( aInfo, *list );
     AppendStatisticsL( aInfo, *list );
     //
-    if  ( aFreeCells )
+    if  ( aCells )
         {
-        AppendFreeCellsL( *aFreeCells, *list );
+        AppendCellsL( *aCells, *list );
         }
     //
     return list;
@@ -902,27 +917,34 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryExtende
 //cigasto: not formatted - raw heap info 
 EXPORT_C TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo( const TMemSpyHeapInfo& aInfo )
 	{
+	_LIT(KUnknown, "Unknown");
 	TMemSpyHeapData list;
+	list.iType.Copy(KUnknown);
 
 	// Heap type	
-	if ( aInfo.Type() == TMemSpyHeapInfo::ETypeUnknown )
-		{
-		_LIT( KItem0_Type_Unknown, "Unknown" );
-		list.iType.Append( KItem0_Type_Unknown );
-		}
-	else if ( aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
+	if (aInfo.Type() != TMemSpyHeapInfo::ETypeUnknown)
 		{
 		const TMemSpyHeapInfoRHeap& rHeap = aInfo.AsRHeap();
 		const TMemSpyHeapMetaDataRHeap& metaData = rHeap.MetaData();
-		const TMemSpyHeapObjectDataRHeap& objectData = rHeap.ObjectData();
 		const TMemSpyHeapStatisticsRHeap& statistics = rHeap.Statistics();
 
-		_LIT( KItem0_Type_RHeap, "RHeap" );
-		list.iType.Append( KItem0_Type_RHeap );
+		_LIT(KRHeap, "RHeap");
+		_LIT(KRHybridHeap, "RHybridHeap");
+		switch (aInfo.Type())
+			{
+			case TMemSpyHeapInfo::ETypeRHeap:
+				list.iType.Copy(KRHeap);
+				break;
+			case TMemSpyHeapInfo::ETypeRHybridHeap:
+				list.iType.Copy(KRHybridHeap);
+				break;
+			default:
+				break;
+			}
 
-	    // Heap size is the size of the heap minus the size of the embedded (in-place) RHeap. 	    
-	    list.iSize = objectData.Size();
-	    list.iBaseAddress = (TUint) objectData.Base();	        
+	    // Heap size is the total amount of memory committed to the heap, which includes the size of the embedded (in-place) RHeap/RHybridHeap.
+	    list.iSize = metaData.iHeapSize;
+	    list.iBaseAddress = (TUint)metaData.iAllocatorAddress; // TODO we can't do the base address any more, allocator address is the closest thing
 	    list.iShared = metaData.IsSharedHeap();
 	    list.iChunkSize = metaData.ChunkSize();
 	    list.iAllocationsCount = statistics.StatsAllocated().TypeCount();
@@ -933,16 +955,16 @@ EXPORT_C TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo( const TMemSpyH
 	    list.iTotalFree =  statistics.StatsFree().TypeSize();
 	    list.iSlackFreeSpace = statistics.StatsFree().SlackSpaceCellSize();
 	    list.iFragmentation = statistics.StatsFree().TypeSize() - statistics.StatsFree().SlackSpaceCellSize(); //to calculate percentage value use iSize as 100% value
-	    list.iHeaderSizeA = metaData.HeaderSizeAllocated();
-	    list.iHeaderSizeF = metaData.HeaderSizeFree();
-	    TInt allocOverhead = metaData.HeaderSizeAllocated() * statistics.StatsAllocated().TypeCount();
+	    list.iHeaderSizeA = 0; //metaData.HeaderSizeAllocated();
+	    list.iHeaderSizeF = 0; //metaData.HeaderSizeFree();
+	    TInt allocOverhead = rHeap.Overhead(); //metaData.HeaderSizeAllocated() * statistics.StatsAllocated().TypeCount();
 	    list.iAllocationOverhead = allocOverhead;
-	    TInt freeOverhead = metaData.HeaderSizeFree() * statistics.StatsFree().TypeCount();
-	    list.iFreeOverhead = freeOverhead;
-	    list.iTotalOverhead = freeOverhead + allocOverhead;
-	    list.iOverhead = freeOverhead + allocOverhead; //to calculate percentage value use iSize as 100% value    
-	    list.iMinLength = objectData.iMinLength;
-	    list.iMaxLength = objectData.iMaxLength;
+	    //TInt freeOverhead = metaData.HeaderSizeFree() * statistics.StatsFree().TypeCount();
+	    list.iFreeOverhead = 0; // TODO there is no way of calculating this
+	    list.iTotalOverhead = allocOverhead; // freeOverhead + allocOverhead
+	    list.iOverhead = allocOverhead; //freeOverhead + allocOverhead; //to calculate percentage value use iSize as 100% value    
+	    list.iMinLength = metaData.iMinHeapSize;
+	    list.iMaxLength = metaData.iMaxHeapSize;
 	    list.iDebugAllocatorLibrary = metaData.IsDebugAllocator();
 		}
 
@@ -1001,7 +1023,7 @@ void CMemSpyEngineHelperHeap::AppendMetaDataL( const TMemSpyHeapInfo& aInfo, CMe
 
     // Type
     _LIT( KMetaData_Type,  "Type:" );
-    if ( aInfo.Type() != TMemSpyHeapInfo::ETypeRHeap )
+    if ( aInfo.Type() == TMemSpyHeapInfo::ETypeUnknown )
         {
         _LIT( KMetaData_Type_Unknown,  "Unknown" );
         aList.AddItemL( KMetaData_Type, KMetaData_Type_Unknown );
@@ -1012,15 +1034,23 @@ void CMemSpyEngineHelperHeap::AppendMetaDataL( const TMemSpyHeapInfo& aInfo, CMe
     
         // Type
         _LIT( KMetaData_Type_RHeap,  "Symbian OS RHeap" );
-        aList.AddItemL( KMetaData_Type, KMetaData_Type_RHeap );
+        _LIT( KMetaData_Type_RHybridHeap,  "Symbian OS RHybridHeap" );
+		if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap)
+			{
+	        aList.AddItemL( KMetaData_Type, KMetaData_Type_RHeap );
+			}
+		else
+			{
+			aList.AddItemL( KMetaData_Type, KMetaData_Type_RHybridHeap );
+			}
 
         // VTable
-        _LIT( KMetaData_VTable,  "VTable:" );
-        aList.AddItemHexL( KMetaData_VTable, metaData.VTable() );
+        //_LIT( KMetaData_VTable,  "VTable:" );
+        //aList.AddItemHexL( KMetaData_VTable, metaData.VTable() );
 
         // Object size
-        _LIT( KMetaData_ObjectSize,  "Object Size:" );
-        aList.AddItemL( KMetaData_ObjectSize, metaData.ClassSize() );
+        //_LIT( KMetaData_ObjectSize,  "Object Size:" );
+        //aList.AddItemL( KMetaData_ObjectSize, metaData.ClassSize() );
 
         // Chunk name
         _LIT( KMetaData_ChunkName,  "Chunk Name:" );
@@ -1039,14 +1069,6 @@ void CMemSpyEngineHelperHeap::AppendMetaDataL( const TMemSpyHeapInfo& aInfo, CMe
         _LIT( KMetaData_DebugAllocator,  "Debug Allocator:" );
         aList.AddItemYesNoL( KMetaData_DebugAllocator, metaData.IsDebugAllocator() );
 
-        // Cell header overhead (free cells)
-        _LIT( KMetaData_CellHeaderOverheadFree,  "Overhead (Free):" );
-        aList.AddItemL( KMetaData_CellHeaderOverheadFree, metaData.HeaderSizeFree() );
-
-        // Cell header overhead (allocated cells)
-        _LIT( KMetaData_CellHeaderOverheadAlloc,  "Overhead (Alloc):" );
-        aList.AddItemL( KMetaData_CellHeaderOverheadAlloc, metaData.HeaderSizeAllocated() );
-
         // Shared Heap
         _LIT( KMetaData_Shared,  "Shared:" );
         aList.AddItemYesNoL( KMetaData_Shared, metaData.IsSharedHeap() );
@@ -1058,90 +1080,9 @@ void CMemSpyEngineHelperHeap::AppendMetaDataL( const TMemSpyHeapInfo& aInfo, CMe
     aList.AddBlankItemL( 1 );
     }
 
-
-void CMemSpyEngineHelperHeap::AppendObjectDataL( const TMemSpyHeapInfo& aInfo, CMemSpyEngineOutputList& aList )
-    {
-    if ( aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
-        {
-        const TMemSpyHeapInfoRHeap& rHeap = aInfo.AsRHeap();
-        const TMemSpyHeapObjectDataRHeap& objectData = rHeap.ObjectData();
-
-        // Make caption
-        _LIT( KOverallCaption1, "RAllocator" );
-        aList.AddItemL( KOverallCaption1 );
-        aList.AddUnderlineForPreviousItemL( '=', 0 );
-
-        // RAllocator
-        _LIT( KObjectData_RAllocator_iAccessCount,  "RAllocator::iAccessCount" );
-        aList.AddItemL( KObjectData_RAllocator_iAccessCount, objectData.iAccessCount );
-        _LIT( KObjectData_RAllocator_iHandleCount,  "RAllocator::iHandleCount" );
-        aList.AddItemL( KObjectData_RAllocator_iHandleCount, objectData.iHandleCount );
-        _LIT( KObjectData_RAllocator_iHandles,  "RAllocator::iHandles" );
-        aList.AddItemL( KObjectData_RAllocator_iHandles, objectData.iHandles );
-        _LIT( KObjectData_RAllocator_iFlags,  "RAllocator::iFlags" );
-        aList.AddItemHexL( KObjectData_RAllocator_iFlags, objectData.iFlags );
-        _LIT( KObjectData_RAllocator_iCellCount,  "RAllocator::iCellCount" );
-        aList.AddItemL( KObjectData_RAllocator_iCellCount, objectData.iCellCount );
-        _LIT( KObjectData_RAllocator_iTotalAllocSize,  "RAllocator::iTotalAllocSize" );
-        aList.AddItemL( KObjectData_RAllocator_iTotalAllocSize, objectData.iTotalAllocSize );
-
-        aList.AddBlankItemL( 1 );
-
-        // Make caption
-        _LIT( KOverallCaption2, "RHeap" );
-        aList.AddItemL( KOverallCaption2 );
-        aList.AddUnderlineForPreviousItemL( '=', 0 );
-
-        // RHeap
-        _LIT( KObjectData_RHeap_iMinLength,  "RHeap::iMinLength" );
-        aList.AddItemL( KObjectData_RHeap_iMinLength, objectData.iMinLength );
-        _LIT( KObjectData_RHeap_iMaxLength,  "RHeap::iMaxLength" );
-        aList.AddItemL( KObjectData_RHeap_iMaxLength, objectData.iMaxLength );
-        _LIT( KObjectData_RHeap_iOffset,  "RHeap::iOffset" );
-        aList.AddItemL( KObjectData_RHeap_iOffset, objectData.iOffset );
-        _LIT( KObjectData_RHeap_iGrowBy,  "RHeap::iGrowBy" );
-        aList.AddItemL( KObjectData_RHeap_iGrowBy, objectData.iGrowBy );
-        _LIT( KObjectData_RHeap_iChunkHandle,  "RHeap::iChunkHandle" );
-        aList.AddItemHexL( KObjectData_RHeap_iChunkHandle, objectData.iChunkHandle );
-        _LIT( KObjectData_RHeap_iBase,  "RHeap::iBase" );
-        aList.AddItemL( KObjectData_RHeap_iBase, objectData.iBase );
-        _LIT( KObjectData_RHeap_iTop,  "RHeap::iTop" );
-        aList.AddItemL( KObjectData_RHeap_iTop, objectData.iTop );
-        _LIT( KObjectData_RHeap_iAlign,  "RHeap::iAlign" );
-        aList.AddItemL( KObjectData_RHeap_iAlign, objectData.iAlign );
-        _LIT( KObjectData_RHeap_iMinCell,  "RHeap::iMinCell" );
-        aList.AddItemL( KObjectData_RHeap_iMinCell, objectData.iMinCell );
-        _LIT( KObjectData_RHeap_iPageSize,  "RHeap::iPageSize" );
-        aList.AddItemL( KObjectData_RHeap_iPageSize, objectData.iPageSize );
-        _LIT( KObjectData_RHeap_iFree_next,  "RHeap::iFree.next" );
-        aList.AddItemL( KObjectData_RHeap_iFree_next, objectData.iFree.next );
-        _LIT( KObjectData_RHeap_iFree_len,  "RHeap::iFree.len" );
-        aList.AddItemL( KObjectData_RHeap_iFree_len, objectData.iFree.len );
-        _LIT( KObjectData_RHeap_iNestingLevel,  "RHeap::iNestingLevel" );
-        aList.AddItemL( KObjectData_RHeap_iNestingLevel, objectData.iNestingLevel );
-        _LIT( KObjectData_RHeap_iAllocCount,  "RHeap::iAllocCount" );
-        aList.AddItemL( KObjectData_RHeap_iAllocCount, objectData.iAllocCount );
-        _LIT( KObjectData_RHeap_iFailType,  "RHeap::iFailType" );
-        aList.AddItemL( KObjectData_RHeap_iFailType, (TInt) objectData.iFailType );
-        _LIT( KObjectData_RHeap_iFailRate,  "RHeap::iFailRate" );
-        aList.AddItemL( KObjectData_RHeap_iFailRate, objectData.iFailRate );
-        _LIT( KObjectData_RHeap_iFailed,  "RHeap::iFailed" );
-        aList.AddItemTrueFalseL( KObjectData_RHeap_iFailed, objectData.iFailed );
-        _LIT( KObjectData_RHeap_iFailAllocCount,  "RHeap::iFailAllocCount" );
-        aList.AddItemL( KObjectData_RHeap_iFailAllocCount, objectData.iFailAllocCount );
-        _LIT( KObjectData_RHeap_iRand,  "RHeap::iRand" );
-        aList.AddItemL( KObjectData_RHeap_iRand, objectData.iRand );
-        _LIT( KObjectData_RHeap_iTestData,  "RHeap::iTestData" );
-        aList.AddItemL( KObjectData_RHeap_iTestData, objectData.iTestData );
-
-        aList.AddBlankItemL( 1 );
-        }
-    }
-
-
 void CMemSpyEngineHelperHeap::AppendStatisticsL( const TMemSpyHeapInfo& aInfo, CMemSpyEngineOutputList& aList )
     {
-    if ( aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
+    if (aInfo.Type() != TMemSpyHeapInfo::ETypeUnknown)
         {
         const TMemSpyHeapInfoRHeap& rHeap = aInfo.AsRHeap();
         const TMemSpyHeapStatisticsRHeap& rHeapStats = rHeap.Statistics();
@@ -1161,10 +1102,13 @@ void CMemSpyEngineHelperHeap::AppendStatisticsL( const TMemSpyHeapInfo& aInfo, C
         aList.AddItemL( KStatsData_CellSize, rHeapStats.StatsFree().TypeSize() );
         aList.AddItemL( KStatsData_LargestCellAddress, rHeapStats.StatsFree().LargestCellAddress() );
         aList.AddItemL( KStatsData_LargestCellSize, rHeapStats.StatsFree().LargestCellSize() );
-        _LIT( KStatsData_Free_SlackCellAddress,  "Slack:" );
-        aList.AddItemL( KStatsData_Free_SlackCellAddress, rHeapStats.StatsFree().SlackSpaceCellAddress() );
-        _LIT( KStatsData_Free_SlackCellSize,  "Slack size:" );
-        aList.AddItemL( KStatsData_Free_SlackCellSize, rHeapStats.StatsFree().SlackSpaceCellSize() );
+		if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap)
+			{
+			_LIT( KStatsData_Free_SlackCellAddress,  "Slack:" );
+			aList.AddItemL( KStatsData_Free_SlackCellAddress, rHeapStats.StatsFree().SlackSpaceCellAddress() );
+			_LIT( KStatsData_Free_SlackCellSize,  "Slack size:" );
+			aList.AddItemL( KStatsData_Free_SlackCellSize, rHeapStats.StatsFree().SlackSpaceCellSize() );
+			}
         _LIT( KStatsData_Free_Checksum,  "Checksum:" );
         aList.AddItemHexL( KStatsData_Free_Checksum, rHeapStats.StatsFree().Checksum() );
 
@@ -1181,43 +1125,60 @@ void CMemSpyEngineHelperHeap::AppendStatisticsL( const TMemSpyHeapInfo& aInfo, C
         aList.AddItemL( KStatsData_LargestCellSize, rHeapStats.StatsAllocated().LargestCellSize() );
 
         aList.AddBlankItemL( 1 );
-
-        // Common
-        _LIT( KOverallCaption3, "Common Statistics" );
-        aList.AddItemL( KOverallCaption3 );
-        aList.AddUnderlineForPreviousItemL( '=', 0 );
-
-        _LIT( KStatsData_Common_TotalCellCount,  "Total cell count:" );
-        aList.AddItemL( KStatsData_Common_TotalCellCount, rHeapStats.StatsCommon().TotalCellCount() );
-
-        _LIT( KStatsData_Common_TotalSize,  "Total cell size:" );
-        aList.AddItemL( KStatsData_Common_TotalSize, rHeapStats.StatsAllocated().TypeSize() + rHeapStats.StatsFree().TypeSize() );
-
-        aList.AddBlankItemL( 1 );
-        }
+         }
     }
 
 
-void CMemSpyEngineHelperHeap::AppendFreeCellsL( const RArray<TMemSpyDriverFreeCell>& aFreeCells, CMemSpyEngineOutputList& aList )
+void CMemSpyEngineHelperHeap::AppendCellsL(const RArray<TMemSpyDriverCell>& aCells, CMemSpyEngineOutputList& aList)
     {
-    // Free space
+    // For reasons that may or may not turn out to be sensible, we separate free and allocated cells in the output data
+
     _LIT( KOverallCaption1, "Free Cell List" );
     aList.AddItemL( KOverallCaption1 );
     aList.AddUnderlineForPreviousItemL( '=', 0 );
 
     TBuf<128> caption;
     _LIT( KCaptionFormat, "FC %04d" );
-    _LIT( KValueFormat, "0x%08x %8d %1d" );
+    _LIT( KValueFormat, "0x%08x %8d %d" );
 
-    const TInt count = aFreeCells.Count();
+	TBool foundAllocatedCells = EFalse;
+    const TInt count = aCells.Count();
     for( TInt i=0; i<count; i++ )
         {
-        const TMemSpyDriverFreeCell& cell = aFreeCells[ i ];
-        caption.Format( KCaptionFormat, i + 1 );
-        aList.AddItemFormatL( caption, KValueFormat, cell.iAddress, cell.iLength, cell.iType );
+        const TMemSpyDriverCell& cell = aCells[ i ];
+		if (cell.iType & EMemSpyDriverAllocatedCellMask)
+			{
+			foundAllocatedCells = ETrue;
+			}
+		else if (cell.iType & EMemSpyDriverFreeCellMask)
+			{
+	        caption.Format( KCaptionFormat, i + 1 );
+		    aList.AddItemFormatL( caption, KValueFormat, cell.iAddress, cell.iLength, cell.iType );
+			}
         }
-    }
 
+	if (foundAllocatedCells)
+		{
+        aList.AddBlankItemL( 1 );
+		_LIT( KOverallCaption1, "Allocated Cell List" );
+		aList.AddItemL( KOverallCaption1 );
+		aList.AddUnderlineForPreviousItemL( '=', 0 );
+
+		TBuf<128> caption;
+		_LIT( KCaptionFormat, "AC %04d" );
+		_LIT( KValueFormat, "0x%08x %8d %d" );
+
+		for (TInt i = 0; i < count; i++)
+			{
+			const TMemSpyDriverCell& cell = aCells[ i ];
+			if (cell.iType & EMemSpyDriverAllocatedCellMask)
+				{
+				caption.Format( KCaptionFormat, i + 1 );
+				aList.AddItemFormatL( caption, KValueFormat, cell.iAddress, cell.iLength, cell.iType );
+				}
+			}
+		}
+    }
 
 void CMemSpyEngineHelperHeap::UpdateSharedHeapInfoL( const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo )
     {

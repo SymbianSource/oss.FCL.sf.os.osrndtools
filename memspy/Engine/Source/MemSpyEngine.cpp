@@ -43,14 +43,14 @@ EXPORT_C CMemSpyEngine::~CMemSpyEngine()
     }
 
 
-void CMemSpyEngine::ConstructL( RFs& aFsSession, TBool aStartServer )
+void CMemSpyEngine::ConstructL( RFs& aFsSession )
     {
 #ifdef _DEBUG
     RDebug::Printf( "CMemSpyEngine::ConstructL() - START" );
 #endif
     
     iImp = new(ELeave) CMemSpyEngineImp( aFsSession, *this );
-    iImp->ConstructL(aStartServer);
+    iImp->ConstructL();
 
 #ifdef _DEBUG
     RDebug::Printf( "CMemSpyEngine::ConstructL() - END" );
@@ -60,18 +60,17 @@ void CMemSpyEngine::ConstructL( RFs& aFsSession, TBool aStartServer )
 
 EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession )
     {
-    return NewL(aFsSession, ETrue );
-    }
-
-EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession, TBool aStartServer )
-    {
     CMemSpyEngine* self = new(ELeave) CMemSpyEngine();
     CleanupStack::PushL( self );
-    self->ConstructL( aFsSession, aStartServer );
+    self->ConstructL( aFsSession );
     CleanupStack::Pop( self );
     return self;
     }
 
+EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession, TBool aStartServer )
+    {
+    return NewL(aFsSession);
+    }
 
 EXPORT_C RFs& CMemSpyEngine::FsSession()
     {
@@ -123,9 +122,18 @@ EXPORT_C TMemSpySinkType CMemSpyEngine::SinkType()
 
 EXPORT_C void CMemSpyEngine::InstallSinkL( TMemSpySinkType aType )
     {
-    iImp->InstallSinkL( aType );
+    iImp->InstallSinkL( aType, KNullDesC );
     }
 
+EXPORT_C void CMemSpyEngine::InstallDebugSinkL()
+    {
+    iImp->InstallSinkL( ESinkTypeDebug, KNullDesC );
+    }
+
+EXPORT_C void CMemSpyEngine::InstallFileSinkL( const TDesC& aRootFolder )
+    {
+    iImp->InstallSinkL( ESinkTypeFile, aRootFolder );
+    }
 
 EXPORT_C void CMemSpyEngine::ListOpenFilesL()
     {

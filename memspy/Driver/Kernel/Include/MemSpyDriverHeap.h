@@ -28,104 +28,39 @@
 #include "MemSpyDriverObjectsInternal.h"
 
 // Constants
+// We shouldn't be using any of these any more! -Tomsci
 const TUint KRHeapObjectSize = 0x74;
 const TUint KRAllocatorAndRHeapMemberDataOffset = 4; // 4 bytes past start of allocator address, i.e. skipping the vtable
 const TUint KRHeapMemberDataSize = KRHeapObjectSize - KRAllocatorAndRHeapMemberDataOffset;
 
 // Classes referenced
 class DMemSpyDriverOSAdaption;
-
+namespace LtkUtils
+	{
+	class RAllocatorHelper;
+	}
 
 /**
  * Essentially a mirror of RAllocator and RHeap's layout.
  */
 class RMemSpyDriverRHeapBase
 	{
-public:
-	struct SCell
-        {
-        TInt len; 
-        SCell* next;
-        };
-
-    struct SDebugCell
-        {
-        TInt len;
-        TInt nestingLevel;
-        TInt allocCount;
-        };
-
-    struct _s_align {char c; double d;};
-
-    struct SHeapCellInfo { RHeap* iHeap; TInt iTotalAlloc;	TInt iTotalAllocSize; TInt iTotalFree; TInt iLevelAlloc; SDebugCell* iStranded; };
-	
-    enum {ECellAlignment = sizeof(_s_align)-sizeof(double)};
-	enum {EFreeCellSize = sizeof(SCell)};
-	enum TDebugOp {EWalk=128};
-	enum TCellType
-		{EGoodAllocatedCell, EGoodFreeCell, EBadAllocatedCellSize, EBadAllocatedCellAddress,
-		EBadFreeCellAddress, EBadFreeCellSize};
-	
-    enum TDebugHeapId {EUser=0, EKernel=1};
-
 protected:
     RMemSpyDriverRHeapBase();
 
-public: // Inlines
-    inline TUint8* Base() const { return iBase; }
-    inline TInt Size() const { return iTop - iBase; }
-    inline TInt MaxLength() const { return iMaxLength; }
-
 public: // API
     void PrintInfo();
-    void CopyObjectDataTo( TMemSpyHeapObjectDataRHeap& aData );
+	LtkUtils::RAllocatorHelper* Helper();
+	TMemSpyHeapInfo::THeapImplementationType GetTypeFromHelper() const;
 
 public: // Virtual API
     virtual void Reset();
-    virtual void AssociateWithKernelChunk( DChunk* aChunk, TLinAddr aAddress, TUint32 aMappingAttributes ) = 0;
-    virtual void DisassociateWithKernelChunk() = 0;
+	virtual void Close();
     virtual DChunk& Chunk() = 0;
     virtual const DChunk& Chunk() const = 0;
-    virtual TLinAddr ChunkKernelAddress() const = 0;
-    virtual TBool ChunkIsInitialised() const = 0;
-    virtual TUint ClientToKernelDelta() const = 0;
-    virtual void GetHeapSpecificInfo( TMemSpyHeapInfo& /*aInfo*/ ) const { }
 
-public: // Utilities
-    TBool CheckCell( TAny* aCellAddress, TInt aLength ) const;
-    static TInt AllocatedCellHeaderSize( TBool aDebugLibrary );
-    static TInt FreeCellHeaderSize();
-    static TInt CellHeaderSize( const TMemSpyDriverInternalWalkHeapParamsCell& aCell, TBool aDebugEUser );
-
-public: // From RAllocator
-	TInt iAccessCount;
-	TInt iHandleCount;
-	TInt* iHandles;
-	TUint32 iFlags;
-	TInt iCellCount;
-	TInt iTotalAllocSize;
-
-public: // From RHeap
-	TInt iMinLength;
-	TInt iMaxLength;
-	TInt iOffset;
-	TInt iGrowBy;
-	TInt iChunkHandle;
-	RFastLock iLock;
-	TUint8* iBase;
-	TUint8* iTop;
-	TInt iAlign;
-	TInt iMinCell;
-	TInt iPageSize;
-	SCell iFree;
-	TInt iNestingLevel;
-	TInt iAllocCount;
-    RAllocator::TAllocFail iFailType;
-	TInt iFailRate;
-	TBool iFailed;
-	TInt iFailAllocCount;
-	TInt iRand;
-	TAny* iTestData;
+protected:
+	LtkUtils::RAllocatorHelper* iHelper;
     };
 
 
@@ -137,17 +72,12 @@ protected:
     RMemSpyDriverRHeapReadFromCopy( DMemSpyDriverOSAdaption& aOSAdaption );
 
 public: // New API
-    TInt ReadFromUserAllocator( DThread& aThread );
+    void AssociateWithKernelChunk( DChunk* aChunk, TLinAddr aAddress, TUint32 aMappingAttributes );
 
 public: // From RMemSpyDriverRHeapBase
     void Reset();
-    void AssociateWithKernelChunk( DChunk* aChunk, TLinAddr aAddress, TUint32 aMappingAttributes );
-    void DisassociateWithKernelChunk();
     DChunk& Chunk();
     const DChunk& Chunk() const;
-    TLinAddr ChunkKernelAddress() const;
-    TBool ChunkIsInitialised() const;
-    TUint ClientToKernelDelta() const;
 
 protected:
     inline DMemSpyDriverOSAdaption& OSAdaption() { return iOSAdaption; }
@@ -162,7 +92,7 @@ private:
 
     // Calculated delta between client's address space values and actual kernel
     // address of the heap chunk.
-    TUint iClientToKernelDelta;
+    //TUint iClientToKernelDelta;
     };
 
 
@@ -171,13 +101,21 @@ private:
 
 
 
-class RMemSpyDriverRHeapUser : public RMemSpyDriverRHeapReadFromCopy
+class RMemSpyDriverRHeapUser : public RMemSpyDriverRHeapBase
 	{
 public:
     RMemSpyDriverRHeapUser( DMemSpyDriverOSAdaption& aOSAdaption );
+	TInt OpenUserHeap(DThread& aThread, TBool aEuserUdeb);
 
-public: // New API
-    TInt ReadFromUserAllocator( DThread& aThread );
+	DChunk& Chunk() { return *iChunk; }
+	const DChunk& Chunk() const { return *iChunk; }
+
+private:
+    inline DMemSpyDriverOSAdaption& OSAdaption() { return iOSAdaption; }
+
+private:
+    DMemSpyDriverOSAdaption& iOSAdaption;
+	DChunk* iChunk;
     };
 
 
@@ -191,8 +129,8 @@ public: // API
     void SetKernelHeap( RHeapK& aKernelHeap );
 
 public: // From RMemSpyDriverRHeapBase
-    void DisassociateWithKernelChunk();
-    void GetHeapSpecificInfo( TMemSpyHeapInfo& aInfo ) const;
+    //void DisassociateWithKernelChunk();
+	void Close();
 
 private:
     RHeapK* iKernelHeap;
@@ -204,50 +142,19 @@ class RMemSpyDriverRHeapKernelInPlace : public RMemSpyDriverRHeapBase
     {
 public:
     RMemSpyDriverRHeapKernelInPlace();
+	TInt OpenKernelHeap();
     
-public: // API
-    void FailNext();
-    void SetKernelHeap( RHeapK& aKernelHeap );
 
 public: // From RMemSpyDriverRHeapBase
-    void Reset();
-    void AssociateWithKernelChunk( DChunk* aChunk, TLinAddr aAddress, TUint32 aMappingAttributes );
-    void DisassociateWithKernelChunk();
+    void Close();
+
     DChunk& Chunk();
     const DChunk& Chunk() const;
-    TLinAddr ChunkKernelAddress() const;
-    TBool ChunkIsInitialised() const;
-    TUint ClientToKernelDelta() const;
-    void GetHeapSpecificInfo( TMemSpyHeapInfo& aInfo ) const;
 
-private: // Internal methods
-    void CopyMembersFromKernelHeap();
-
-private: // Internal class
-
-    /**
-     * Used when opening the kernel heap
-     */
-#ifndef __SYMBIAN_KERNEL_HYBRID_HEAP__
-    class RHeapKExtended : public RHeapK
-        {
-    public:
-        inline void FailNext()
-            {
-            SetFailType( RAllocator::EFailNext );
-            SetFailRate( 1 );
-            ResetFailed();
-            ResetFailAllocCount();
-            }
-        inline void SetFailType( TAllocFail aType ) { iFailType = aType; }
-        inline void SetFailRate( TInt aRate ) { iFailRate = aRate; }
-        inline void ResetFailed() { iFailed = EFalse; }
-        inline void ResetFailAllocCount() { iFailAllocCount = 0; }
-        };
-#endif
+	// Only important member data is the base class's RAllocatorHelper
+	// We do cache the chunk though
 private:
-    RHeapK* iKernelHeap;
-    DChunk* iChunk;
+	DChunk* iChunk;
     };
 
 	

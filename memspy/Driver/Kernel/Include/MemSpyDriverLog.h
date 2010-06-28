@@ -119,5 +119,6 @@
 #   define TRACE_CHUNK( x )
 #endif
 
+#define LOG(args...) TRACE(Kern::Printf(args))
 
 #endif

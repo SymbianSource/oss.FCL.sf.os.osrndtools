@@ -6616,6 +6616,4 @@ EXPORT_C CTestCombiner* LibEntryL()
     return CTestCombiner::NewL();
     }
 
-
-
-//  End of File
+// End of File

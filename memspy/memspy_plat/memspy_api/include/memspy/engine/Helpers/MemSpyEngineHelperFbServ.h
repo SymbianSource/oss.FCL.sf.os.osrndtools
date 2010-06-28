@@ -74,7 +74,7 @@ private: // Internal methods
     HBufC8* LocateBitmapArrayHeapCellDataLC( TAny*& aArrayCellAddress, TInt aArrayAllocCount );
     void ReadCObjectConInfoL( TAny* aCellAddress, RArray<TAny*>& aContainerObjects, TInt& aCount, TInt& aAllocated );
     static void ParseCellDataAndExtractHandlesL( const TDesC8& aData, RArray<TInt>& aHandles, TInt aArrayEntryCount );
-    static TBool VerifyCorrectHeapCellL( const TDesC8& aData, TAny* aCellAddress, TAny* aPayloadAddress, TUint aHeapStartingAddress, TUint aHeapSize );
+    static TBool VerifyCorrectHeapCellL( const TDesC8& aData, TAny* aCellAddress, TAny* aPayloadAddress, TUint aHeapStartingAddress, TUint aHeapMaxSize );
     static TUint OffsetToCObjectConBitmapCon();
     static TUint OffsetToCObjectConFontCon();
     static TUint OffsetToBitmapHandleArray();

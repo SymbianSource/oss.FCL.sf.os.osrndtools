@@ -902,5 +902,5 @@ void CTestProgress::ReplaceTextL( const TTestProgress& aProgress )
     CleanupStack::PopAndDestroy( tmp );
     
     }
-    
+
 // End of File

@@ -412,4 +412,16 @@ EXPORTS
 	?ItemsCount@CMemSpyEngineGenericKernelObjectList@@QBEHXZ @ 411 NONAME ; int CMemSpyEngineGenericKernelObjectList::ItemsCount(void) const
 	?Priority@CMemSpyThread@@QBE?AW4TThreadPriority@@XZ @ 412 NONAME ; enum TThreadPriority CMemSpyThread::Priority(void) const
 	?NewL@CMemSpyEngine@@SAPAV1@AAVRFs@@H@Z @ 413 NONAME ; class CMemSpyEngine * CMemSpyEngine::NewL(class RFs &, int)
+	?Value@CMemSpyThreadInfoItemBase@@QBE?AVTPtrC16@@H@Z @ 414 NONAME ; class TPtrC16 CMemSpyThreadInfoItemBase::Value(int) const
+	?ExitType@CMemSpyProcess@@QBE?AW4TExitType@@XZ @ 415 NONAME ; enum TExitType CMemSpyProcess::ExitType(void) const
+	?ExitCategory@CMemSpyProcess@@QBE?AV?$TBuf@$0BA@@@XZ @ 416 NONAME ; class TBuf<16> CMemSpyProcess::ExitCategory(void) const
+	?Priority@CMemSpyProcess@@QBE?AW4TProcessPriority@@XZ @ 417 NONAME ; enum TProcessPriority CMemSpyProcess::Priority(void) const
+	?Caption@CMemSpyThreadInfoItemBase@@QBE?AVTPtrC16@@H@Z @ 418 NONAME ; class TPtrC16 CMemSpyThreadInfoItemBase::Caption(int) const
+	?ExitReason@CMemSpyProcess@@QBEHXZ @ 419 NONAME ; int CMemSpyProcess::ExitReason(void) const
+	?NewL@CMemSpyEngineSinkMetaData@@SAPAV1@ABVTDesC16@@000HHABVTTime@@@Z @ 420 NONAME ; class CMemSpyEngineSinkMetaData * CMemSpyEngineSinkMetaData::NewL(class TDesC16 const &, class TDesC16 const &, class TDesC16 const &, class TDesC16 const &, int, int, class TTime const &)
+	?InstallDebugSinkL@CMemSpyEngine@@QAEXXZ @ 421 NONAME ; void CMemSpyEngine::InstallDebugSinkL(void)
+	?NewL@CMemSpyEngineSinkMetaData@@SAPAV1@ABVTDesC16@@000HH@Z @ 422 NONAME ; class CMemSpyEngineSinkMetaData * CMemSpyEngineSinkMetaData::NewL(class TDesC16 const &, class TDesC16 const &, class TDesC16 const &, class TDesC16 const &, int, int)
+	?InstallFileSinkL@CMemSpyEngine@@QAEXABVTDesC16@@@Z @ 423 NONAME ; void CMemSpyEngine::InstallFileSinkL(class TDesC16 const &)
+	?CheckForChangesNowL@CMemSpyEngineHelperSysMemTracker@@QAEXXZ @ 424 NONAME ; void CMemSpyEngineHelperSysMemTracker::CheckForChangesNowL(void)
+	?GetHeapInfoUserL@CMemSpyEngineHelperHeap@@QAEXABVTProcessId@@ABVTThreadId@@AAVTMemSpyHeapInfo@@PAV?$RArray@VTMemSpyDriverFreeCell@@@@H@Z @ 425 NONAME ; void CMemSpyEngineHelperHeap::GetHeapInfoUserL(class TProcessId const &, class TThreadId const &, class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> *, int)
 

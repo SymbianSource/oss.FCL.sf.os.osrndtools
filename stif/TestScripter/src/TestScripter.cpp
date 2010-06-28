@@ -3875,7 +3875,7 @@ void CTestRunner::StartInterferenceL( TDesC& aName, CStifItemParser* aItem )
         User::Leave( KErrArgument ); // Error in parsing => Leave    	
     	}
     // Convert idle time from milli to micro seconds
-   	idle = time * 1000.0;
+   	idle = static_cast<TInt>( time * 1000.0);
 
     if( idle < 0 )
     	{
@@ -3901,7 +3901,7 @@ void CTestRunner::StartInterferenceL( TDesC& aName, CStifItemParser* aItem )
     	}
     
     // Convert active time from milli to micro seconds
-   	active = time * 1000.0;
+   	active = static_cast<TInt>( time * 1000.0 );
    	
     if( active < 0 )
     	{
@@ -5166,5 +5166,4 @@ EXPORT_C CTestScripter* LibEntryL()
     
     }
 
-
-//  End of File
+// End of File

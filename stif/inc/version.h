@@ -20,10 +20,12 @@
 
 #define STIF_MAJOR_VERSION 7
 #define STIF_MINOR_VERSION 3
-#define STIF_BUILD_VERSION 34
+#define STIF_BUILD_VERSION 35
 
-#define STIF_REL_DATE "1st June 2010"
+#define STIF_REL_DATE "15th June 2010"
 
 #define TO_UNICODE(text) _L(text) 
 
 #endif /*VERSION_H_*/
+
+// End of File

@@ -146,7 +146,6 @@ TInt DMemSpyDriverLogChanContainers::GetContainerHandles( TMemSpyDriverInternalC
 
         DObjectCon* container = Kern::Containers()[type];
         container->Wait();
-        NKern::LockSystem();
 
         const TInt count = container->Count();
         for(TInt i=0; i<count; i++)
@@ -158,9 +157,7 @@ TInt DMemSpyDriverLogChanContainers::GetContainerHandles( TMemSpyDriverInternalC
                 }
             }
 
-        NKern::UnlockSystem();
         container->Signal();
-
     	NKern::ThreadLeaveCS();
         }
     else
@@ -214,34 +211,30 @@ TInt DMemSpyDriverLogChanContainers::GetContainerHandles( TMemSpyDriverInternalC
 
                 // Iterate through each handle in the thread/process and add it to the temp handles container if
                 // the handle is of the correct type.
-                MemSpyObjectIx_Wait( handles );
 
-	            TInt handleCount = handles->Count();
+				MemSpyObjectIx_HandleLookupLock();
+				const TInt handleCount = handles->Count();
+				MemSpyObjectIx_HandleLookupUnlock();
                 TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetContainerHandles - %d handles in index...", handleCount ));
 
                 for( TInt handleIndex=0; handleIndex<handleCount; handleIndex++ )
     	            {
     	            // Get a handle from the container...
-                    NKern::LockSystem();
-    	            DObject* objectToSearchFor = (*handles)[ handleIndex ];
-                    NKern::UnlockSystem();
+					MemSpyObjectIx_HandleLookupLock();
+					if (handleIndex >= handles->Count()) break; // Count may have changed in the meantime
+    				DObject* objectToSearchFor = (*handles)[ handleIndex ];
+					if (objectToSearchFor && objectToSearchFor->Open() != KErrNone) objectToSearchFor = NULL;
+					MemSpyObjectIx_HandleLookupUnlock();
         
-                    if  ( objectToSearchFor != NULL )
+                    if (objectToSearchFor && OSAdaption().DThread().GetObjectType(*objectToSearchFor) == ObjectTypeFromMemSpyContainerType(params.iContainer))
                         {
-                        // Check to see if this object is of the specified type. We can use quick mode
-                        // because we know the object is valid since it's registered as a handle of the
-                        // thread/process.
-                        DObject* matchResult = CheckIfObjectIsInContainer( params.iContainer, objectToSearchFor, ETrue );
-                        if  ( matchResult )
-                            {
-                            // Found a match in the specified container. Write the object's handle (aka the object address)
-                            // back to the client address space
-                            AddTempHandle( matchResult );
-                            }
+                        // Found a match in the specified container. Write the object's handle (aka the object address)
+                        // back to the client address space
+                        AddTempHandle( objectToSearchFor );
                         }
+					if (objectToSearchFor) objectToSearchFor->Close(NULL);
     	            }
 
-                MemSpyObjectIx_Signal( handles );
                 NKern::ThreadLeaveCS();
                 }
 
@@ -307,30 +300,21 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 
     // First, locate the specific DObject in question. Cast the handle, but don't use the object...
     DObject* handleAsObject = (DObject*) params.iHandle;
-    handleAsObject = CheckIfObjectIsInContainer( params.iType, handleAsObject );
+    handleAsObject = CheckedOpen(params.iType, handleAsObject);
     if  ( handleAsObject != NULL )
         {
         // We found the right object. First get generic info.
         handleAsObject->FullName( params.iName );
         handleAsObject->Name( params.iNameDetail );
         
-        NKern::LockSystem();
-        r = handleAsObject->Open();
-        NKern::UnlockSystem();
-        //
-        if  ( r == KErrNone )
-            {
-            // Using threadAddaption to fetch generic info.
-            // Implementations of following get functions are actually in DMemSpyDriverOSAdaptionDObject
-            // so it does not matter what adaption to use for generic info.
-            DMemSpyDriverOSAdaptionDThread& threadAddaption = OSAdaption().DThread();
-            params.iAccessCount = threadAddaption.GetAccessCount( *handleAsObject );
-            params.iUniqueID = threadAddaption.GetUniqueID( *handleAsObject );
-            params.iProtection = threadAddaption.GetProtection( *handleAsObject );
-            params.iAddressOfKernelOwner = threadAddaption.GetAddressOfKernelOwner( *handleAsObject );
-            //
-            handleAsObject->Close( NULL );
-            }
+        // Using threadAddaption to fetch generic info.
+        // Implementations of following get functions are actually in DMemSpyDriverOSAdaptionDObject
+        // so it does not matter what adaption to use for generic info.
+        DMemSpyDriverOSAdaptionDThread& threadAddaption = OSAdaption().DThread();
+        params.iAccessCount = threadAddaption.GetAccessCount( *handleAsObject );
+        params.iUniqueID = threadAddaption.GetUniqueID( *handleAsObject );
+        params.iProtection = threadAddaption.GetProtection( *handleAsObject );
+        params.iAddressOfKernelOwner = threadAddaption.GetAddressOfKernelOwner( *handleAsObject );
         
         // Get type-specific info.
         if  ( params.iType == EMemSpyDriverContainerTypeThread )
@@ -338,76 +322,49 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeThread" ));
 
             DThread* object = (DThread*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDThread& threadAdaption = OSAdaption().DThread();
             //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDThread& threadAdaption = OSAdaption().DThread();
-                //
-                params.iId = threadAdaption.GetId( *object );
-                params.iPriority = threadAdaption.GetPriority( *object );
-                params.iAddressOfOwningProcess = threadAdaption.GetAddressOfOwningProcess( *object );
-                threadAdaption.GetNameOfOwningProcess( *object, params.iNameOfOwner );
-                //
-                object->Close( NULL );
-                }
+            params.iId = threadAdaption.GetId( *object );
+            params.iPriority = threadAdaption.GetPriority( *object );
+            params.iAddressOfOwningProcess = threadAdaption.GetAddressOfOwningProcess( *object );
+            threadAdaption.GetNameOfOwningProcess( *object, params.iNameOfOwner );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeProcess )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeProcess" ));
 
             DProcess* object = (DProcess*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDProcess& processAdaption = OSAdaption().DProcess();
             //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDProcess& processAdaption = OSAdaption().DProcess();
-                //
-                params.iId = processAdaption.GetId( *object );
-                //
-                params.iPriority = processAdaption.GetPriority( *object );
-                params.iAddressOfOwningProcess = processAdaption.GetAddressOfOwningProcess( *object );
-                params.iCreatorId = processAdaption.GetCreatorId( *object );
-                params.iSecurityZone = processAdaption.GetSecurityZone( *object );
-                params.iAttributes = processAdaption.GetAttributes( *object );
-                params.iAddressOfDataBssStackChunk = processAdaption.GetAddressOfDataBssStackChunk( *object );
-                //
-                object->Close( NULL );
-                }
+            params.iId = processAdaption.GetId( *object );
+            //
+            params.iPriority = processAdaption.GetPriority( *object );
+            params.iAddressOfOwningProcess = processAdaption.GetAddressOfOwningProcess( *object );
+            params.iCreatorId = processAdaption.GetCreatorId( *object );
+            params.iSecurityZone = processAdaption.GetSecurityZone( *object );
+            params.iAttributes = processAdaption.GetAttributes( *object );
+            params.iAddressOfDataBssStackChunk = processAdaption.GetAddressOfDataBssStackChunk( *object );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeChunk )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeChunk" ));
 
             DChunk* object = (DChunk*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDChunk& ca = OSAdaption().DChunk();
             //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDChunk& ca = OSAdaption().DChunk();
-                //
-                params.iSize = ca.GetSize( *object );
-                params.iId = ca.GetOwningProcessId( *object );
-                params.iAddressOfOwningProcess = ca.GetAddressOfOwningProcess( *object );
-                params.iMaxSize = ca.GetMaxSize( *object );
-                params.iBottom = ca.GetBottom( *object );
-                params.iTop = ca.GetTop( *object );
-                params.iAttributes = ca.GetAttributes( *object );
-                params.iStartPos = ca.GetStartPos( *object );
-                params.iControllingOwner = ca.GetControllingOwnerId( *object );
-                params.iRestrictions = ca.GetRestrictions( *object );
-                params.iMapAttr = ca.GetMapAttr( *object );
-                params.iChunkType = ca.GetType( *object );
-                ca.GetNameOfOwningProcess( *object, params.iNameOfOwner );
-                //
-                object->Close( NULL );
-                }
+            params.iSize = ca.GetSize( *object );
+            params.iId = ca.GetOwningProcessId( *object );
+            params.iAddressOfOwningProcess = ca.GetAddressOfOwningProcess( *object );
+            params.iMaxSize = ca.GetMaxSize( *object );
+            params.iBottom = ca.GetBottom( *object );
+            params.iTop = ca.GetTop( *object );
+            params.iAttributes = ca.GetAttributes( *object );
+            params.iStartPos = ca.GetStartPos( *object );
+            params.iControllingOwner = ca.GetControllingOwnerId( *object );
+            params.iRestrictions = ca.GetRestrictions( *object );
+            params.iMapAttr = ca.GetMapAttr( *object );
+            params.iChunkType = ca.GetType( *object );
+            ca.GetNameOfOwningProcess( *object, params.iNameOfOwner );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeLibrary )
             {
@@ -416,28 +373,19 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 	        Kern::AccessCode();
             //
             DLibrary* object = (DLibrary*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDCodeSeg& csa = OSAdaption().DCodeSeg();
+            DCodeSeg* codeSeg = csa.GetCodeSeg( *object );
+            params.iAddressOfCodeSeg = (TUint8*)codeSeg;
+            params.iMapCount = csa.GetMapCount( *object );
+            params.iState = csa.GetState( *object );
             //
-            if  ( r == KErrNone )
+            if  ( codeSeg )
                 {
-                DMemSpyDriverOSAdaptionDCodeSeg& csa = OSAdaption().DCodeSeg();
-                DCodeSeg* codeSeg = csa.GetCodeSeg( *object );
-                params.iAddressOfCodeSeg = (TUint8*)codeSeg;
-                params.iMapCount = csa.GetMapCount( *object );
-                params.iState = csa.GetState( *object );
-                //
-                if  ( codeSeg )
-                    {
-                    params.iSize = csa.GetSize( *codeSeg );
-                    }
-                else
-                    {
-                    r = KErrNotFound;
-                    }
-                //
-                object->Close( NULL );
+                params.iSize = csa.GetSize( *codeSeg );
+                }
+            else
+                {
+                r = KErrNotFound;
                 }
             //
 	        Kern::EndAccessCode();
@@ -447,39 +395,21 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeSemaphore" ));
 
             DSemaphore* object = (DSemaphore*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
-            //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDSemaphore& sa = OSAdaption().DSemaphore();
-                params.iCount = sa.GetCount( *object );
-                params.iResetting = sa.GetResetting( *object );
-                //
-                object->Close( NULL );
-                }
+            DMemSpyDriverOSAdaptionDSemaphore& sa = OSAdaption().DSemaphore();
+            params.iCount = sa.GetCount( *object );
+            params.iResetting = sa.GetResetting( *object );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeMutex )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeMutex" ));
 
             DMutex* object = (DMutex*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDMutex& ma = OSAdaption().DMutex();
             //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDMutex& ma = OSAdaption().DMutex();
-                //
-                params.iCount = ma.GetHoldCount( *object );
-                params.iWaitCount = ma.GetWaitCount( *object );
-                params.iResetting = ma.GetResetting( *object );
-                params.iOrder = ma.GetOrder( *object );
-                //
-                object->Close( NULL );
-                }
+            params.iCount = ma.GetHoldCount( *object );
+            params.iWaitCount = ma.GetWaitCount( *object );
+            params.iResetting = ma.GetResetting( *object );
+            params.iOrder = ma.GetOrder( *object );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeTimer )
             {
@@ -487,98 +417,62 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 
             // Get timer properties
             DTimer* object = (DTimer*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDTimer& ta = OSAdaption().DTimer();
             //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDTimer& ta = OSAdaption().DTimer();
-                //
-                params.iTimerType = MapToMemSpyTimerType( ta.GetType( *object ) );
-                params.iTimerState = MapToMemSpyTimerState( ta.GetState( *object ) );
-                //
-                object->Close( NULL );
-                }
+            params.iTimerType = MapToMemSpyTimerType( ta.GetType( *object ) );
+            params.iTimerState = MapToMemSpyTimerState( ta.GetState( *object ) );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeServer )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeServer" ));
 
             DServer* object = (DServer*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDServer& sa = OSAdaption().DServer();
             //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDServer& sa = OSAdaption().DServer();
-                //
-                params.iCount = sa.GetSessionCount( *object );
-                params.iId = sa.GetOwningThreadId( *object );
-                params.iSessionType = sa.GetSessionType( *object );
-                params.iAddressOfOwningThread = sa.GetAddressOfOwningThread( *object );
-                sa.GetNameOfOwningThread( *object, params.iNameOfOwner );
-                //
-                object->Close( NULL );
-                }
+            params.iCount = sa.GetSessionCount( *object );
+            params.iId = sa.GetOwningThreadId( *object );
+            params.iSessionType = sa.GetSessionType( *object );
+            params.iAddressOfOwningThread = sa.GetAddressOfOwningThread( *object );
+            sa.GetNameOfOwningThread( *object, params.iNameOfOwner );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeSession )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeSession" ));
 
             DSession* object = (DSession*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
+            DMemSpyDriverOSAdaptionDServer& serverAdaption = OSAdaption().DServer();
+            DMemSpyDriverOSAdaptionDSession& sessionAdaption = OSAdaption().DSession();
+
+            params.iName.Zero();
+
+            TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - getting session type..." ));
+            params.iSessionType = sessionAdaption.GetSessionType( *object );
+            params.iAddressOfServer = sessionAdaption.GetAddressOfServer( *object );
+            params.iTotalAccessCount = sessionAdaption.GetTotalAccessCount( *object );
+            params.iSvrSessionType = sessionAdaption.GetSessionType( *object );
+            params.iMsgCount = sessionAdaption.GetMsgCount( *object );
+            params.iMsgLimit = sessionAdaption.GetMsgLimit( *object );
+            
+            // Its more useful in this instance, if the name object
+            // points to the server which the session is connected to
+            // (rather than displaying a process-local name).
+            DServer* server = (DServer*)CheckedOpen(EMemSpyDriverContainerTypeServer, sessionAdaption.GetServer( *object ));
+	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - getting full name, server: 0x%08x", server ));
             //
-	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - open error: %d", r ));
-            if  ( r == KErrNone )
+            if  ( server )
                 {
-                DMemSpyDriverOSAdaptionDServer& serverAdaption = OSAdaption().DServer();
-                DMemSpyDriverOSAdaptionDSession& sessionAdaption = OSAdaption().DSession();
+                server->FullName( params.iName );
 
-                params.iName.Zero();
-
-                TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - getting session type..." ));
-                params.iSessionType = sessionAdaption.GetSessionType( *object );
-                params.iAddressOfServer = sessionAdaption.GetAddressOfServer( *object );
-                params.iTotalAccessCount = sessionAdaption.GetTotalAccessCount( *object );
-                params.iSvrSessionType = sessionAdaption.GetSessionType( *object );
-                params.iMsgCount = sessionAdaption.GetMsgCount( *object );
-                params.iMsgLimit = sessionAdaption.GetMsgLimit( *object );
-                
-                // Its more useful in this instance, if the name object
-                // points to the server which the session is connected to
-                // (rather than displaying a process-local name).
-                DServer* server = sessionAdaption.GetServer( *object );
-	            TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - getting full name, server: 0x%08x", server ));
-                //
-                if  ( server )
+                // Continue as normal for other items
+	            TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - server: 0x%08x, server->iOwningThread: 0x%08x", server, server->iOwningThread ));
+                DThread* owningThread = serverAdaption.GetOwningThread( *server );
+                if  ( owningThread )
                     {
-	                NKern::LockSystem();
-                    r = server->Open();
-     	            NKern::UnlockSystem();
-
-                    if  ( r == KErrNone )
-                        {
-                        server->FullName( params.iName );
- 
-                        // Continue as normal for other items
-	                    TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - server: 0x%08x, server->iOwningThread: 0x%08x", server, server->iOwningThread ));
-                        DThread* owningThread = serverAdaption.GetOwningThread( *server );
-                        if  ( owningThread )
-                            {
-	                        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - getting server thread id..." ));
-                            params.iId = serverAdaption.GetOwningThreadId( *server );
-                            }
-
-                        server->Close( NULL );
-                        }
+	                TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - getting server thread id..." ));
+                    params.iId = serverAdaption.GetOwningThreadId( *server );
                     }
 
-                TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - closing session object..." ));
-                object->Close( NULL );
+                server->Close(NULL);
                 }
             }
         else if ( params.iType == EMemSpyDriverContainerTypeLogicalDevice )
@@ -586,39 +480,21 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeLogicalDevice" ));
 
             DLogicalDevice* object = (DLogicalDevice*) handleAsObject;
-	        NKern::LockSystem();
-            r = object->Open();
-    	    NKern::UnlockSystem();
-            //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDLogicalDevice& lda = OSAdaption().DLogicalDevice();
-                params.iOpenChannels = lda.GetOpenChannels( *object );
-                params.iVersion = lda.GetVersion( *object );
-                params.iParseMask = lda.GetParseMask( *object );
-                params.iUnitsMask = lda.GetUnitsMask( *object );
-                //
-                object->Close( NULL );
-                }
+            DMemSpyDriverOSAdaptionDLogicalDevice& lda = OSAdaption().DLogicalDevice();
+            params.iOpenChannels = lda.GetOpenChannels( *object );
+            params.iVersion = lda.GetVersion( *object );
+            params.iParseMask = lda.GetParseMask( *object );
+            params.iUnitsMask = lda.GetUnitsMask( *object );
             }
         else if ( params.iType == EMemSpyDriverContainerTypePhysicalDevice )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypePhysicalDevice" ));
 	        
 	        DPhysicalDevice* object = (DPhysicalDevice*) handleAsObject;
-            NKern::LockSystem();
-            r = object->Open();
-            NKern::UnlockSystem();
-            //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDPhysicalDevice& pda = OSAdaption().DPhysicalDevice();
-                params.iVersion = pda.GetVersion( *object );
-                params.iUnitsMask = pda.GetUnitsMask( *object );
-                params.iAddressOfCodeSeg = pda.GetAddressOfCodeSeg( *object );
-                //
-                object->Close( NULL );
-                }
+            DMemSpyDriverOSAdaptionDPhysicalDevice& pda = OSAdaption().DPhysicalDevice();
+            params.iVersion = pda.GetVersion( *object );
+            params.iUnitsMask = pda.GetUnitsMask( *object );
+            params.iAddressOfCodeSeg = pda.GetAddressOfCodeSeg( *object );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeLogicalChannel )
             {
@@ -629,37 +505,19 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeChangeNotifier" ));
 
 	        DChangeNotifier* object = (DChangeNotifier*) handleAsObject;
-            NKern::LockSystem();
-            r = object->Open();
-            NKern::UnlockSystem();
-            //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDChangeNotifier& cna = OSAdaption().DChangeNotifier();
-                params.iChanges = cna.GetChanges( *object );
-                params.iAddressOfOwningThread = cna.GetAddressOfOwningThread( *object );
-                cna.GetNameOfOwningThread( *object, params.iNameOfOwner );
-                //
-                object->Close( NULL );
-                }
+            DMemSpyDriverOSAdaptionDChangeNotifier& cna = OSAdaption().DChangeNotifier();
+            params.iChanges = cna.GetChanges( *object );
+            params.iAddressOfOwningThread = cna.GetAddressOfOwningThread( *object );
+            cna.GetNameOfOwningThread( *object, params.iNameOfOwner );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeUndertaker )
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeUndertaker" ));
 	        
             DUndertaker* object = (DUndertaker*) handleAsObject;
-            NKern::LockSystem();
-            r = object->Open();
-            NKern::UnlockSystem();
-            //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDUndertaker& uta = OSAdaption().DUndertaker();
-                params.iAddressOfOwningThread = uta.GetAddressOfOwningThread( *object );
-                uta.GetNameOfOwningThread( *object, params.iNameOfOwner );
-                //
-                object->Close( NULL );
-                }
+            DMemSpyDriverOSAdaptionDUndertaker& uta = OSAdaption().DUndertaker();
+            params.iAddressOfOwningThread = uta.GetAddressOfOwningThread( *object );
+            uta.GetNameOfOwningThread( *object, params.iNameOfOwner );
             }
         else if ( params.iType == EMemSpyDriverContainerTypeMsgQueue )
             {
@@ -674,26 +532,18 @@ TInt DMemSpyDriverLogChanContainers::GetGenericHandleInfo( TInt aTid, TMemSpyDri
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - EMemSpyDriverContainerTypeCondVar" ));
 	        
             DCondVar* object = (DCondVar*) handleAsObject;
-            NKern::LockSystem();
-            r = object->Open();
-            NKern::UnlockSystem();
-            //
-            if  ( r == KErrNone )
-                {
-                DMemSpyDriverOSAdaptionDCondVar& cva = OSAdaption().DCondVar();
-                params.iResetting = cva.GetResetting( *object );
-                params.iAddressOfOwningThread = cva.GetAddressOfMutex( *object );
-                cva.GetNameOfMutex( *object, params.iNameOfOwner );
-                params.iWaitCount = cva.GetWaitCount( *object );
-                //
-                object->Close( NULL );
-                }
+            DMemSpyDriverOSAdaptionDCondVar& cva = OSAdaption().DCondVar();
+            params.iResetting = cva.GetResetting( *object );
+            params.iAddressOfOwningThread = cva.GetAddressOfMutex( *object );
+            cva.GetNameOfMutex( *object, params.iNameOfOwner );
+            params.iWaitCount = cva.GetWaitCount( *object );
             }
         else
             {
 	        TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetGenericHandleInfo() - KErrNotSupported" ));
             r = KErrNotSupported;
             }
+		handleAsObject->Close(NULL);
         }
     else
         {
@@ -881,13 +731,12 @@ TInt DMemSpyDriverLogChanContainers::GetPAndSInfo( DObject* aHandle, TMemSpyDriv
 	NKern::ThreadEnterCS();
 
     // First, locate the specific DObject in question. Cast the handle, but don't use the object...
-    // NB: This claims the system lock
-    DObject* object = CheckIfObjectIsInContainer( EMemSpyDriverContainerTypePropertyRef, aHandle );
+    DObject* object = CheckedOpen(EMemSpyDriverContainerTypePropertyRef, aHandle);
     TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetPAndSInfo() - handle search returned: 0x%08x", object ));
 
     if  ( object != NULL )
         {
-        NKern::LockSystem();
+        NKern::LockSystem(); // Keep this, the DPropertyRef APIs use it -TomS
 
         DMemSpyDriverOSAdaptionDPropertyRef& pra = OSAdaption().DPropertyRef();
         const TBool isReady = pra.GetIsReady( *object );
@@ -913,6 +762,7 @@ TInt DMemSpyDriverLogChanContainers::GetPAndSInfo( DObject* aHandle, TMemSpyDriv
             }
 
         NKern::UnlockSystem();
+		object->Close(NULL);
         }
 
     NKern::ThreadLeaveCS();
@@ -939,7 +789,7 @@ TInt DMemSpyDriverLogChanContainers::GetCondVarSuspendedThreads( TMemSpyDriverIn
     NKern::ThreadEnterCS();
     
     DObject* condVarHandle = (DObject*) params.iCondVarHandle;
-    condVarHandle = CheckIfObjectIsInContainer( EMemSpyDriverContainerTypeCondVar, condVarHandle );
+    condVarHandle = CheckedOpen(EMemSpyDriverContainerTypeCondVar, condVarHandle);
     if  ( condVarHandle == NULL )
         {
         Kern::Printf("DMemSpyDriverLogChanMisc::GetCondVarSuspThrs() - END - condVar not found");
@@ -949,9 +799,9 @@ TInt DMemSpyDriverLogChanContainers::GetCondVarSuspendedThreads( TMemSpyDriverIn
     
     ResetTempHandles();
         
-    DCondVar* condVar = (DCondVar*) params.iCondVarHandle;;
+    DCondVar* condVar = (DCondVar*) condVarHandle;
     
-    NKern::LockSystem();
+    NKern::LockSystem(); // Keep this, needed for iterating suspended queue -TomS
 
     // Iterate through suspended threads, writing back thread pointer (handle)
     // to client
@@ -1003,6 +853,7 @@ TInt DMemSpyDriverLogChanContainers::GetCondVarSuspendedThreads( TMemSpyDriverIn
             }
         }
 
+	condVarHandle->Close(NULL);
     NKern::ThreadLeaveCS();
 
     TRACE( Kern::Printf("DMemSpyDriverLogChanMisc::GetCondVarSuspThrs() - END - r: %d", r));
@@ -1026,7 +877,7 @@ TInt DMemSpyDriverLogChanContainers::GetCondVarSuspendedThreadInfo( TAny* aThrea
     NKern::ThreadEnterCS();
 
     DObject* threadHandle = (DObject*) aThreadHandle;
-    threadHandle = CheckIfObjectIsInContainer( EMemSpyDriverContainerTypeThread, threadHandle );
+    threadHandle = CheckedOpen(EMemSpyDriverContainerTypeThread, threadHandle);
     if  ( threadHandle == NULL )
         {
         Kern::Printf("DMemSpyDriverLogChanMisc::GetCondVarSuspThrInfo() - END - thread not found");
@@ -1043,6 +894,7 @@ TInt DMemSpyDriverLogChanContainers::GetCondVarSuspendedThreadInfo( TAny* aThrea
         r = Kern::ThreadRawWrite( &ClientThread(), aParams, &params, sizeof(TMemSpyDriverCondVarSuspendedThreadInfo) );
         }
     
+	threadHandle->Close(NULL);
     NKern::ThreadLeaveCS();
     
     TRACE( Kern::Printf("DMemSpyDriverLogChanMisc::GetCondVarSuspThrInfo() - END - r: %d", r));
@@ -1106,17 +958,13 @@ TInt DMemSpyDriverLogChanContainers::SearchThreadsFor( DObject* aHandleToLookFor
 
         if  ( handles != NULL )
             {
-            MemSpyObjectIx_Wait( handles );
-            //
-            TInt searchResult = handles->At( aHandleToLookFor );
-	        if  ( searchResult != KErrNotFound )
+            TBool found = handles->Find( aHandleToLookFor );
+	        if (found)
 		        {
                 TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::SearchThreadsFor - found handle match in [%O]", thread ));
                 aStream.WriteUint32( (TUint32) thread );
                 ++matches;
 		        }
-            //
-            MemSpyObjectIx_Signal( handles );
             }
         }
 
@@ -1151,17 +999,13 @@ TInt DMemSpyDriverLogChanContainers::SearchProcessFor( DObject* aHandleToLookFor
 
         if  ( handles != NULL )
             {
-            MemSpyObjectIx_Wait( handles );
-            //
-            TInt searchResult = handles->At( aHandleToLookFor );
-	        if  ( searchResult != KErrNotFound )
+            TBool found = handles->Find( aHandleToLookFor );
+	        if  ( found )
 		        {
                 TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::SearchProcessFor - found handle match in [%O]", process ));
                 aStream.WriteUint32( (TUint32) process );
                 ++matches;
 		        }
-            //
-            MemSpyObjectIx_Signal( handles );
             }
         }
 

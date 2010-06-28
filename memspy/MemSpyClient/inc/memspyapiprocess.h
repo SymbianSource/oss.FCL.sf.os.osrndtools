@@ -51,6 +51,8 @@ public:
 	
 	IMPORT_C TProcessPriority Priority() const;
 	
+	IMPORT_C TBool IsDead() const;
+	
 	
 private:
 	CMemSpyApiProcess();

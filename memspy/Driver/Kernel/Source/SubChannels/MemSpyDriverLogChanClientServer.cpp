@@ -96,8 +96,8 @@ TInt DMemSpyDriverLogChanClientServer::GetServerSessionHandles( TMemSpyDriverInt
     NKern::ThreadEnterCS();
 
     DObject* serverHandle = (DObject*) params.iServerHandle;
-    serverHandle = CheckIfObjectIsInContainer( EMemSpyDriverContainerTypeServer, serverHandle );
-    if  ( serverHandle == NULL )
+    DServer* server = static_cast<DServer*>(CheckedOpen(EMemSpyDriverContainerTypeServer, serverHandle));
+    if (server == NULL)
         {
     	Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionHandles() - END - server not found");
         NKern::ThreadLeaveCS();
@@ -106,47 +106,29 @@ TInt DMemSpyDriverLogChanClientServer::GetServerSessionHandles( TMemSpyDriverInt
 
 	ResetTempHandles();
 
-    DServer* server = (DServer*) serverHandle;
-    NKern::LockSystem();
-
-    r = server->Open();
-    if  ( r == KErrNone )
+    NKern::LockSystem(); // Iterating session queue requires system lock
+    // Iterate through this server's sessions, writing back session pointer (handle)
+    // to client
+    SDblQue& serverQueue = serverAdaption.GetSessionQueue( *server );
+    SDblQueLink* anchor = &serverQueue.iA;
+    SDblQueLink* link = serverQueue.First();
+    while( link != anchor )
         {
-        // Iterate through this server's sessions, writing back session pointer (handle)
-        // to client
-        SDblQue& serverQueue = serverAdaption.GetSessionQueue( *server );
-        SDblQueLink* anchor = &serverQueue.iA;
-        SDblQueLink* link = serverQueue.First();
-        while( link != anchor )
-        	{
-			DSession* session = serverAdaption.GetSession( link );
+		DSession* session = serverAdaption.GetSession( link );
 
-            // Found a match in the specified container. Write the object's handle (aka the object address)
-            // back to the client address space
-            if  ( session )
-                {
-                AddTempHandle( session );
-                }
-
-            // Get next item
-            link = link->iNext;
+        // Found a match in the specified container. Write the object's handle (aka the object address)
+        // back to the client address space
+        if  ( session )
+            {
+            AddTempHandle( session );
             }
 
-        NKern::ThreadEnterCS();
-        TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionHandles() - in CS..." ));
-        //
-	    Kern::SafeClose( (DObject*&) server, NULL );
-        TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionHandles() - done safe close..." ));
-        //
-	    NKern::ThreadLeaveCS();
-        TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionHandles() - left CS" ));
+        // Get next item
+        link = link->iNext;
         }
-    else
-        {
-    	Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionHandles - error: %d opening server", r);
-        }
-
     NKern::UnlockSystem();
+	server->Close(NULL);
+	NKern::ThreadLeaveCS();
 
     // This variable holds the number of handles that we have already
 	// written to the client-side.
@@ -176,7 +158,6 @@ TInt DMemSpyDriverLogChanClientServer::GetServerSessionHandles( TMemSpyDriverInt
             }
         }
 
-	NKern::ThreadLeaveCS();
 
 	TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionHandles() - END - r: %d", r));
 	return r;
@@ -199,74 +180,48 @@ TInt DMemSpyDriverLogChanClientServer::GetServerSessionInfo( TAny* aSessionHandl
 
 	NKern::ThreadEnterCS();
 
-    DObject* sessionHandle = (DObject*) aSessionHandle;
-    sessionHandle = CheckIfObjectIsInContainer( EMemSpyDriverContainerTypeSession, sessionHandle );
-    if  ( sessionHandle == NULL )
+    DSession* session = (DSession*)CheckedOpen(EMemSpyDriverContainerTypeSession, (DObject*)aSessionHandle);
+    if (session == NULL )
         {
     	Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionInfo() - END - session not found");
         NKern::ThreadLeaveCS();
         return KErrNotFound;
         }
 
-    DSession* session = (DSession*) sessionHandle;
     session->FullName( params.iName );
 
-    NKern::LockSystem();
-    r = session->Open();
-    if  ( r == KErrNone )
+    // Get owner type and id
+    DObject* sessionOwner = sessionAdaption.GetOwner( *session );
+    if  ( sessionOwner )
         {
-        // Get owner type and id
-        DObject* sessionOwner = sessionAdaption.GetOwner( *session );
-        if  ( sessionOwner )
+        const TObjectType objectType = sessionAdaption.GetObjectType( *sessionOwner );
+        if  ( objectType == EProcess )
             {
-            const TObjectType objectType = sessionAdaption.GetObjectType( *sessionOwner );
-            if  ( objectType == EProcess )
-                {
-                DProcess* sessionProcess = (DProcess*) sessionOwner;
-                //
-                params.iOwnerId = processAdaption.GetId( *sessionProcess );
-                params.iOwnerType = TMemSpyDriverServerSessionInfo::EOwnerProcess;
-                }
-            else if ( objectType == EThread )
-                {
-                DThread* sessionThread = (DThread*) sessionOwner;
-                //
-                params.iOwnerId = threadAdaption.GetId( *sessionThread );
-                params.iOwnerType = TMemSpyDriverServerSessionInfo::EOwnerThread;
-                }
+            DProcess* sessionProcess = (DProcess*) sessionOwner;
+            //
+            params.iOwnerId = processAdaption.GetId( *sessionProcess );
+            params.iOwnerType = TMemSpyDriverServerSessionInfo::EOwnerProcess;
             }
-        else
+        else if ( objectType == EThread )
             {
-            params.iOwnerId = -1;
-            params.iOwnerType = TMemSpyDriverServerSessionInfo::EOwnerNone;
+            DThread* sessionThread = (DThread*) sessionOwner;
+            //
+            params.iOwnerId = threadAdaption.GetId( *sessionThread );
+            params.iOwnerType = TMemSpyDriverServerSessionInfo::EOwnerThread;
             }
-
-        // Other attributes
-        params.iSessionType = sessionAdaption.GetSessionType( *session );
-        params.iAddress = (TUint8*)session;
-
-        NKern::ThreadEnterCS();
-        TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionInfo() - in CS..." ));
-        //
-	    Kern::SafeClose( (DObject*&) session, NULL );
-        TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionInfo() - done safe close..." ));
-        //
-	    NKern::ThreadLeaveCS();
-        TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionInfo() - left CS" ));
         }
     else
         {
-    	Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionInfo - error: %d opening server", r);
+        params.iOwnerId = -1;
+        params.iOwnerType = TMemSpyDriverServerSessionInfo::EOwnerNone;
         }
 
-    NKern::UnlockSystem();
-
-    if  ( r == KErrNone )
-        {
-        r = Kern::ThreadRawWrite( &ClientThread(), aParams, &params, sizeof(TMemSpyDriverServerSessionInfo) );
-        }
-
+    // Other attributes
+    params.iSessionType = sessionAdaption.GetSessionType( *session );
+    params.iAddress = (TUint8*)session;
+	session->Close(NULL);
 	NKern::ThreadLeaveCS();
+    r = Kern::ThreadRawWrite( &ClientThread(), aParams, &params, sizeof(TMemSpyDriverServerSessionInfo) );
 
 	TRACE( Kern::Printf("DMemSpyDriverLogChanClientServer::GetServerSessionInfo() - END - r: %d", r));
 	return r;

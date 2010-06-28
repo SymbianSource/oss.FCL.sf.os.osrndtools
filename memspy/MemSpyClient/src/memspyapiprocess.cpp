@@ -72,6 +72,11 @@ EXPORT_C TProcessPriority CMemSpyApiProcess::Priority() const
 	return iProcessData->iPriority;
 	}
 
+EXPORT_C TBool CMemSpyApiProcess::IsDead() const
+    {
+    return iProcessData->iIsDead;
+    }
+
 CMemSpyApiProcess::CMemSpyApiProcess() : iProcessData(0)
 	{
 	}

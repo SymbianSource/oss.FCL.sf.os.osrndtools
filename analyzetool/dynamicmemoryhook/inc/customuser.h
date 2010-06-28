@@ -21,7 +21,7 @@
 
 // INCLUDES
 #include <u32std.h>
-
+#include <e32svr.h>
 // CONSTANTS
 const TInt KATVersionLength = 20;
 const TInt KATDefaultLogOption = 0;

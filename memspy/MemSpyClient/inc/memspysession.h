@@ -25,24 +25,26 @@
 #include <u32std.h>
 
 //user includes
-#include <memspy/engine/memspyprocessdata.h> //for Processes
 #include <memspy/api/memspyapiprocess.h>
 
-#include <memspy/engine/memspythreaddata.h> //for Threads
 #include <memspy/api/memspyapithread.h>
 #include <memspy/api/memspyapithreadinfoitem.h>
 #include <memspy/engine/memspythreadinfoitemdata.h>
 #include <memspy/engine/memspyengineobjectthreadinfoobjects.h>
+#include <memspy/engine/memspydevicewideoperations.h>
 
-#include <memspy/engine/memspykernelobjectdata.h> //for KernelObjects
 #include <memspy/api/memspyapikernelobject.h>
 
 #include <memspy/api/memspyapikernelobjectitem.h> //for KernelObjectItems
 
-#include <memspy/engine/memspyheapdata.h> //for Heap
 #include <memspy/api/memspyapiheap.h>
 
+#include <memspy/api/memspyapimemorytrackingcycle.h>
+
 #include <memspyengineclientinterface.h>
+#include <memspy/engine/memspyengineoutputsinktype.h>
+
+#include <memspy/engine/memspyenginehelpersysmemtrackerconfig.h>
 
 // Constants
 const TInt KMemSpyVersion           = 2;
@@ -63,6 +65,19 @@ enum TMemSpyOutputType
     EOutputTypeFile
     };
 
+class TMemSpyDeviceWideOperationProgress 
+	{
+public:
+	IMPORT_C TInt Progress() const;
+	IMPORT_C const TDesC& Description() const;
+	
+private:
+	TPckgBuf<TInt> iProgress;
+	TFullName iDescription;
+	
+friend class RMemSpySession;
+	};
+
 
 NONSHARABLE_CLASS( RMemSpySession ) : public RSessionBase
     {
@@ -71,12 +86,72 @@ public:
     IMPORT_C TInt Connect();
     
 public:	//API
-    IMPORT_C void OutputKernelHeapDataL(TMemSpyOutputType aOutputType); //EMemSpyClientServerOpHeapData
-    IMPORT_C void OutputThreadHeapDataL(TMemSpyOutputType aOutputType, TThreadId aThreadId); //EMemSpyClientServerOpHeapData
-    IMPORT_C void OutputThreadCellListL(TMemSpyOutputType aOutputType, TThreadId aThreadId);//EMemSpyClientServerOpHeapCellListing
-    IMPORT_C void OutputKernelObjectsL(TMemSpyOutputType aOutputType);// EMemSpyClientServerOpEnumerateKernelContainerAll
-    IMPORT_C void OutputCompactStackInfoL(TMemSpyOutputType aOutputType);// EMemSpyClientServerOpStackInfoCompact
-    IMPORT_C void OutputCompactHeapInfoL(TMemSpyOutputType aOutputType);// EMemSpyClientServerOpHeapInfoCompact
+    //Thread speciifc operations
+    IMPORT_C void OutputKernelHeapDataL(); //EMemSpyClientServerOpHeapData
+    
+    IMPORT_C void OutputKernelHeapData(TRequestStatus& aStatus); //EMemSpyClientServerOpHeapData
+    
+    IMPORT_C void OutputThreadHeapDataL(TThreadId aThreadId); //EMemSpyClientServerOpHeapData
+    
+    IMPORT_C void OutputThreadHeapDataL(const TDesC& aThreadName); //EMemSpyClientServerOpHeapData
+    
+    IMPORT_C void OutputThreadCellListL(TThreadId aThreadId);//EMemSpyClientServerOpHeapCellListing    
+    
+    IMPORT_C void OutputHeapInfoUserL(TThreadId aThreadId);	//EMemSpyClientServerOpHeapInfo
+    
+    IMPORT_C void SwitchOutputSinkL( TMemSpySinkType aType); //EMemSpyClientServerOpSwitchOutputSinkFile / EMemSpyClientServerOpSwitchOutputSinkTrace
+    
+    IMPORT_C void SwitchOutputToTraceL(); // EMemSpyClientServerOpSwitchOutputSinkTrace
+    
+    IMPORT_C void SwitchOutputToFileL(const TDesC& aRootFolder); // EMemSpyClientServerOpSwitchOutputSinkFile
+    
+    IMPORT_C void OutputStackInfoL(TThreadId aThreadId); //EMemSpyClientServerOpStackInfo
+    
+    IMPORT_C void OutputStackDataL(TThreadId aThreadId, TMemSpyDriverDomainType aType ); //EMemSpyClientServerOpStackDataUser / EMemSpyClientServerOpStackDataKernel    
+    
+    IMPORT_C void OutputThreadInfoHandlesL(TThreadId aThreadId); //EMemSpyClientServerOpOutputInfoHandles
+    
+    IMPORT_C void OutputAOListL(TThreadId aId, TMemSpyThreadInfoItemType aType);	//EMemSpyClientServerOpOutputAOList    
+    
+    IMPORT_C void OutputKernelObjectsL();// EMemSpyClientServerOpEnumerateKernelContainerAll
+    
+    IMPORT_C void OutputCompactStackInfoL();// EMemSpyClientServerOpStackInfoCompact
+    
+    IMPORT_C void OutputCompactHeapInfoL();// EMemSpyClientServerOpHeapInfoCompact
+    
+    // Device Wide Operations
+    // Synchronous operations - for CLI
+    IMPORT_C void OutputHeapData();
+    
+    // Asynchronous operations
+    IMPORT_C void OutputPhoneInfo(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputDetailedPhoneInfo(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputHeapInfo(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputCompactHeapInfo(TRequestStatus &aStatus);
+    
+    IMPORT_C void OutputHeapCellListing(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputHeapData(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputStackInfo(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputCompactStackInfo(TRequestStatus &aStatus);
+    
+    IMPORT_C void OutputUserStackData(TRequestStatus& aStatus);
+    
+    IMPORT_C void OutputKernelStackData(TRequestStatus& aStatus);
+    
+    IMPORT_C void NotifyDeviceWideOperationProgress(TMemSpyDeviceWideOperationProgress &aProgress, TRequestStatus &aStatus);
+    
+    IMPORT_C void CancelDeviceWideOperationL();
+    
+    // Synchronous operations for MemSpyLauncher
+    IMPORT_C void OutputPhoneInfo();
+    
+    // "Ui" operations 
     
     IMPORT_C void GetProcessesL(RArray<CMemSpyApiProcess*> &aProcesses, TSortType aSortType = ESortProcById);
     
@@ -87,10 +162,42 @@ public:	//API
     IMPORT_C TInt ProcessSystemPermanentOrCritical( TProcessId aId, TBool aValue ); //aValue -> return value
     
     IMPORT_C void SetThreadPriorityL(TThreadId aId, TInt aPriority);
+    
     IMPORT_C TInt EndProcess( TProcessId aId, TMemSpyEndType aType );
     
     IMPORT_C TInt SwitchToProcess( TProcessId aId, TBool aBrought  );
     
+    //SWMT operations
+    
+    IMPORT_C void GetMemoryTrackingCyclesL(RArray<CMemSpyApiMemoryTrackingCycle*>& aCycles);
+    
+    IMPORT_C void SetSwmtConfig( TMemSpyEngineHelperSysMemTrackerConfig aConfig );    
+    
+    IMPORT_C void SetSwmtAutoStartProcessList( CArrayFixFlat<TUid>* aList );
+    
+    IMPORT_C void SetSwmtFilter( const TDesC& aFilter );            
+    
+    IMPORT_C void SetSwmtCategoriesL(TInt aCategories);
+
+    IMPORT_C void SetSwmtHeapDumpsEnabledL(TBool aEnabled);
+    
+    IMPORT_C void SwmtResetTracking();
+    
+    IMPORT_C void GetOutputSink( TMemSpySinkType aType );
+           
+    IMPORT_C TBool IsSwmtRunningL();
+    
+    IMPORT_C void StartSwmtTimerL(TInt aPeriod);
+    
+    IMPORT_C void StartSwmtTimerL(); // for CLI
+    
+    IMPORT_C void SetSwmtTimerIntervalL(TInt aPeriod); //for CLI
+    
+    IMPORT_C void StopSwmtTimerL();
+    
+    IMPORT_C void ForceSwmtUpdateL();
+    
+    IMPORT_C void ForceSwmtUpdate(TRequestStatus& aStatus);
     
     //Threads operations
     /**
@@ -106,29 +213,36 @@ public:	//API
     
     IMPORT_C TInt GetInfoItemType( TInt aIndex, TThreadId aId, TMemSpyThreadInfoItemType &aType );
     
-    IMPORT_C void GetThreadInfoItems( RArray<CMemSpyApiThreadInfoItem*> &aInfoItems, TThreadId aId, TMemSpyThreadInfoItemType aType );
+    IMPORT_C TInt GetThreadInfoItems( RArray<CMemSpyApiThreadInfoItem*> &aInfoItems, TThreadId aId, TMemSpyThreadInfoItemType aType );
     
-    //KernelObjects operations    
-    /**
-     * 
-     */
+    IMPORT_C void GetThreadInfoItemsL( RArray<CMemSpyApiThreadInfoItem*> &aInfoItems, TThreadId aId, TMemSpyThreadInfoItemType aType );
+        
+    
+    //KernelObjects operations
+    
+    IMPORT_C void GetKernelObjectsL( RArray<CMemSpyApiKernelObject*> &aKernelObjects );
+    
     IMPORT_C TInt GetKernelObjects( RArray<CMemSpyApiKernelObject*> &aKernelObjects );
+    
+    IMPORT_C void GetKernelObjectItemsL( RArray<CMemSpyApiKernelObjectItem*> &aKernelObjectItems, TMemSpyDriverContainerType aForContainer );
     
     IMPORT_C TInt GetKernelObjectItems( RArray<CMemSpyApiKernelObjectItem*> &aKernelObjectItems, TMemSpyDriverContainerType aForContainer );
     
     IMPORT_C void OutputAllContainerContents();
     
-    /**
-     * 
-     */    
+    // Heap 
+    
+    IMPORT_C CMemSpyApiHeap* GetHeapL();
+    
 	IMPORT_C CMemSpyApiHeap* GetHeap();
 	
-	IMPORT_C void DumpKernelHeap();
-    
+	IMPORT_C void DumpKernelHeap();	
+	
 private:
-    TInt StartServer();
+    TInt StartServer();       
     
     void SetOutputTypeL(TMemSpyOutputType aOutputType);
+    
     };
 
 #endif // MEMSPYSESSION_H

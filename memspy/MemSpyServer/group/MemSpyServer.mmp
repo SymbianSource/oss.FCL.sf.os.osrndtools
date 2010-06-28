@@ -30,8 +30,6 @@ EPOCHEAPSIZE 0x100000 0x4000000
 
 
 SOURCEPATH ../Source
-//SOURCE 		MemSpyServer.cpp 
-//SOURCE		MemSpyServerSession.cpp 
 SOURCE		MemSpyServerMain.cpp 
 
 USERINCLUDE ../Include

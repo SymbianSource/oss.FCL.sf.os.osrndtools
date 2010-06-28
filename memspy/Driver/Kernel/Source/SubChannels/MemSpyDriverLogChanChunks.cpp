@@ -164,15 +164,18 @@ TInt DMemSpyDriverLogChanChunks::GetChunkHandles( TMemSpyDriverInternalChunkHand
 
 	    // Iterate through each handle in the process
 	    MemSpyObjectIx* processHandles = processAdaption.GetHandles( *process );
-        MemSpyObjectIx_Wait( processHandles );
-
+		MemSpyObjectIx_HandleLookupLock();
         const TInt processHandleCount = processHandles->Count();
+		MemSpyObjectIx_HandleLookupUnlock();
+
 	    for( TInt processHandleIndex = 0; processHandleIndex<processHandleCount && r == KErrNone && currentWriteIndex < maxCount; processHandleIndex++ )
     	    {
     	    // Get a handle from the process container...
-            NKern::LockSystem();
+            MemSpyObjectIx_HandleLookupLock();
+			if (processHandleIndex >= processHandles->Count()) break; // Count may have changed in the meantime
     	    DObject* object = (*processHandles)[ processHandleIndex ];
-            NKern::UnlockSystem();
+			if (object && object->Open() != KErrNone) object = NULL;
+			MemSpyObjectIx_HandleLookupUnlock();
             
             if  ( object )
                 {
@@ -187,10 +190,9 @@ TInt DMemSpyDriverLogChanChunks::GetChunkHandles( TMemSpyDriverInternalChunkHand
                         ++currentWriteIndex;
                         }
                     }
+				object->Close(NULL);
                 }
     	    }
-
-        MemSpyObjectIx_Signal( processHandles );
 
         // If we were asked for process-related chunks, also check the chunk container
         // for entries which we don't have handles to, but do refer to our process
@@ -276,34 +278,36 @@ TInt DMemSpyDriverLogChanChunks::GetChunkInfo( TMemSpyDriverInternalChunkInfoPar
 	NKern::ThreadEnterCS();
 
     container->Wait();
-    NKern::LockSystem();
     const TInt count = container->Count();
-    NKern::UnlockSystem();
 
     DChunk* foundChunk = NULL;
     
     for(TInt i=0; i<count; i++)
         {
-        NKern::LockSystem();
         DChunk* chunk = (DChunk*) (*container)[i];
-        NKern::UnlockSystem();
-        //
         if  ( chunk == params.iHandle )
             {
             foundChunk = chunk;
             TRACE( PrintChunkInfo( *chunk ) );
+			r = foundChunk->Open();
             break;
             }
         }
 
     container->Signal();
-	NKern::ThreadLeaveCS();
 
     if  ( foundChunk == NULL )
         {
     	Kern::Printf("DMemSpyDriverLogChanChunks::GetChunkInfo() - END - KErrNotFound - couldnt find chunk");
+		NKern::ThreadLeaveCS();
         return KErrNotFound;
         }
+	if (r)
+		{
+		Kern::Printf("DMemSpyDriverLogChanChunks::GetChunkInfo() - END - %d - Failed to open chunk", r);
+		NKern::ThreadLeaveCS();
+		return r;
+		}
 
     // Prepare return data
     DMemSpyDriverOSAdaptionDChunk& chunkAdaption = OSAdaption().DChunk();
@@ -335,6 +339,10 @@ TInt DMemSpyDriverLogChanChunks::GetChunkInfo( TMemSpyDriverInternalChunkInfoPar
     // Get type & attribs
     params.iType = IdentifyChunkType( *foundChunk );
     params.iAttributes = chunkAdaption.GetAttributes( *foundChunk );
+
+	// Finished with foundChunk
+	foundChunk->Close(NULL);
+	NKern::ThreadLeaveCS();
     
     // Write back to client
     r = Kern::ThreadRawWrite( &ClientThread(), aParams, &params, sizeof(TMemSpyDriverInternalChunkInfoParams) );
@@ -470,40 +478,36 @@ TBool DMemSpyDriverLogChanChunks::IsHeapChunk( DChunk& aChunk, const TName& aNam
 
     if  ( process && size >= 4 )
         {
+		NKern::ThreadEnterCS();
         // Chunks are mapped into entire process so any thread within the process is enough...
-        DThread* firstThread = processAdaption.GetFirstThread( *process );
+        DThread* firstThread = processAdaption.OpenFirstThread( *process );
         TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk() - firstThread: 0x%08x (%O)", firstThread, firstThread ) );
         if  ( firstThread != NULL )
             {
-            TInt err = firstThread->Open();
-            TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk() - firstThread open result: %d", err ) );
-
+            TBuf8<4> allocatorVTableBuffer;
+            TInt err = Kern::ThreadRawRead( firstThread, base, (TUint8*) allocatorVTableBuffer.Ptr(), allocatorVTableBuffer.MaxLength() );
+            TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk - read result of vtable data from requested thread is: %d", err ));
+            //
             if  ( err == KErrNone )
                 {
-                TBuf8<4> allocatorVTableBuffer;
-                err = Kern::ThreadRawRead( firstThread, base, (TUint8*) allocatorVTableBuffer.Ptr(), allocatorVTableBuffer.MaxLength() );
-                TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk - read result of vtable data from requested thread is: %d", err ));
-                //
-                if  ( err == KErrNone )
-                    {
-                    TRACE( MemSpyDriverUtils::DataDump("possible chunk vtable data - %lS", allocatorVTableBuffer.Ptr(), allocatorVTableBuffer.MaxLength(), allocatorVTableBuffer.MaxLength() ) );
-                    allocatorVTableBuffer.SetLength( allocatorVTableBuffer.MaxLength() );
-                    
-                    const TUint32 vtable =   allocatorVTableBuffer[0] +
-                                            (allocatorVTableBuffer[1] << 8) + 
-                                            (allocatorVTableBuffer[2] << 16) + 
-                                            (allocatorVTableBuffer[3] << 24);
-                    TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk - [possible] vTable within chunk is: 0x%08x", vtable) );
+                TRACE( MemSpyDriverUtils::DataDump("possible chunk vtable data - %lS", allocatorVTableBuffer.Ptr(), allocatorVTableBuffer.MaxLength(), allocatorVTableBuffer.MaxLength() ) );
+                allocatorVTableBuffer.SetLength( allocatorVTableBuffer.MaxLength() );
+                
+                const TUint32 vtable =   allocatorVTableBuffer[0] +
+                                        (allocatorVTableBuffer[1] << 8) + 
+                                        (allocatorVTableBuffer[2] << 16) + 
+                                        (allocatorVTableBuffer[3] << 24);
+                TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk - [possible] vTable within chunk is: 0x%08x", vtable) );
 
-                    // Check the v-table to work out if it really is an RHeap
-                    isHeap = ( vtable == rHeapVTable );
-                    TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk() - isHeap: %d", isHeap ) );
-                    }
-
-                TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk() - closing first thread..." ) );
-            	Kern::SafeClose( (DObject*&) firstThread, NULL );
+                // Check the v-table to work out if it really is an RHeap
+                isHeap = ( vtable == rHeapVTable );
+                TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk() - isHeap: %d", isHeap ) );
                 }
+
+            TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::IsHeapChunk() - closing first thread..." ) );
+            Kern::SafeClose( (DObject*&) firstThread, NULL );
             }
+		NKern::ThreadLeaveCS();
         }
 
     /* We only want RHeap's at the moment

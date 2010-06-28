@@ -40,7 +40,7 @@ public:
     TInt iThreadCount;
     TUint32 iSID;
     TUint32 iVID;
-    //TMemSpyDriverProcessInfo iInfo;
+    TBool iIsDead;
 	};
 
 #endif // MEMSPYPROCESSDATA_H

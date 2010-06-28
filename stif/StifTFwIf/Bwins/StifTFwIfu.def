@@ -60,4 +60,5 @@ EXPORTS
 	?ReadFiltersL@CUIStore@@QAEXAAV?$RPointerArray@VTDesC16@@@@@Z @ 59 NONAME ; void CUIStore::ReadFiltersL(class RPointerArray<class TDesC16> &)
 	?GetTestSetsList@CUIStore@@QAEHAAV?$RRefArray@VTDesC16@@@@@Z @ 60 NONAME ; int CUIStore::GetTestSetsList(class RRefArray<class TDesC16> &)
 	?SaveTestSet2@CUIStore@@QAEHAAVTDes16@@@Z @ 61 NONAME ; int CUIStore::SaveTestSet2(class TDes16 &)
+	?UnloadTestSet@CUIStore@@QAEHABVTDesC16@@@Z @ 62 NONAME ; int CUIStore::UnloadTestSet(class TDesC16 const &)
 

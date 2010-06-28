@@ -29,7 +29,6 @@ SMPSAFE
 
 SOURCEPATH				../User/Source
 SOURCE					MemSpyDriverClient.cpp
-SOURCE					RBuildQueryableHeap.cpp
 SOURCE					MemSpyDriverStreamReader.cpp
 SOURCE					MemSpyDriverStreamReaderImp.cpp
 
@@ -40,6 +39,10 @@ OS_LAYER_SYSTEMINCLUDE
 
 LIBRARY					euser.lib efsrv.lib
 
+// New Allocator support
+MACRO			STANDALONE_ALLOCHELPER
+SOURCEPATH      ../Shared
+SOURCE          heaputils.cpp
 
 
 

@@ -427,10 +427,8 @@ TInt DMemSpySuspensionManager::OpenTempObject(TUint aId, TObjectType aType)
     //
 	if ( iTempObj )
         {
-		NKern::LockSystem();
 		r = iTempObj->Open();
 	    TRACE( Kern::Printf("DMemSpySuspensionManager::OpenTempObject() - open returned: %d", r ));
-		NKern::UnlockSystem();
 		//
         if  ( r == KErrNone )
             {
@@ -499,14 +497,9 @@ void DMemSpySuspensionManager::CloseTempObject()
 	__ASSERT_DEBUG( iTempObj, MemSpyDriverUtils::Fault( __LINE__ ) );
     if  ( iTempObj )
         {
-	    NKern::ThreadEnterCS();
-        
-        TRACE( Kern::Printf("DMemSpySuspensionManager::CloseTempObject() - in CS..." ));
+		NKern::ThreadEnterCS();
 	    Kern::SafeClose( iTempObj, NULL );
-        TRACE( Kern::Printf("DMemSpySuspensionManager::CloseTempObject() - done safe close..." ));
-	    NKern::ThreadLeaveCS();
-
-        TRACE( Kern::Printf("DMemSpySuspensionManager::CloseTempObject() - left CS" ));
+		NKern::ThreadLeaveCS();
         }
 
     TRACE( Kern::Printf("DMemSpySuspensionManager::CloseTempObject() - END" ));

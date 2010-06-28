@@ -2889,4 +2889,4 @@ EXPORT_C CUiEnvProxy* CTestThreadContainer::GetUiEnvProxy()
 	return iModuleContainer->GetTestModule()->GetTestServer()->GetUiEnvProxy();
 	}
 
-//  End of File
+// End of File

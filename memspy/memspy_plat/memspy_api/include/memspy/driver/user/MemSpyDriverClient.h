@@ -157,6 +157,7 @@ public: // HEAP INFO
      */
     IMPORT_C TInt GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUint aTid );
     IMPORT_C TInt GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUint aTid, RArray<TMemSpyDriverFreeCell>& aFreeCells );
+	IMPORT_C TInt GetHeapInfoUser(TMemSpyHeapInfo& aInfo, TUint aTid, RArray<TMemSpyDriverCell>& aCells, TBool aCollectAllocatedCellsAsWellAsFree);
 
     /**
      *

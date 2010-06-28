@@ -229,4 +229,4 @@ TInt CNullOutput::Write(  TBool /* aWithTimeStamp */,
 // ================= OTHER EXPORTED FUNCTIONS =================================
 // None
 
-//  End of File
+// End of File

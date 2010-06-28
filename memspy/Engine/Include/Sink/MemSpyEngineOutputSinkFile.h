@@ -32,12 +32,12 @@ class CMemSpyEngineFileHolder;
 NONSHARABLE_CLASS( CMemSpyEngineOutputSinkFile ) : public CMemSpyEngineOutputSink
     {
 public:
-    static CMemSpyEngineOutputSinkFile* NewL( CMemSpyEngine& aEngine );
+    static CMemSpyEngineOutputSinkFile* NewL( CMemSpyEngine& aEngine, const TDesC& aRootFolder );
     ~CMemSpyEngineOutputSinkFile();
 
 public:
     CMemSpyEngineOutputSinkFile( CMemSpyEngine& aEngine );
-    void ConstructL();
+    void ConstructL( const TDesC& aRootFolder );
     
 private: // From CMemSpyEngineOutputSink
     void ProcessSuspendedL( TProcessId aId );
@@ -64,6 +64,8 @@ private:
 
     TUint iFileServerProcessId;
     TBool iFileServerSuspended;
+    
+    HBufC* iRoot;
 
 private:
     friend class CMemSpyEngineFileHolder;

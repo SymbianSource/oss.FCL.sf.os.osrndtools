@@ -132,5 +132,5 @@ class TEventTc
     };
 
 #endif      // TESTCOMBINEREVENT_H
-            
+
 // End of File

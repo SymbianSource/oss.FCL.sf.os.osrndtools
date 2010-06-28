@@ -30,8 +30,8 @@ file=ABI_DIR\BUILD_DIR\MemSpyClient.dll											SHARED_LIB_DIR\MemSpyClient.dl
 file=ABI_DIR\BUILD_DIR\MemSpy.exe									            SHARED_LIB_DIR\MemSpy.exe
 
 // Console UI
-file=ABI_DIR\BUILD_DIR\MemSpyConsole.exe										SHARED_LIB_DIR\MemSpyConsole.exe
-data=ZPRIVATE\\2002129E\MemSpyEComInterfaceIds.xml							    \private\2002129E\MemSpyEComInterfaceIds.xml
-data=ZPRIVATE\\2002129E\MemSpyProcessMemoryTrackingAutoStartConfig.xml		    \private\2002129E\MemSpyProcessMemoryTrackingAutoStartConfig.xml
+//file=ABI_DIR\BUILD_DIR\MemSpyConsole.exe										SHARED_LIB_DIR\MemSpyConsole.exe
+//data=ZPRIVATE\\2002129E\MemSpyEComInterfaceIds.xml							    \private\2002129E\MemSpyEComInterfaceIds.xml
+//data=ZPRIVATE\\2002129E\MemSpyProcessMemoryTrackingAutoStartConfig.xml		    \private\2002129E\MemSpyProcessMemoryTrackingAutoStartConfig.xml
 
 #endif

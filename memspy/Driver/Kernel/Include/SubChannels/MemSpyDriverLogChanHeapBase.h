@@ -61,33 +61,20 @@ protected: // From DMemSpyDriverLogChanBase
 protected: // Capability checks for heap access
     TDrmMatchType IsDrmThread( DThread& aThread );
 
-private: // From MHeapWalkerObserver
+protected: // From MHeapWalkerObserver
     void HandleHeapWalkInit();
-    TBool HandleHeapCell( TInt aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
+    TBool HandleHeapCell( TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
 
 protected: // Heap utility functions
     TInt OpenKernelHeap( RHeapK*& aHeap, DChunk*& aChunk, TDes8* aClientHeapChunkName = NULL );
-    TInt OpenKernelHeap( RMemSpyDriverRHeapKernelInPlace& aHeap, TDes8* aClientHeapChunkName = NULL );
     TInt OpenKernelHeap( RMemSpyDriverRHeapKernelFromCopy& aHeap, TDes8* aClientHeapChunkName = NULL );
-    TInt OpenUserHeap( DThread& aClientThread, TUint aExpectedHeapVTable, RMemSpyDriverRHeapUser& aHeap, DChunk*& aUserHeapChunk, TDes8* aClientHeapChunkName = NULL );
-    TBool GetUserHeapHandle( DThread& aThread, RMemSpyDriverRHeapUser& aHeap, TUint aExpectedVTable );
-    TBool IsDebugKernel();
-    TBool IsDebugKernel( RMemSpyDriverRHeapKernelInPlace& aHeap );
-    TInt GetHeapInfoKernel( RMemSpyDriverRHeapBase& aHeap, TBool aIsDebugAllocator, const TDesC8& aChunkName, TMemSpyHeapInfo* aHeapInfo, TDes8* aTransferBuffer );
+    TInt GetHeapInfoKernel(RMemSpyDriverRHeapBase& aHeap, TMemSpyHeapInfo* aHeapInfo, TDes8* aTransferBuffer);
     void PrintHeapInfo( const TMemSpyHeapInfo& aInfo );
 
-protected: // Free cells
-    void ReleaseFreeCells();
-    TInt PrepareFreeCellTransferBuffer();
-	TInt FetchFreeCells( TDes8* aBufferSink );
-    TInt CalculateFreeCellBufferSize() const;
-
 private: // Data members
-	RArray< TMemSpyDriverFreeCell > iFreeCells;
 
     // Points to stack-based object whilst walking in progress
     RMemSpyMemStreamWriter* iStackStream;
-    RMemSpyMemStreamWriter* iHeapStream;
     TInt iFreeCellCount;
 	};
 

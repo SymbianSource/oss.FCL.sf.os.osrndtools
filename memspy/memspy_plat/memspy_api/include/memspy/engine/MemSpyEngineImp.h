@@ -61,7 +61,7 @@ NONSHARABLE_CLASS( CMemSpyEngineImp ) : public CBase, public MMemSpyEngineUndert
 public:
     CMemSpyEngineImp( RFs& aFsSession, CMemSpyEngine& aEngine );
     ~CMemSpyEngineImp();
-    void ConstructL( TBool aStartServer );
+    void ConstructL();
 
 private: // Construction support
     void ConstructHelpersL();
@@ -80,6 +80,7 @@ public: // Sink related
     CMemSpyEngineOutputSink& Sink();
     TMemSpySinkType SinkType();
     void InstallSinkL( TMemSpySinkType aType );
+    void InstallSinkL( TMemSpySinkType aType, const TDesC& aRootFolder );
 
 public: // Misc
     void ListOpenFilesL();

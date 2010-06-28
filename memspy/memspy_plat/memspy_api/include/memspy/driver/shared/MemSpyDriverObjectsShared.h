@@ -349,7 +349,8 @@ public: // Enumerations
     enum THeapImplementationType
         {
         ETypeUnknown = 0,
-        ETypeRHeap
+        ETypeRHeap = 1,
+		ETypeRHybridHeap = 2,
         };
 
 public: // Constructor & destructor
@@ -426,17 +427,19 @@ public:
     };
 
 
-
 /**
- * Free cell information
+ * cell information
  */
 class TMemSpyDriverFreeCell
-    {
+	{
 public:
-    TInt iType;
-    TAny* iAddress;
-    TInt iLength;
-    };
+	TMemSpyDriverCellType iType;
+	TAny* iAddress;
+	TInt iLength;
+	};
+
+// For compatibility I can't change TMemSpyDriverCell to be the class and typdef/derive TMemSpyDriverFreeCell. Sigh...
+typedef TMemSpyDriverFreeCell TMemSpyDriverCell;
 
 
 /** 

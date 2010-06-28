@@ -1246,6 +1246,7 @@ _LIT( KSetCreate,       "Create test set" );
 _LIT( KSetLoad,         "Load test set" );
 
 _LIT( KSetShow,         "Show started test sets" );
+_LIT( KSetUnload,       "Unload test set" );
 _LIT( KSetRemove,       "Remove test set" );
 _LIT( KSetCaseAdd,      "Add test case to test set" );
 _LIT( KSetCaseRemove,   "Remove test case from test set" );
@@ -1281,6 +1282,7 @@ class CTestSetMenu
             ESetStartPar,
             //ESetStartRep,
  
+            ESetUnload,
             ESetRemove,
             ESetSave,
             ESetCaseAdd,

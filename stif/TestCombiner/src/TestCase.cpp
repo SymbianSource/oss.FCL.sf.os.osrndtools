@@ -336,7 +336,6 @@ TBool CTestCase::IsCompletelyFinished(void)
 CTCTestCase::CTCTestCase( CTestCombiner* testCombiner,
                           TInt aExpectedResult,
                           TFullTestResult::TCaseExecutionResult aCategory,
-                          const TDesC& aTestCaseArguments,
                           CTCTestModule* aModule ): //--PYTHON
     CTestCase( testCombiner, aExpectedResult, aCategory, ECaseLocal, aModule ), //--PYTHON
     iResultPckg( iResult )
@@ -406,7 +405,6 @@ CTCTestCase* CTCTestCase::NewL( CTestCombiner* testCombiner,
     CTCTestCase* self = new (ELeave) CTCTestCase( testCombiner,
                                                    aExpectedResult,
                                                    aCategory,
-                                                   aTestCaseArguments,
                                                    aModule ); //--PYTHON
      
     CleanupStack::PushL( self );
@@ -1206,4 +1204,4 @@ CRemoteSendReceive::~CRemoteSendReceive()
 
     }
 
-//  End of File
+// End of File

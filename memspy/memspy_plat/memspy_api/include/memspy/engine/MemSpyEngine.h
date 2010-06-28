@@ -65,7 +65,7 @@ public:
 
 private:
     CMemSpyEngine();
-    void ConstructL( RFs& aFsSession, TBool aStartServer );
+    void ConstructL( RFs& aFsSession );
 
 public: // API
     IMPORT_C RFs& FsSession();
@@ -81,6 +81,8 @@ public: // Sink related
     IMPORT_C CMemSpyEngineOutputSink& Sink();
     IMPORT_C TMemSpySinkType SinkType();
     IMPORT_C void InstallSinkL( TMemSpySinkType aType );
+    IMPORT_C void InstallDebugSinkL();
+    IMPORT_C void InstallFileSinkL( const TDesC& aRootFolder );
 
 public: // Misc
     IMPORT_C void ListOpenFilesL();

@@ -42,3 +42,4 @@ LIBRARY         euser.lib
 LIBRARY         efsrv.lib 
 
 LIBRARY		MemSpyClient.lib
+LIBRARY     MemSpyEngine.lib
