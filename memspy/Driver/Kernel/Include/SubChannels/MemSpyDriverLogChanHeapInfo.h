@@ -53,13 +53,22 @@ private: // from DMemSpyDriverLogChanBase
 private: // Channel operation handlers
     TInt GetHeapInfoUser( TMemSpyDriverInternalHeapRequestParameters* aParams );
     TInt GetHeapInfoKernel( TMemSpyDriverInternalHeapRequestParameters* aParams, TDes8* aTransferBuffer );
-    TInt GetIsDebugKernel( TBool* aIsDebugKernel );
+    TInt GetIsDebugKernel(TAny* aIsDebugKernel);
+
+private: // From MHeapWalkerObserver
+    void HandleHeapWalkInit();
+    TBool HandleHeapCell( TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
 
 private: // Internal methods
-    TUint32 CalculateFreeCellBufferSize() const;
+	void ReleaseCellList();
+    TInt PrepareCellListTransferBuffer();
+	TInt FetchCellList(TDes8* aBufferSink);
+    TInt CalculateCellListBufferSize() const;
 
 private: // Data members
     TMemSpyDriverInternalHeapRequestParameters iHeapInfoParams;
+	RArray<TMemSpyDriverCell> iCellList;
+    RMemSpyMemStreamWriter* iHeapStream;
 	};
 
 

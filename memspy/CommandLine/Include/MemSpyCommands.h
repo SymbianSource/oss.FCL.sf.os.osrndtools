@@ -18,39 +18,77 @@
 #ifndef MEMSPYCOMMANDS_H
 #define MEMSPYCOMMANDS_H
 
-
 // Literal constants
-_LIT( KMemSpyCmdHeapDump, "CmdHeap_Dump" );
-_LIT( KMemSpyCmdHeapDumpKernel, "CmdHeap_Dump_Kernel" );
-_LIT( KMemSpyCmdHeapCompact, "CmdHeap_Compact" );
-_LIT( KMemSpyCmdSWMTForceUpdate, "CmdSWMT_ForceUpdate" );
-_LIT( KMemSpyCmdSWMTReset, "CmdSWMT_Reset" );
-_LIT( KMemSpyCmdOpenFile, "CmdOpenFile" );
-_LIT( KMemSpyCmdContainer, "CmdContainer" );
-_LIT( KMemSpyCmdBitmapsSave, "CmdBitmaps_Save" );
-_LIT( KMemSpyCmdRamDisableAknIconCache, "CmdRAM_DisableAknIconCache" );
-_LIT( KMemSpyCmdOutputToFile, "CmdOutput_ToFile" );
-_LIT( KMemSpyCmdOutputToTrace, "CmdOutput_ToTrace" );
+_LIT( KMemSpyCLINewLine, "\r\n" );
+_LIT( KMemSpyCLIName, "MemSpy CommandLineInterpreter" );
+_LIT( KMemSpyCLIInputPrompt, " > %S" );
+_LIT( KMemSpyCLIWildcardCharacter, "*" );
 
+// Numerical constants
+const TInt KMemSpyMaxDisplayLengthThreadName = 48;
+const TInt KMemSpyMaxDisplayLengthSizeText = 14;
+const TInt KMemSpyMaxInputBufferLength = 200;
 
-_LIT( KMemSpyCmdUiSendToBackground, "CmdUI_Background" );
-_LIT( KMemSpyCmdUiBringToForeground, "CmdUI_Foreground" );
+// Key constants (S60)
+const TInt KMemSpyUiS60KeyCodeButtonOk = 2000;
+const TInt KMemSpyUiS60KeyCodeButtonCancel = 2001;
+const TInt KMemSpyUiS60KeyCodeRockerEnter = 63557;
 
-_LIT( KMemSpyCmdUiExit, "CmdUI_Exit" );
+// Status messages
+_LIT( KOutputChangeMessage, "Change output mode opetarion in progress" );
+_LIT( KHeapDumpMessage, "Heap dump opetarion in progress" );
+_LIT( KSWMTMessage, "System Wide Memory Tracking opetarion in progress" );
 
-_LIT( KMemSpyCmdSWMTTypeHeap,                    "HEAP" );
-_LIT( KMemSpyCmdSWMTTypeChunk,                   "CHNK" );
-_LIT( KMemSpyCmdSWMTTypeCode,                    "CODE" );
-_LIT( KMemSpyCmdSWMTTypeStack,                   "STAK" );
-_LIT( KMemSpyCmdSWMTTypeGlobalData,              "GLOD" );
-_LIT( KMemSpyCmdSWMTTypeRamDrive,                "RAMD" );
-_LIT( KMemSpyCmdSWMTTypeOpenFile,                "FILE" );
-_LIT( KMemSpyCmdSWMTTypeDiskSpace,               "DISK" );
-_LIT( KMemSpyCmdSWMTTypeHandleGeneric,           "HGEN" );
-_LIT( KMemSpyCmdSWMTTypeFbserv,                  "FABS" );
-_LIT( KMemSpyCmdSWMTTypeFileServerCache,         "F32C" );
-_LIT( KMemSpyCmdSWMTTypeSystemMemory,            "SYSM" );
-_LIT( KMemSpyCmdSWMTTypeWindowGroup,             "WNDG" );
-_LIT( KMemSpyCmdSWMTTypeHeapFilter,              "HEAPFilter:" );
+// Help text
+_LIT( KHelpMessage, "=== MemSpy CommandLineInterpreter Help ===\r\n" );
+_LIT( KHelpOutputCommand, "Change output mode to trace: 'memspy output trace'\r\n" );
+_LIT( KHelpOutputToFileCommand, "Change output mode to trace: 'memspy output file'\r\n" );
+_LIT( KHelpHeapDumpCommand, "Heap dump: 'memspy heapdup <all | kernel | user heap filter >'\r\n" );
+_LIT( KHelpSwmtCommand, "SWMT: 'memspy swmt <starttimer <value in seconds> | stop timer | dumpnow > <categories>'\r\n" );
+_LIT( KHelpKillServerCommand, "Kill server: 'memspy killserver'\r\n" );
+_LIT( KHelpCommand, "Press 'c' to continue" );
 
+//new commands
+
+//HELP
+_LIT( KMemSpyCmdHelp1, "-?" );
+_LIT( KMemSpyCmdHelp2, "-h" );
+_LIT( KMemSpyCmdHelp3, "-help" );
+_LIT( KMemSpyCmdHelp4, "--help" );
+
+//OUTPUT
+_LIT( KMemSpyCmdOutput, "output" );
+_LIT( KMemSpyCmdOutputParameterTrace, "trace" );
+_LIT( KMemSpyCmdOutputParameterFile, "file" );
+//<directory> //parameter to be parsed
+
+//HEAP DUMP
+_LIT( KMemSpyCmdHeapDump, "heapdump" );
+_LIT( KMemSpyCmdHeapDumpParameterAll, "all" ); //default
+_LIT( KMemSpyCmdHeapDumpParameterKernel, "kernel" ); //kernel heap dump
+
+//SWMT
+_LIT( KMemSpyCmdSwmt, "swmt" );
+_LIT( KMemSpyCmdSwmtParameterStarttimer, "starttimer" ); //<value in seconds> optionaly
+_LIT( KMemSpyCmdSwmtParameterStoptimer, "stoptimer" );
+_LIT( KMemSpyCmdSwmtParameterDumpnow, "dumpnow" );
+
+//KILL SERVER
+_LIT( KMemSpyCmdKillServer, "killserver"); //kills the server in case of it is running
+
+//SWMT CATEGORIES (TYPES)
+_LIT( KMemSpyCmdSWMTTypeHeap,                    "heap" );
+_LIT( KMemSpyCmdSWMTTypeChunk,                   "chnk" );
+_LIT( KMemSpyCmdSWMTTypeCode,                    "code" );
+_LIT( KMemSpyCmdSWMTTypeStack,                   "stak" );
+_LIT( KMemSpyCmdSWMTTypeGlobalData,              "glob" );
+_LIT( KMemSpyCmdSWMTTypeRamDrive,                "ramd" );
+_LIT( KMemSpyCmdSWMTTypeOpenFile,                "file" );
+_LIT( KMemSpyCmdSWMTTypeDiskSpace,               "disk" );
+_LIT( KMemSpyCmdSWMTTypeHandleGeneric,           "hgen" );
+_LIT( KMemSpyCmdSWMTTypeFbserv,                  "fabs" );
+_LIT( KMemSpyCmdSWMTTypeFileServerCache,         "f32c" );
+_LIT( KMemSpyCmdSWMTTypeSystemMemory,            "sysm" );
+_LIT( KMemSpyCmdSWMTTypeWindowGroup,             "wndg" );
+_LIT( KMemSpyCmdSWMTTypeAll,					 "all"	); //default value, dumps all categories expect heap dumps	
 #endif

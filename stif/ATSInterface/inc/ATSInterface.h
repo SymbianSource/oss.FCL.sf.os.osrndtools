@@ -188,5 +188,5 @@ class CATSInterface
 
 
 #endif // ATS_INTERFACE_H
-    
+
 // End of File

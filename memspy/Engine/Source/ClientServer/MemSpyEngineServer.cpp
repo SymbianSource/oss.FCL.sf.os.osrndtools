@@ -42,12 +42,39 @@
 #include <memspy/engine/memspyenginehelpersysmemtrackerconfig.h>
 #include <memspy/engine/memspyenginehelperkernelcontainers.h>
 #include <memspy/engine/memspyengineobjectthreadinfocontainer.h>
+#include <memspy/engine/memspyengineobjectthreadinfoobjects.h>
+#include <memspy/engine/memspyenginehelpersysmemtrackercycle.h>
 
 #include <memspy/engine/memspyprocessdata.h>
 #include <memspy/engine/memspythreaddata.h>
 #include <memspy/engine/memspykernelobjectdata.h>
 #include <memspy/engine/memspythreadinfoitemdata.h>
+#include <memspy/engine/memspymemorytrackingcycledata.h>
+#include <memspy/engine/memspyengineoutputsink.h>
+#include <memspy/engine/memspyenginehelperactiveobject.h>
 
+inline CShutdown::CShutdown() :CTimer(-1)
+    {
+    CActiveScheduler::Add(this);
+    }
+
+inline void CShutdown::ConstructL()
+    {
+    CTimer::ConstructL();
+    }
+
+inline void CShutdown::Start()
+    {
+    After(KMyShutdownDelay);
+    }
+
+void CShutdown::RunL()
+    //
+    // Initiate server exit when the timer expires
+    //
+    {
+    CActiveScheduler::Stop();
+    }
 
 CMemSpyEngineServer::CMemSpyEngineServer( CMemSpyEngine& aEngine )
 :   CServer2( EPriorityNormal ), iEngine( aEngine )
@@ -63,6 +90,10 @@ CMemSpyEngineServer::~CMemSpyEngineServer()
 void CMemSpyEngineServer::ConstructL()
     {
     StartL( KMemSpyServerName );
+    
+    iShutdown.ConstructL();
+    // ensure that the server still exits even if the 1st client fails to connect
+    iShutdown.Start();
     }
 
 
@@ -87,6 +118,34 @@ CSession2* CMemSpyEngineServer::NewSessionL( const TVersion& aVersion, const RMe
     CMemSpyEngineSession* session = CMemSpyEngineSession::NewL( iEngine, aMessage );
 	return session;
     }
+
+void CMemSpyEngineServer::AddSession(TBool aCliRequest)
+    {
+    if (aCliRequest)
+        {
+        iCliConnected = ETrue;
+        }
+    else
+        {
+        ++iSessionCount;
+        }
+    iShutdown.Cancel();
+    }
+
+void CMemSpyEngineServer::DropSession(TBool aCliRequest)
+    {
+    if (!aCliRequest)
+        {
+        --iSessionCount;
+        }
+    
+    if (iSessionCount == 0 && !iCliConnected)
+        {
+        iShutdown.Start();
+        }
+    }
+
+
 
 
 
@@ -129,6 +188,8 @@ CMemSpyEngineSession::~CMemSpyEngineSession()
 #endif
 
     delete iClientThreadName;
+    
+    Server().DropSession(iIsCliRequest);
     }
 
 
@@ -147,10 +208,17 @@ void CMemSpyEngineSession::ConstructL( const RMessage2& aMessage )
     iClientThreadId = thread.Id();
 
     CleanupStack::PopAndDestroy( &thread );
-
+    
+    const TUid KCliUid3 = { 0x2002129D };
+    iIsCliRequest = aMessage.SecureId() == TSecureId(KCliUid3);
+    
     TRACE( RDebug::Print( _L("[MemSpy] CMemSpyEngineSession::ConstructL() - NEW SESSION - this: 0x%08x, id: %4d, client: %S"), this, iClientThreadId, iClientThreadName ) );
     }
 
+void CMemSpyEngineSession::CreateL()
+    {   
+    Server().AddSession(iIsCliRequest);
+    }
 
 CMemSpyEngineSession* CMemSpyEngineSession::NewL( CMemSpyEngine& aEngine, const RMessage2& aMessage )
     {
@@ -171,7 +239,11 @@ void CMemSpyEngineSession::ServiceL( const RMessage2& aMessage )
         {
         RDebug::Print( _L("[MemSpy] CMemSpyEngineSession::ServiceL() - SERVICE ERROR - this: 0x%08x, fn: %d, err: %d, client: %S"), this, aMessage.Function(), error, iClientThreadName );
         }
-    aMessage.Complete( error );
+    
+    if ((aMessage.Function() & KMemSpyOpFlagsAsyncOperation) == 0 || error != KErrNone)
+    	{
+		aMessage.Complete( error );
+    	}
 
     TRACE( RDebug::Print( _L("[MemSpy] CMemSpyEngineSession::ServiceL() - END - this: 0x%08x, fn: 0x%08x, id: %4d, client: %S"), this, aMessage.Function(), iClientThreadId, iClientThreadName ) );
 	}
@@ -190,7 +262,6 @@ void CMemSpyEngineSession::DoServiceL( const RMessage2& aMessage )
 	else
 		DoCmdServiceL(aMessage);
 	}
-
 // ---------------------------------------------------------
 // DoUiServiceL( const RMessage2& aMessage )
 // ---------------------------------------------------------
@@ -216,8 +287,15 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 				{
 				CMemSpyProcess& process = iEngine.Container().At(i);
 				TMemSpyProcessData data;
+				data.iIsDead = process.IsDead();
 				data.iId = process.Id();
-				data.iName.Copy(process.Name());
+				data.iName.Copy(process.Name().Left(KMaxFullName));
+				data.iThreadCount = process.Count();
+				data.iPriority = process.Priority();
+				data.iExitType = process.ExitType();
+				data.iExitReason = process.ExitReason();
+				data.iExitCategory = process.ExitCategory();
+				data.iSID = process.SID();
 				
 				TPckgBuf<TMemSpyProcessData> buffer(data);
 				aMessage.WriteL(1, buffer, offset);
@@ -225,7 +303,7 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			
 			a0 = list.Count();
 			aMessage.WriteL(0, a0);
-	
+
 			break;
 			}
 		case EMemSpyClienServerOpGetProcessIdByName:
@@ -262,8 +340,6 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			CMemSpyEngineObjectContainer& container = iEngine.Container();
 			CMemSpyProcess& process = container.ProcessByIdL( id() );
 			
-			process.Open();
-	
 			if  ( process.IsSystemPermanent() || process.IsSystemCritical() )
 				{
 				ret = ETrue;
@@ -357,9 +433,7 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			TPckgBuf<TProcessId> pid;
 			aMessage.ReadL(1, pid);
 			CMemSpyProcess& process = iEngine.Container().ProcessByIdL(pid());
-			process.Open();
 			aMessage.WriteL(0, TPckgBuf<TInt>(process.Count()));
-			process.Close();
 			break;
 			}
 		case EMemSpyClientServerOpGetThreads:
@@ -368,33 +442,27 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			aMessage.ReadL(2, pid);
 			
 			CMemSpyProcess& list = iEngine.Container().ProcessByIdL(pid());
-			list.Open();
 			
 			TPckgBuf<TInt> a0;
 			aMessage.ReadL(0, a0);
 			TInt realCount = Min(a0(), list.Count());
-			
+						
 			for(TInt i=0, offset = 0; i<realCount; i++, offset += sizeof(TMemSpyThreadData))
 				{
 				CMemSpyThread& thread = list.At(i);
-				thread.Open();
 				
 				TMemSpyThreadData data;
 				data.iId = thread.Id();
-				data.iName.Copy(thread.Name());
+				data.iName.Copy(thread.Name().Left(KMaxFullName));
 				data.iThreadPriority = thread.Priority();
 				
 				TPckgBuf<TMemSpyThreadData> buffer(data);
 				aMessage.WriteL(1, buffer, offset);
-				
-				thread.Close();
 				}
 			
 			a0 = list.Count();
 			aMessage.WriteL(0, a0);
-			
-			list.Close();
-	
+
 			break;
 			}
 		case EMemSpyClientServerOpSetThreadPriority:
@@ -410,15 +478,12 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			
 			if (thread)
 				{				
-				thread->Open();
-				thread->SetPriorityL(static_cast<TThreadPriority>(priority()));				
-				thread->Close();
+				thread->SetPriorityL(static_cast<TThreadPriority>(priority()));
 				}					
 			break;
 			}
 		case EMemSpyClientServerOpThreadSystemPermanentOrCritical:
 			{
-			TBool ret = EFalse;
 			TPckgBuf<TThreadId> id;
 			aMessage.ReadL( 0, id );
 			
@@ -427,16 +492,8 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			CMemSpyThread* thread = NULL; 
 			User::LeaveIfError( container.ProcessAndThreadByThreadId( id(), process, thread ) );
 			
-			if ( thread )
-				{				
-				thread->Open();
-				
-				if  ( thread->IsSystemPermanent() || thread->IsSystemCritical() )
-					{			
-					ret = ETrue;					
-					}
-				thread->Close();
-				}
+			TBool ret = thread && ( thread->IsSystemPermanent() || thread->IsSystemCritical() );
+			
 			TPckgBuf<TBool> retBuf( ret );
 			aMessage.WriteL( 1, retBuf );
 							
@@ -519,6 +576,7 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			}		
 		case EMemSpyClientServerOpGetInfoItemType:
 			{
+			
 			TPckgBuf<TInt> index;
 			aMessage.ReadL( 0, index );			
 			TPckgBuf<TThreadId> id;
@@ -529,22 +587,16 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			CMemSpyThread* thread = NULL; 
 			User::LeaveIfError( container.ProcessAndThreadByThreadId( id(), process, thread ) );
 		            
-			thread->Open();
-			process->Open();
-		            
 			CMemSpyThreadInfoContainer& threadInfoContainer = thread->InfoContainerForceSyncronousConstructionL();                        
 			TMemSpyThreadInfoItemType retType = threadInfoContainer.Item( index() ).Type();
 			
 			TPckgBuf<TMemSpyThreadInfoItemType> ret( retType );
 			aMessage.WriteL( 2, ret );			
 			
-			thread->Close();
-			process->Close();			
-			
 			break;
 			}
 		case EMemSpyClientServerOpGetThreadInfoItemsCount:
-			{		
+			{
 			TPckgBuf<TThreadId> id;
 			aMessage.ReadL( 0, id );
 			TPckgBuf<TMemSpyThreadInfoItemType> type;
@@ -556,9 +608,6 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			
 			container.ProcessAndThreadByThreadId( id(), process, thread );
 			
-			thread->Open();
-			process->Open();
-				    
 			CMemSpyThreadInfoContainer& threadInfoContainer = thread->InfoContainerForceSyncronousConstructionL();                 
 								
 			CMemSpyThreadInfoItemBase& threadInfoItemBase = threadInfoContainer.Item( type() );
@@ -566,10 +615,7 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			TInt count = threadInfoItemBase.MdcaCount();		    
 			TPckgBuf<TInt> tempret( count );
 			aMessage.WriteL( 2, tempret );
-					
-			thread->Close();
-			process->Close();
-					
+		
 			break;
 			}		
 		case EMemSpyClientServerOpGetThreadInfoItems:
@@ -586,15 +632,12 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			CMemSpyThread* thread = NULL; 
 			User::LeaveIfError( container.ProcessAndThreadByThreadId( id() , process, thread ) );
 							  
-			process->Open();
-			thread->Open();
-					
 			CMemSpyThreadInfoContainer& threadInfoContainer = thread->InfoContainerForceSyncronousConstructionL();      
-					
+
 			CMemSpyThreadInfoItemBase& threadInfoItemBase = threadInfoContainer.Item( type() ); //get ThreadInfoItemBaseByType
 			
 			TInt itemCount = Min(count(), threadInfoItemBase.MdcaCount());
-					
+								
 			for( TInt i=0, offset = 0; i<itemCount; i++, offset += sizeof( TMemSpyThreadInfoItemData ) )
 				{
 				TMemSpyThreadInfoItemData data;
@@ -609,16 +652,13 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 				if (tabPos != KErrNotFound)
 					value.Set(value.Mid(tabPos + 1));
 												
-				data.iCaption.Copy( caption );
-				data.iValue.Copy( value );
+				data.iCaption.Copy( caption.Left(64) );
+				data.iValue.Copy( value.Left(32) );
 							
 				TPckgBuf<TMemSpyThreadInfoItemData> buffer(data);
 				aMessage.WriteL(3, buffer, offset);				
 				}			
-			aMessage.WriteL(0, count);						
-					
-			thread->Close();
-			process->Close();
+			aMessage.WriteL(0, count);
 					
 			break;
 			}
@@ -651,7 +691,7 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 				data.iType = model->At(i).Type();
 				data.iCount = model->At(i).Count();											
 				data.iSize = model->At(i).Count() * model->At(i).Count();
-	
+
 				TPckgBuf<TMemSpyKernelObjectData> buffer(data);
 				aMessage.WriteL(1, buffer, offset);
 				}			
@@ -683,7 +723,7 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			aMessage.ReadL( 0, count ); //get count of items
 			aMessage.ReadL(1, tempType); //get type of kernel object
 			TInt c = count();
-			
+						
 			CMemSpyEngineHelperKernelContainers& kernelContainerManager = iEngine.HelperKernelContainers();
 			CMemSpyEngineGenericKernelObjectList* iObjectList = kernelContainerManager.ObjectsForSpecificContainerL( tempType() );
 			CleanupStack::PushL( iObjectList );
@@ -701,6 +741,87 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			CleanupStack::PopAndDestroy( iObjectList );			
 			break;
 			}
+			
+		case EMemSpyClientServerOpOutputAllContainerContents:
+			{
+			CMemSpyEngineHelperKernelContainers& kernelContainerManager = iEngine.HelperKernelContainers();
+			CMemSpyEngineGenericKernelObjectContainer* model = kernelContainerManager.ObjectsAllL();
+			
+			model->OutputL( iEngine.Sink() );
+
+			break;
+			}
+			
+		case EMemSpyClientServerOpDumpKernelHeap:
+			{
+		    iEngine.HelperHeap().OutputHeapDataKernelL();
+			
+			break;
+			}
+			
+		case EMemSpyClientServerOpOutputInfoHandles:
+			{
+			TPckgBuf<TThreadId> id;
+			aMessage.ReadL(0, id);
+			CMemSpyEngineObjectContainer& container = iEngine.Container();            
+			CMemSpyProcess* process = NULL;
+			CMemSpyThread* thread = NULL; 
+			User::LeaveIfError( container.ProcessAndThreadByThreadId( id() , process, thread ) );
+										  
+			CMemSpyThreadInfoContainer& threadInfoContainer = thread->InfoContainerForceSyncronousConstructionL();
+			
+			threadInfoContainer.PrintL();
+			
+			break;
+			}
+			
+		case EMemSpyClientServerOpOutputAOList:
+			{
+			TPckgBuf<TThreadId> id;
+			TPckgBuf<TMemSpyThreadInfoItemType> type;
+			aMessage.ReadL(0, id);
+			aMessage.ReadL(1, type);
+			
+			CMemSpyEngineObjectContainer& container = iEngine.Container();            
+			CMemSpyProcess* process = NULL;
+			CMemSpyThread* thread = NULL; 
+			User::LeaveIfError( container.ProcessAndThreadByThreadId( id() , process, thread ) );
+										  
+			CMemSpyThreadInfoContainer& threadInfoContainer = thread->InfoContainerForceSyncronousConstructionL();      
+
+			CMemSpyThreadInfoItemBase* threadInfoItem = &threadInfoContainer.Item( type() );
+						
+			CMemSpyThreadInfoActiveObjects* activeObjectArray = static_cast< CMemSpyThreadInfoActiveObjects* >( threadInfoItem );			
+						
+		    // Begin a new data stream
+		    _LIT( KMemSpyContext, "Active Object List - " );
+		    _LIT( KMemSpyFolder, "Active Objects" );
+		    iEngine.Sink().DataStreamBeginL( KMemSpyContext, KMemSpyFolder );
+		    		    
+		    // Set prefix for overall listing
+		    iEngine.Sink().OutputPrefixSetLC( KMemSpyContext );
+
+		    // Create header
+		    CMemSpyEngineActiveObjectArray::OutputDataColumnsL( iEngine );
+		    
+		    // List items
+		    const TInt count = activeObjectArray->Array().Count();
+		    for(TInt i=0; i<count; i++)
+		        {
+		        const CMemSpyEngineActiveObject& object = activeObjectArray->Array().At( i );
+		        //
+		        object.OutputDataL( iEngine );
+		        }
+
+		    // Tidy up
+		    CleanupStack::PopAndDestroy(); // prefix
+
+		    // End data stream		    		    
+		    iEngine.Sink().DataStreamEndL();		    
+			
+			break;
+			}
+			
 		// --- Kernel Heap related functions ---
 		case EMemSpyClientServerOpGetHeap:
 			{
@@ -713,6 +834,66 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			
 			break;
 			}
+		
+		case EMemSpyClientServerOpGetMemoryTrackingCycleCount:
+			aMessage.WriteL(0, TPckgBuf<TInt>(iEngine.HelperSysMemTracker().CompletedCycles().Count()));
+			break;
+			
+		case EMemSpyClientServerOpGetMemoryTrackingCycles:
+			{
+			const RPointerArray<CMemSpyEngineHelperSysMemTrackerCycle>& list = iEngine.HelperSysMemTracker().CompletedCycles();
+
+			TPckgBuf<TInt> a0;
+			aMessage.ReadL(0, a0);
+			TInt realCount = Min(a0(), list.Count());
+			
+			for (TInt i=0, offset = 0; i<realCount; i++, offset += sizeof(TMemSpyMemoryTrackingCycleData))
+				{
+				CMemSpyProcess& process = iEngine.Container().At(i);
+				TMemSpyMemoryTrackingCycleData data;
+				data.iCycleNumber = list[i]->CycleNumber();
+				data.iCaption.Copy(list[i]->Caption().Left(KMaxFullName));
+				data.iTime = list[i]->Time();
+				data.iFreeMemory = list[i]->MemoryFree();
+				data.iMemoryDelta = list[i]->MemoryDelta();
+				data.iPreviousCycleDiff = list[i]->MemoryFreePreviousCycle();
+				
+				TPckgBuf<TMemSpyMemoryTrackingCycleData> buffer(data);
+				aMessage.WriteL(1, buffer, offset);
+				}
+			
+			a0 = list.Count();
+			aMessage.WriteL(0, a0);
+
+		break;
+		}
+	case EMemSpyClientServerOpIsSwmtRunning:
+		{
+		TPckgBuf<TBool> running(iEngine.HelperSysMemTracker().IsActive());
+		aMessage.WriteL(0, running);
+		break;
+		}
+			
+		
+	case EMemSpyClientServerOpNotifyDeviceWideOperationProgress:
+		{
+		if (!Server().CurrentOperationTracker())
+			{
+			User::Leave(KErrNotReady);
+			}
+		
+		Server().CurrentOperationTracker()->AddNotificationL(aMessage);
+		break;
+		}
+		
+	case EMemSpyClientServerOpCancelDeviceWideOperation:
+		if (!Server().CurrentOperationTracker())
+			{
+			User::Leave(KErrNotReady);
+			}
+		
+		Server().CurrentOperationTracker()->Cancel();
+		break;
 		}
     }
 
@@ -934,16 +1115,31 @@ void CMemSpyEngineSession::HandleThreadSpecificOpL( TInt aFunction, const TDesC&
 void CMemSpyEngineSession::HandleThreadAgnosticOpL( TInt aFunction, const RMessage2& aMessage )
     {
     TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - START" ) );
+    
     //
     if  ( aFunction ==  EMemSpyClientServerOpHeapInfoCompact )
         {
         TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpHeapInfoCompact") );
-        iEngine.HelperHeap().OutputHeapInfoForDeviceL();
+        if (aMessage.Function() & KMemSpyOpFlagsAsyncOperation)
+        	{
+			StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EEntireDeviceHeapInfoCompact, aMessage);
+        	}
+        else
+        	{
+			iEngine.HelperHeap().OutputHeapInfoForDeviceL();
+        	}
         }
     else if ( aFunction ==  EMemSpyClientServerOpStackInfoCompact )
         {
         TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpStackInfoCompact") );
-        iEngine.HelperStack().OutputStackInfoForDeviceL();
+        if (aMessage.Function() & KMemSpyOpFlagsAsyncOperation)
+			{
+			StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EEntireDeviceStackInfoCompact, aMessage);
+			}
+		else
+			{
+			iEngine.HelperStack().OutputStackInfoForDeviceL();
+			}
         }
     else if ( aFunction == EMemSpyClientServerOpSystemWideMemoryTrackingTimerStart )
         {
@@ -1033,12 +1229,31 @@ void CMemSpyEngineSession::HandleThreadAgnosticOpL( TInt aFunction, const RMessa
     else if ( aFunction == EMemSpyClientServerOpSwitchOutputSinkTrace )
         {
         TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpSwitchOutputSinkTrace") );
-        iEngine.InstallSinkL( ESinkTypeDebug );
+        iEngine.InstallDebugSinkL();
         }
     else if ( aFunction == EMemSpyClientServerOpSwitchOutputSinkFile )
         {
         TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpSwitchOutputSinkFile") );
-        iEngine.InstallSinkL( ESinkTypeFile );
+        // Read file name from message.
+        TFileName fileName;
+        RBuf buf;
+		buf.CleanupClosePushL();
+		
+		TInt len = aMessage.GetDesLength( 0 );
+		if ( len > 0 )
+			{
+			buf.CreateL( len );
+			aMessage.ReadL( 0, buf, 0 );
+			
+			iEngine.InstallFileSinkL( buf );           
+			}
+		else
+			{
+			iEngine.InstallFileSinkL( KNullDesC );
+			}
+		
+		CleanupStack::PopAndDestroy( &buf );
+        
         }
     else if ( aFunction == EMemSpyClientServerOpEnumerateKernelContainer )
         {
@@ -1069,6 +1284,46 @@ void CMemSpyEngineSession::HandleThreadAgnosticOpL( TInt aFunction, const RMessa
         TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpDisableAknIconCache") );
         iEngine.HelperRAM().SetAknIconCacheStatusL( EFalse );
         }
+    else if ( aFunction == EMemSpyClientServerOpSummaryInfo )
+    	{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpSummaryInfo") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityGeneralSummary, aMessage);
+    	}
+    else if ( aFunction == EMemSpyClientServerOpSummaryInfoDetailed )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpSummaryInfoDetailed") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityGeneralDetailed, aMessage);
+		}
+    else if ( aFunction == EMemSpyClientServerOpHeapInfo )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpHeapInfo") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityHeapInfo, aMessage);
+		}
+    else if ( aFunction == EMemSpyClientServerOpHeapCellListing )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpHeapCellListing") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityHeapCellListing, aMessage);
+		}
+    else if ( aFunction == EMemSpyClientServerOpHeapData )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpHeapData") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityHeapData, aMessage);
+		}
+    else if ( aFunction == EMemSpyClientServerOpStackInfo )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpStackInfo") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityStackInfo, aMessage);
+		}
+    else if ( aFunction == EMemSpyClientServerOpStackDataUser )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpStackDataUser") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityStackDataUser, aMessage);
+		}
+    else if ( aFunction == EMemSpyClientServerOpStackDataKernel )
+		{
+		TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - EMemSpyClientServerOpStackDataKernel") );
+		StartDeviceWideOperationL(CMemSpyDeviceWideOperations::EPerEntityStackDataKernel, aMessage);
+		}
     else
         {
         TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - [device-wide operation] => invoking UI") );
@@ -1078,7 +1333,108 @@ void CMemSpyEngineSession::HandleThreadAgnosticOpL( TInt aFunction, const RMessa
     TRACE( RDebug::Printf("[MemSpy] CMemSpyEngineSession::HandleThreadAgnosticOpL() - END" ) );
     }
 
+void CMemSpyEngineSession::StartDeviceWideOperationL(CMemSpyDeviceWideOperations::TOperation aOperation, const RMessage2& aMessage)
+	{
+	if (Server().CurrentOperationTracker())
+		{
+		User::Leave(KErrInUse);
+		}
+	
+	Server().SetCurrentOperationTracker(CMemSpyDwOperationTracker::NewL(aOperation, aMessage, Server()));
+	}
 
 
 
 
+
+
+
+
+
+CMemSpyDwOperationTracker* CMemSpyDwOperationTracker::NewL(CMemSpyDeviceWideOperations::TOperation aOperation, 
+		const RMessage2& aOperationMessage, CMemSpyEngineServer& aServer)
+	{
+	CMemSpyDwOperationTracker* self = new (ELeave) CMemSpyDwOperationTracker(aOperationMessage, aServer);
+	CleanupStack::PushL( self );
+	self->ConstructL(aOperation);
+	CleanupStack::Pop( self );
+	return self;
+	}
+	
+CMemSpyDwOperationTracker::~CMemSpyDwOperationTracker()
+	{
+	delete iOperation;
+	delete iPendingNotifications;
+	}
+
+CMemSpyDwOperationTracker::CMemSpyDwOperationTracker(const RMessage2& aOperationMessage, CMemSpyEngineServer& aServer) : 
+		iOperationMessage(aOperationMessage),
+		iServer(aServer),
+		iPendingNotifications(0),
+		iOperation(0),
+		iProgress(0)
+	{
+	}
+
+
+void CMemSpyDwOperationTracker::ConstructL(CMemSpyDeviceWideOperations::TOperation aOperation)
+	{
+	iPendingNotifications = new (ELeave) CArrayFixFlat<RMessage2>(3);
+	iOperation = CMemSpyDeviceWideOperations::NewL(iServer.Engine(), *this, aOperation);
+	}
+
+void CMemSpyDwOperationTracker::AddNotificationL(const RMessage2& aMessage)
+	{
+	iPendingNotifications->AppendL(aMessage);
+	}
+
+void CMemSpyDwOperationTracker::Cancel()
+	{
+	iOperation->Cancel();
+	}
+
+void CMemSpyDwOperationTracker::HandleDeviceWideOperationEvent(TEvent aEvent, TInt aParam1, const TDesC& aParam2)
+	{
+	switch( aEvent )
+		{
+	case MMemSpyDeviceWideOperationsObserver::EOperationCompleted:
+	case MMemSpyDeviceWideOperationsObserver::EOperationCancelled:
+		iServer.SetCurrentOperationTracker(0);
+		
+		for (TInt i=0; i<iPendingNotifications->Count(); i++)
+			{
+			iPendingNotifications->At(i).Complete(KErrCancel);
+			}
+		
+		if (iOperationMessage.Function() & KMemSpyOpFlagsAsyncOperation)
+			{
+			iOperationMessage.Complete(
+				aEvent == MMemSpyDeviceWideOperationsObserver::EOperationCompleted ? KErrNone : KErrCancel);
+			}
+		
+		iPendingNotifications->Reset();
+		
+		delete this;
+		break;
+		
+	case MMemSpyDeviceWideOperationsObserver::EOperationProgressEnd:
+		{
+		iProgress += aParam1;
+		for (TInt i=0; i<iPendingNotifications->Count(); i++)
+			{
+			TInt err;
+			TRAP(err, iPendingNotifications->At(i).WriteL(0, TPckgBuf<TInt>( iProgress * 100 / iOperation->TotalOperationSize() )));
+			TRAP(err, iPendingNotifications->At(i).WriteL(1, aParam2));
+			if (err != KErrNone)
+				{
+				// TODO: iPendingProgressNotifications->At(i).Panic()
+				}
+			iPendingNotifications->At(i).Complete(KErrNone);
+			}
+		iPendingNotifications->Reset();
+		break;
+		}
+		
+		}
+	
+	}

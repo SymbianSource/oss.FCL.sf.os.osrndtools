@@ -55,6 +55,30 @@ inline void Panic(TDObjectPanic aPanic)
 	{ Kern::Fault("DOBJECT",aPanic); }
 	
 
+TBool MemSpyObjectIx::Find(DObject* aObj)
+	{
+	//Check preconditions(debug build only)
+	__ASSERT_CRITICAL;
+	__ASSERT_NO_FAST_MUTEX;
+
+	// I don't like the implementation of At() that was here before, it wasn't safe at all without HandleMutex. So I'm replacing it with a simpler
+	// version based on operator[] that only does what we need and does it safely.
+
+	TBool found = EFalse;
+	MemSpyObjectIx_HandleLookupLock();
+	const TInt count = Count();
+	for (TInt i = 0; i < count; i++)
+		{
+		if ((*this)[i] == aObj)
+			{
+			found = ETrue;
+			break;
+			}
+		}
+	MemSpyObjectIx_HandleLookupUnlock();
+	return found;
+	}
+
 #if MCL_ROBJECTIX_DUPLICATION
 
 #define asserta(x)	do { if (!(x)) { __crash(); } } while(0)
@@ -65,17 +89,18 @@ RMemSpyObjectIx::RMemSpyObjectIx()
     }
 
 
+/*
 void RMemSpyObjectIx::Wait()
 	{
-//	Kern::MutexWait(*HandleMutex);
+	Kern::MutexWait(*HandleMutex);
 	} // RObjectIx::Wait
 
 
 void RMemSpyObjectIx::Signal()
 	{
-//	Kern::MutexSignal(*HandleMutex);
+	Kern::MutexSignal(*HandleMutex);
 	} // RObjectIx::Signal
-
+*/
 
 DObject* RMemSpyObjectIx::operator[](TInt aIndex)
 	{
@@ -89,73 +114,19 @@ DObject* RMemSpyObjectIx::operator[](TInt aIndex)
 	} // RObjectIx::operator[]
 
 
-TInt RMemSpyObjectIx::At(DObject* aObj)
-	{
-	//Check preconditions(debug build only)
-	__ASSERT_CRITICAL;
-	__ASSERT_NO_FAST_MUTEX;
-	//__ASSERT_MUTEX(HandleMutex);
-
-	if (iState==ETerminated)
-		{
-		return KErrNotFound;
-		}
-
-	TInt h = KErrNotFound;
-	AcquireWriteLock();
-	iState = (TUint8)ESearching;		// enable monitoring of new handles
-	iModList.iMonitor.iObj = aObj;		// object to check for
-	iModList.iMonitor.iBoundary = 0;	// will change if aObj is added to a slot before this point
-	TInt pos = 0;
-	while (pos<iCount && iActiveCount)	// stop if index empty
-		{
-		TInt limit = pos + EMaxLockedIter;
-		if (limit>iCount)
-			{
-			limit = iCount;
-			}
-		while (pos<limit)
-			{
-			SSlot* slot = iSlots + pos;
-			if (Occupant(slot) == aObj)
-				{
-				// found it, finish
-				h = MakeHandle(pos, slot->iUsed.iAttr);
-				break;
-				}
-			pos++;
-			}
-		if (h>0)
-			{
-			break;	// found it, finish
-			}
-		iModList.iMonitor.iBoundary = pos;	// will change if aObj is added to a slot already checked
-		ReleaseWriteLock();	// let other threads in
-		AcquireWriteLock();
-		pos = iModList.iMonitor.iBoundary;	// next position to check
-		}
-	iState = (TUint8)ENormal;
-	ReleaseWriteLock();
-	return h;
-	} // RObjectIx::At
-
-
-
-
-
-
 #elif MCL_DOBJECTIX_DUPLICATION
 
-void DMemSpyObjectIx::Wait( DMemSpyObjectIx* /*aObjectIndex*/ )
+/*
+void DMemSpyObjectIx::Wait( DMemSpyObjectIx* aObjectIndex )
 	{
 //	Kern::MutexWait(*aObjectIndex->HandleMutex);
 	}
 
-void DMemSpyObjectIx::Signal( DMemSpyObjectIx* /*aObjectIndex*/ )
+void DMemSpyObjectIx::Signal( DMemSpyObjectIx* aObjectIndex )
 	{
 //	Kern::MutexSignal(*aObjectIndex->HandleMutex);
 	}
-
+*/
 
 /** Counts the number of times an object appears in this index.
 
@@ -236,42 +207,6 @@ DObject* DMemSpyObjectIx::At(TInt aHandle)
 		return NULL;
 	return pS->obj;
 	}
-
-
-
-/**	Looks up an object in the index by object pointer.
-
-	Returns a handle to the object.
-
-	@param	aObj	Pointer to the object to look up.
-	
-	@return	Handle to object (always >0);
-	        KErrNotFound, if object not present in index.
-
-    @pre    Calling thread must be in a critical section.
-    @pre    No fast mutex can be held.
-	@pre	Call in a thread context.
-	@pre	DObject::HandleMutex held.
- */
-TInt DMemSpyObjectIx::At(DObject* aObj)
-	{
-	//Check preconditions(debug build only)
-	__ASSERT_CRITICAL;
-	__ASSERT_NO_FAST_MUTEX;
-
-	if (iCount)
-		{
-		SDObjectIxRec* pS=iObjects;
-		SDObjectIxRec* pE=pS+iCount;
-		TInt i=0;
-		while(pS<pE && pS->obj!=aObj)
-			pS++, i++;
-		if (pS<pE)
-			return(makeHandle(i,pS->str.instance));
-		}
-	return KErrNotFound;
-	}
-
 
 /** Finds the object at a specific position in the index array.
 

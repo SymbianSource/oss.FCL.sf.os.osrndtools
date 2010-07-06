@@ -245,5 +245,5 @@ NONSHARABLE_CLASS(CDefinedValue)
     };
     
 #endif        // TESTCOMBINERUTILS_H
-                
+
 // End of File

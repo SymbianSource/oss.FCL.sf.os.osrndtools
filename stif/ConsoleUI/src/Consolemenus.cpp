@@ -3875,6 +3875,10 @@ TInt CTestSetMenu::ItemTexts( RRefArray<TDesC>& aArray )
             {
             return KErrNoMemory;
             }
+        if( aArray.Append( KSetUnload ) != KErrNone )
+            {
+            return KErrNoMemory;
+            }                        
         if( aArray.Append( KSetRemove ) != KErrNone )
             {
             return KErrNoMemory;
@@ -4026,11 +4030,19 @@ CMenu* CTestSetMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
                                         this, 
                                         _L("Started test sets menu"));
                 return iSubMenu;
+            case ESetUnload:
+                ret = iMain->UIStore().UnloadTestSet( iTestSetName );
+                if( ret != KErrNone )
+                    {
+                    User::InfoPrint( _L("Test set unload failed") );
+                    }
+                iTestSetCreated = EFalse;                  
+                break;
             case ESetRemove: 
                 ret = iMain->UIStore().RemoveTestSet( iTestSetName );
                 if( ret != KErrNone )
                     {
-                    User::InfoPrint( _L("Test set creation failed") );
+                    User::InfoPrint( _L("Test set remove failed") );
                     }
                 iTestSetCreated = EFalse;  
                 break;
@@ -4257,7 +4269,12 @@ TInt CTestSetChoiceMenu::ItemTexts( RRefArray<TDesC>& aArray )
     {
 
    TInt ret = iMain->UIStore().GetTestSetsList( aArray );
-  
+
+	if ( ret != KErrNone )
+		{
+		return ret;
+		}
+
    iFileList.ResetAndDestroy();
    TRAPD( err,
 	//Assign aArray to iFileList, it is used in LoadTestSet
@@ -4380,8 +4397,6 @@ CMenu* CTestSetChoiceMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
                 {           
                 if(iPosOnScreen < iFileList.Count())
                     {
-                    const TDesC& aSetName = iFileList.operator [](iPosOnScreen)->Des();
-                
                     ret = iMain->UIStore().LoadTestSet( iFileList.operator [](iPosOnScreen)->Des() );
                     if (ret == KErrNone)
                         {
@@ -5681,4 +5696,5 @@ void CFilterMenu::SetTestCaseMenu(CMenu* aTestCaseMenu)
         }
     iTestCaseMenu = aTestCaseMenu;
     }
-// End of file
+
+// End of File

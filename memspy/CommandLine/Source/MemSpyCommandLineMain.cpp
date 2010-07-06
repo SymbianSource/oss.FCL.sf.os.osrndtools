@@ -25,7 +25,7 @@
 
 // User includes
 #include "MemSpyCommandLine.h"
-
+#include "MemSpyCommands.h"
 
 // ---------------------------------------------------------------------------
 // DoMainL()
@@ -38,21 +38,27 @@ static void DoMainL()
     CActiveScheduler* scheduler = new (ELeave) CActiveScheduler();
     CActiveScheduler::Install( scheduler );
     CleanupStack::PushL( scheduler );
-
+    
     // Get command line 
     CCommandLineArguments* args = CCommandLineArguments::NewLC();
-
+    
+    //--
+    CConsoleBase* console = Console::NewL( KMemSpyCLIName, TSize( KConsFullScreen, KConsFullScreen ) );
+    CleanupStack::PushL( console );
+    //--
+    
     // Command line manager
-    CMemSpyCommandLine* commandLineMgr = CMemSpyCommandLine::NewLC();
+    CMemSpyCommandLine* commandLineMgr = CMemSpyCommandLine::NewLC( *console );
 
     // Play nicely with external processes
     RProcess::Rendezvous( KErrNone );
 
     // Perform op
-    commandLineMgr->PerformOpL( *args );
-
+    commandLineMgr->PerformOpL( *args );  
+        
     // Tidy up
-    CleanupStack::PopAndDestroy( 3, scheduler ); // scheduler, args, commandLineMgr
+    //CleanupStack::PopAndDestroy( 3, scheduler ); // scheduler, args, commandLineMgr
+    CleanupStack::PopAndDestroy( 4 ); // scheduler, args,  console, commandLineMgr
     }
    
 

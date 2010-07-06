@@ -291,5 +291,4 @@ EXPORT_C TInt DStifKernelTestClassBase::RunInternalL(
     
     }
 
-    
-//  End of File
+// End of File

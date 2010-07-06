@@ -616,4 +616,5 @@ EXPORT_C void TStifUtil::STIFVersion(TInt& aMajorV, TInt& aMinorV, TInt& aBuildV
 	aBuildV = STIF_BUILD_VERSION;
 	aRelDate = TO_UNICODE(STIF_REL_DATE);
 	}
-//  End of File
+
+// End of File

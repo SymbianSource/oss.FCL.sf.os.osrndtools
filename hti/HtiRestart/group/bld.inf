@@ -11,27 +11,22 @@
 *
 * Contributors:
 *
-* Description:
+* Description:  Build information file for HtiRestart
 *
 */
 
-#ifndef RBUILDQUERYABLEHEAP_H
-#define RBUILDQUERYABLEHEAP_H
 
-// System includes
-#include <e32cmn.h>
+PRJ_PLATFORMS
 
-// User includes
-#include <memspy/driver/memspydriverenumerationsshared.h>
+DEFAULT
 
+PRJ_EXPORTS
 
-class RBuildQueryableHeap : public RHeap
-    {
-public: // API
-    TBool IsDebugEUser() const;
-    TInt CellHeaderSize( TMemSpyDriverCellType aType ) const;
-    };
+PRJ_TESTEXPORTS
 
+PRJ_MMPFILES
+HtiRestart.mmp
 
+PRJ_TESTMMPFILES
 
-#endif
+// End of File

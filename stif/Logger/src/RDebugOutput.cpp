@@ -681,4 +681,4 @@ void CRDebugOutput::GetDateAndTime( TStifLoggerTimeStamp8& aDataAndTime )
 // ================= OTHER EXPORTED FUNCTIONS =================================
 // None
 
-//  End of File
+// End of File

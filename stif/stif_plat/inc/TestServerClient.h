@@ -470,6 +470,5 @@ class RTestExecution
     
 
 #endif // TEST_SERVER_CLIENT_H
-    
-            
+
 // End of File

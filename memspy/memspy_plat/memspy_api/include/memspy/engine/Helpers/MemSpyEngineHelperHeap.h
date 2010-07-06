@@ -47,7 +47,8 @@ private:
     void ConstructL();
 
 public: // API - User Heap 
-    IMPORT_C void GetHeapInfoUserL( const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverFreeCell>* aFreeCells = NULL );
+    IMPORT_C void GetHeapInfoUserL( const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverCell>* aCells = NULL );
+	IMPORT_C void GetHeapInfoUserL(const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverCell>* aCells, TBool aCollectAllocatedCellsAsWellAsFree);
     IMPORT_C void GetHeapInfoUserL( const CMemSpyProcess& aProcess, RArray<TMemSpyHeapInfo >& aInfos );
     IMPORT_C void OutputHeapInfoUserL( const CMemSpyThread& aThread );
     IMPORT_C void OutputHeapDataUserL( const CMemSpyThread& aThread );
@@ -60,10 +61,10 @@ public: // API - Kernel Heap
     IMPORT_C void OutputHeapDataKernelL();
 
 public: // API - Common
-    IMPORT_C void OutputHeapInfoL( const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const RArray<TMemSpyDriverFreeCell>* aFreeCells = NULL );
+    IMPORT_C void OutputHeapInfoL( const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const RArray<TMemSpyDriverCell>* aCells = NULL );
     IMPORT_C void OutputHeapInfoForDeviceL( TBool aIncludeKernel = ETrue );
     IMPORT_C CMemSpyEngineOutputList* NewHeapSummaryShortLC( const TMemSpyHeapInfo& aInfo );
-    IMPORT_C CMemSpyEngineOutputList* NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverFreeCell>* aFreeCells = NULL );
+    IMPORT_C CMemSpyEngineOutputList* NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverCell>* aCells = NULL );
     //cigasto    
     IMPORT_C TMemSpyHeapData NewHeapRawInfo( const TMemSpyHeapInfo& aInfo ); //not formatted heap info
 
@@ -75,9 +76,8 @@ public: // But not exported
 private:
     static TUint DescriptorAsDWORD( const TDesC8& aItem );
     void AppendMetaDataL( const TMemSpyHeapInfo& aInfo, CMemSpyEngineOutputList& aList );
-    void AppendObjectDataL( const TMemSpyHeapInfo& aInfo, CMemSpyEngineOutputList& aList );
     void AppendStatisticsL( const TMemSpyHeapInfo& aInfo, CMemSpyEngineOutputList& aList );
-    void AppendFreeCellsL( const RArray<TMemSpyDriverFreeCell>& aFreeCells, CMemSpyEngineOutputList& aList );
+	void AppendCellsL(const RArray<TMemSpyDriverCell>& aCells, CMemSpyEngineOutputList& aList);
     void OutputCSVEntryL( TInt aIndex, const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const TDesC& aProcessName );
     void UpdateSharedHeapInfoL( const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo );
 

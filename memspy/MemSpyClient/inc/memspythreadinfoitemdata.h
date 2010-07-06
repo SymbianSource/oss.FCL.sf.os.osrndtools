@@ -20,8 +20,6 @@
 
 #include <memspy/driver/memspydriverobjectsshared.h>
 
-const TInt KMaxBufSize = 32;
-
 // TMemSpyProcess data class holds data to be sent to the UI
 class TMemSpyThreadInfoItemData 
 	{	
@@ -32,8 +30,8 @@ public:
 		}
 	
 public:
-    TBuf<KMaxBufSize> iCaption;
-    TBuf<KMaxBufSize> iValue;
+    TBuf<64> iCaption;
+    TBuf<32> iValue;
 	};
 
 #endif // MEMSPYTHREADINFOITEMDATA_H

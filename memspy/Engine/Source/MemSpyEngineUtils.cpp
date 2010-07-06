@@ -274,7 +274,7 @@ TPtrC MemSpyEngineUtils::TextAfterLastDoubleColon( const TDesC& aText )
 
 EXPORT_C TMemSpyPercentText MemSpyEngineUtils::FormatPercentage( TReal aOneHundredPercentValue, TReal aValue )
     {
-    const TReal value = (TInt) (( aValue / aOneHundredPercentValue) * 100.0);
+    const TReal value = (( aValue / aOneHundredPercentValue) * 100.0);
     
     _LIT(KPercentFormat, "%3.2f %%");
 
@@ -365,6 +365,7 @@ EXPORT_C void MemSpyEngineUtils::GetRomInfoL( TDes& aPlatform, TDes& aChecksum )
 EXPORT_C void MemSpyEngineUtils::GetFolderL( RFs& aFsSession, TDes& aFolder, const CMemSpyEngineSinkMetaData& aMetaData, const TDriveNumber* aForceDrive )
     {
     const TChar KMemSpyDirectorySeparator = '\\';
+    const TChar KMemSpyDriveSeparator = ':';
 
     TDriveList drives;
     User::LeaveIfError( aFsSession.DriveList( drives ) );
@@ -379,7 +380,26 @@ EXPORT_C void MemSpyEngineUtils::GetFolderL( RFs& aFsSession, TDes& aFolder, con
         }
     else
         {
-        logDrive = MemSpyEngineUtils::LocateSuitableDrive( aFsSession );
+		// check if drive is specified in root path
+		if ( aMetaData.Root().Length() > 2 && aMetaData.Root()[1] == KMemSpyDriveSeparator )
+			{
+			TChar drive = aMetaData.Root()[0];
+			
+			// check if drive is valid
+			if (drives.Locate(drive) != KErrNone)
+				{
+				TDriveUnit driveUnit( aMetaData.Root().Left(1) );
+				logDrive = static_cast<TDriveNumber>(static_cast<TInt>(driveUnit));
+				}
+			else
+				{
+				logDrive = MemSpyEngineUtils::LocateSuitableDrive( aFsSession );
+				}
+			}
+		else
+			{
+			logDrive = MemSpyEngineUtils::LocateSuitableDrive( aFsSession );
+			}
         }
 
     // Prepare the drive buffer
@@ -389,7 +409,35 @@ EXPORT_C void MemSpyEngineUtils::GetFolderL( RFs& aFsSession, TDes& aFolder, con
     // Prepare the drive name
     TDriveUnit driveUnit( logDrive );
     pFileName.Append( driveUnit.Name() );
-    pFileName.Append( KMemSpyLogRootPath );
+    
+    if ( aMetaData.Root().Length() == 0 )
+    	{
+		pFileName.Append( KMemSpyLogRootPath );
+    	}
+    else
+    	{
+		TPtrC root( aMetaData.Root() );
+		// check if root path contains drive (e.g. c:) and remove it
+		if ( root.Length() > 2 && root[1] == KMemSpyDriveSeparator )
+			{
+			root.Set( root.Mid( 2 ) );
+			}
+		// check if root starts with \ and remove it
+		if ( root.Length() > 1 && root[0] == KMemSpyDirectorySeparator )
+			{
+			root.Set( root.Mid( 1 ) );
+			}
+		
+		// append root path
+		pFileName.Append( KMemSpyDirectorySeparator );
+		pFileName.Append( root );
+		
+		// add trailing slash if necessary
+		if ( root[root.Length() - 1] != KMemSpyDirectorySeparator )
+			{
+			pFileName.Append( KMemSpyDirectorySeparator );
+			}
+    	}
 
     // Add any custom folder information
     if  ( aMetaData.Folder().Length() > 0 )

@@ -46,24 +46,18 @@ DMemSpyDriverLogChanHeapInfo::DMemSpyDriverLogChanHeapInfo( DMemSpyDriverDevice&
 DMemSpyDriverLogChanHeapInfo::~DMemSpyDriverLogChanHeapInfo()
 	{
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::~DMemSpyDriverLogChanHeapInfo() - START - this: 0x%08x", this ));
+	ReleaseCellList();
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::~DMemSpyDriverLogChanHeapInfo() - END - this: 0x%08x", this ));
 	}
-
-
-
-
-
-
-
 
 TInt DMemSpyDriverLogChanHeapInfo::Request( TInt aFunction, TAny* a1, TAny* a2 )
 	{
 	TInt r = DMemSpyDriverLogChanHeapBase::Request( aFunction, a1, a2 );
     if  ( r == KErrNone )
         {
-        if  ( aFunction != EMemSpyDriverOpCodeHeapInfoFetchFreeCells )
+        if  ( aFunction != EMemSpyDriverOpCodeHeapInfoFetchCellList )
             {
-            ReleaseFreeCells();
+            ReleaseCellList();
             }
         //
         switch( aFunction )
@@ -75,10 +69,10 @@ TInt DMemSpyDriverLogChanHeapInfo::Request( TInt aFunction, TAny* a1, TAny* a2 )
             r = GetHeapInfoKernel( (TMemSpyDriverInternalHeapRequestParameters*) a1, (TDes8*) a2 );
             break;
         case EMemSpyDriverOpCodeHeapInfoGetIsDebugKernel:
-            r = GetIsDebugKernel( (TBool*) a1 );
+            r = GetIsDebugKernel(a1);
             break;
-        case EMemSpyDriverOpCodeHeapInfoFetchFreeCells:
-            r = FetchFreeCells( (TDes8*) a1 );
+        case EMemSpyDriverOpCodeHeapInfoFetchCellList:
+            r = FetchCellList( (TDes8*) a1 );
             break;
 
         default:
@@ -132,50 +126,42 @@ TInt DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser( TMemSpyDriverInternalHeapReq
             DThread* thread = (DThread*) TempObject();
             if  ( SuspensionManager().IsSuspended( *thread ) )
                 {
-                TFullName chunkName;
-
                 // Open client's heap
                 RMemSpyDriverRHeapUser rHeap( OSAdaption() );
-                DChunk* userHeapChunk = NULL;
-                r = OpenUserHeap( *thread, iHeapInfoParams.iRHeapVTable, rHeap, userHeapChunk, &chunkName );
+				r = rHeap.OpenUserHeap(*thread, iHeapInfoParams.iDebugAllocator);
                 TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - opening client heap returned: %d", r) );
 
                 if  ( r == KErrNone )
                     {
                     // This object holds all of the info we will accumulate for the client.
                     TMemSpyHeapInfo masterHeapInfo;
-                    masterHeapInfo.SetType( TMemSpyHeapInfo::ETypeRHeap );
+                    masterHeapInfo.SetType(rHeap.GetTypeFromHelper());
                     masterHeapInfo.SetTid( iHeapInfoParams.iTid );
                     masterHeapInfo.SetPid( OSAdaption().DThread().GetOwningProcessId( *thread ) );
 
                     // This is the RHeap-specific object that contains all RHeap info
                     TMemSpyHeapInfoRHeap& rHeapInfo = masterHeapInfo.AsRHeap();
 
-                    // This is the object data for the RHeap instance
-                    TMemSpyHeapObjectDataRHeap& rHeapObjectData = rHeapInfo.ObjectData();
-                    rHeap.CopyObjectDataTo( rHeapObjectData );
 
                     // We must walk the client's heap in order to build statistics
                     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - calling heap walker constructor..."));
-                    TMemSpyHeapWalkerNullObserver observer; 
-                    RMemSpyDriverHeapWalker heapWalker( rHeap, iHeapInfoParams.iDebugAllocator );
-                    if  ( iHeapInfoParams.iBuildFreeCellList )
+					RMemSpyDriverHeapWalker heapWalker(rHeap);
+                    if  (iHeapInfoParams.iBuildFreeCellList || iHeapInfoParams.iBuildAllocCellList)
                         {
                         heapWalker.SetObserver( this );
-                        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - collecting free cells"));
+                        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - collecting cells"));
                         }
                     else
                         {
-                        heapWalker.SetObserver( &observer );
-                        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - not collecting free cells"));
+                        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - not collecting cells"));
                         }
 
-                    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - starting traversal..." ));
+                    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - starting traversal openerr: %d...", r));
 
 #if ( defined( TRACE_TYPE_USERHEAP ) && defined( TRACE_TYPE_HEAPWALK ) )
                     heapWalker.SetPrintDebug();
 #endif
-                    r = heapWalker.Traverse();
+                    if (r == KErrNone) r = heapWalker.Traverse();
                     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser - finished traversal - err: %d", r ));
 
                     TMemSpyHeapStatisticsRHeap& rHeapStats = rHeapInfo.Statistics();
@@ -183,24 +169,26 @@ TInt DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser( TMemSpyDriverInternalHeapReq
 
                     // Get remaining meta data that isn't stored elsewhere
                     TMemSpyHeapMetaDataRHeap& rHeapMetaData = rHeapInfo.MetaData();
-                    rHeapMetaData.SetChunkName( chunkName );
-                    rHeapMetaData.SetChunkSize( (TUint) OSAdaption().DChunk().GetSize( *userHeapChunk ) );
-                    rHeapMetaData.SetChunkHandle( userHeapChunk );
-                    rHeapMetaData.SetChunkBaseAddress( OSAdaption().DChunk().GetBase( *userHeapChunk ) );
-                    rHeapMetaData.SetDebugAllocator( iHeapInfoParams.iDebugAllocator );
-                    rHeapMetaData.SetHeaderSizeFree( RMemSpyDriverRHeapBase::FreeCellHeaderSize() );
-                    rHeapMetaData.SetHeaderSizeAllocated( RMemSpyDriverRHeapBase::AllocatedCellHeaderSize( iHeapInfoParams.iDebugAllocator ) );
+					DChunk& userHeapChunk = rHeap.Chunk();
+					TFullName chunkName;
+					userHeapChunk.FullName(chunkName);
+					rHeapMetaData.SetChunkName( chunkName );
+		            rHeapMetaData.SetChunkSize( (TUint) OSAdaption().DChunk().GetSize( userHeapChunk ) );
+					rHeapMetaData.SetChunkHandle( &userHeapChunk );
+					rHeapMetaData.SetChunkBaseAddress( OSAdaption().DChunk().GetBase( userHeapChunk ) );
+                    rHeapMetaData.SetDebugAllocator(rHeap.Helper()->AllocatorIsUdeb());
                     rHeapMetaData.SetUserThread( ETrue );
-
-                    // Get any heap-specific info
-                    rHeap.GetHeapSpecificInfo( masterHeapInfo );
+					rHeapMetaData.iHeapSize = rHeap.Helper()->CommittedSize();
+					rHeapMetaData.iAllocatorAddress = (TAny*)rHeap.Helper()->AllocatorAddress();
+					rHeapMetaData.iMinHeapSize = rHeap.Helper()->MinCommittedSize();
+					rHeapMetaData.iMaxHeapSize = rHeap.Helper()->MaxCommittedSize();
 
                     PrintHeapInfo( masterHeapInfo );
 
                     // Write free cells if requested
-                    if  ( r == KErrNone && iHeapInfoParams.iBuildFreeCellList )
+                    if  ( r == KErrNone && (iHeapInfoParams.iBuildFreeCellList || iHeapInfoParams.iBuildAllocCellList))
                         {
-                        r = PrepareFreeCellTransferBuffer();
+                        r = PrepareCellListTransferBuffer();
                         }
 
                     // Update info ready for writing back to the user-side
@@ -217,7 +205,7 @@ TInt DMemSpyDriverLogChanHeapInfo::GetHeapInfoUser( TMemSpyDriverInternalHeapReq
                         }
 
                     // Release resources
-                    rHeap.DisassociateWithKernelChunk();
+					rHeap.Close();
                     }
                 }
             else
@@ -249,18 +237,13 @@ TInt DMemSpyDriverLogChanHeapInfo::GetHeapInfoKernel( TMemSpyDriverInternalHeapR
     if  ( r == KErrNone )
         {
         // Open kernel heap
-        TFullName heapChunkName;
         RMemSpyDriverRHeapKernelInPlace rHeap;
-        r = OpenKernelHeap( rHeap, &heapChunkName );
+        r = rHeap.OpenKernelHeap();
         TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoKernel() - open err: %d", r ) );
 
         if  ( r == KErrNone )
             {
-            // We must identify if we have a debug kernel allocator
-            const TBool debugAllocator = IsDebugKernel( rHeap );
-            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoKernel() - debugAllocator: %d", debugAllocator ) );
-
-            r = DMemSpyDriverLogChanHeapBase::GetHeapInfoKernel( rHeap, debugAllocator, heapChunkName, params.iMasterInfo, aTransferBuffer );
+            r = DMemSpyDriverLogChanHeapBase::GetHeapInfoKernel(rHeap, params.iMasterInfo, aTransferBuffer);
             TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetHeapInfoKernel() - base class get heap info: %d", r) );
             }
         }
@@ -278,7 +261,7 @@ TInt DMemSpyDriverLogChanHeapInfo::GetHeapInfoKernel( TMemSpyDriverInternalHeapR
 
 
 
-TInt DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel( TBool* aIsDebugKernel )
+TInt DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel(TAny* aResult)
     {
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel() - START") );
     
@@ -288,22 +271,22 @@ TInt DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel( TBool* aIsDebugKernel )
     NKern::ThreadEnterCS();
     
     RMemSpyDriverRHeapKernelInPlace rHeap;
-    r = OpenKernelHeap( rHeap );
+    r = rHeap.OpenKernelHeap();
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel() - open kernel heap returned: %d", r) );
 
     if  ( r == KErrNone )
         {
-        debugKernel = IsDebugKernel( rHeap );
+        debugKernel = rHeap.Helper()->AllocatorIsUdeb();
 
         // Tidy up
-        rHeap.DisassociateWithKernelChunk();
+        rHeap.Close();
         }
 
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel() - debugKernel: %d", debugKernel) );
 
     // Write back to user-land
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel() - writing to user-side...") );
-    r = Kern::ThreadRawWrite( &ClientThread(), aIsDebugKernel, &debugKernel, sizeof(TBool) );
+    r = Kern::ThreadRawWrite( &ClientThread(), aResult, &debugKernel, sizeof(TBool) );
 
     NKern::ThreadLeaveCS();
 
@@ -311,39 +294,120 @@ TInt DMemSpyDriverLogChanHeapInfo::GetIsDebugKernel( TBool* aIsDebugKernel )
     return r;
     }
 
+TInt DMemSpyDriverLogChanHeapInfo::PrepareCellListTransferBuffer()
+    {
+    // Transfer free cells immediately from xfer stream
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::PrepareCellListTransferBuffer() - START - iHeapStream: 0x%08x", iHeapStream ));
+    __ASSERT_ALWAYS( !iHeapStream, MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapFreeCellStreamNotClosed ) );
+    //
+    TInt r = KErrNoMemory;
+    //
+    NKern::ThreadEnterCS();
+    //
+    iHeapStream = new RMemSpyMemStreamWriter();
+    if  ( iHeapStream )
+        {
+        const TInt requiredMemory = CalculateCellListBufferSize();
+        r = OpenXferStream( *iHeapStream, requiredMemory );
+        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::PrepareCellListTransferBuffer() - requested %d bytes for free cell list, r: %d", requiredMemory, r ));
+
+        if  ( r == KErrNone )
+            {
+            const TInt count = iCellList.Count();
+            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::PrepareCellListTransferBuffer() - cell count: %d", count ));
+            //
+            iHeapStream->WriteInt32( count );
+            for( TInt i=0; i<count; i++ )
+                {
+                const TMemSpyDriverCell& cell = iCellList[ i ];
+                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::PrepareCellListTransferBuffer() - storing entry: %d", i ));
+                //
+                iHeapStream->WriteInt32( cell.iType );
+                iHeapStream->WriteUint32( reinterpret_cast<TUint32>( cell.iAddress ) );
+                iHeapStream->WriteInt32( cell.iLength );
+                }
+
+            // Finished with the array now
+            iCellList.Reset();
+
+            // We return the amount of client-side memory that needs to be allocated to hold the buffer
+            r = requiredMemory;
+            }
+        }
+    //
+    NKern::ThreadLeaveCS();
+               
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::PrepareCellListTransferBuffer() - END - r: %d", r));
+	return r;
+    }
+
+
+TInt DMemSpyDriverLogChanHeapInfo::FetchCellList( TDes8* aBufferSink )
+    {
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::FetchCellList() - START - iHeapStream: 0x%08x", iHeapStream ));
+    __ASSERT_ALWAYS( iHeapStream, MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapFreeCellStreamNotOpen ) );
+
+    TInt r = KErrNone;
+
+    // Write buffer to client
+    NKern::ThreadEnterCS();
+    r = iHeapStream->WriteAndClose( aBufferSink );
+
+    // Tidy up
+    ReleaseCellList();
+
+    NKern::ThreadLeaveCS();
+    //
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::FetchCellList() - END - r: %d", r));
+	return r;
+    }
 
 
 
+TInt DMemSpyDriverLogChanHeapInfo::CalculateCellListBufferSize() const
+    {
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::CalculateCellListBufferSize() - START" ));
+
+    const TInt count = iCellList.Count();
+    const TInt entrySize = sizeof( TInt32 ) + sizeof( TInt32 ) + sizeof( TUint32 );
+    const TInt r = ( count * entrySize ) + sizeof( TInt ); // Extra TInt to hold count
+                
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::CalculateCellListBufferSize() - END - r: %d, count: %d, entrySize: %d", r, count, entrySize ));
+	return r;
+    }
 
 
 
+void DMemSpyDriverLogChanHeapInfo::ReleaseCellList()
+    {
+	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::ReleaseCellList() - START - this: 0x%08x", this ));
 
+    NKern::ThreadEnterCS();
+    iCellList.Reset();
+    delete iHeapStream;
+    iHeapStream = NULL;
+    NKern::ThreadLeaveCS();
 
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapInfo::ReleaseCellList() - END - this: 0x%08x", this ));
+    }
 
+TBool DMemSpyDriverLogChanHeapInfo::HandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt /*aNestingLevel*/, TInt /*aAllocNumber*/)
+    {
+	TInt err = KErrNone;
+    if (((aCellType & EMemSpyDriverFreeCellMask) && iHeapInfoParams.iBuildFreeCellList) || ((aCellType & EMemSpyDriverAllocatedCellMask) && iHeapInfoParams.iBuildAllocCellList))
+		{
+		TMemSpyDriverCell cell;
+		cell.iType = aCellType;
+		cell.iAddress = aCellAddress;
+		cell.iLength = aLength;
 
+		NKern::ThreadEnterCS();
+		err = iCellList.Append(cell);
+		NKern::ThreadLeaveCS();
+		}
+	return err == KErrNone;
+	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void DMemSpyDriverLogChanHeapInfo::HandleHeapWalkInit()
+	{
+	}

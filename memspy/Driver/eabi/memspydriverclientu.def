@@ -67,4 +67,5 @@ EXPORTS
 	_ZN22RMemSpyMemStreamReader5ReadLER6TDes16 @ 66 NONAME
 	_ZN19RMemSpyDriverClient26GetCondVarSuspendedThreadsEPvPS0_Ri @ 67 NONAME
 	_ZN19RMemSpyDriverClient29GetCondVarSuspendedThreadInfoEPvR39TMemSpyDriverCondVarSuspendedThreadInfo @ 68 NONAME
+	_ZN19RMemSpyDriverClient15GetHeapInfoUserER15TMemSpyHeapInfojR6RArrayI21TMemSpyDriverFreeCellEi @ 69 NONAME
 

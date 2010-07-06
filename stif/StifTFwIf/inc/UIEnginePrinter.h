@@ -143,5 +143,5 @@ class CUIEnginePrinter
 
 
 #endif // STIF_TFW_IF_PRINTER_H
-    
+
 // End of File

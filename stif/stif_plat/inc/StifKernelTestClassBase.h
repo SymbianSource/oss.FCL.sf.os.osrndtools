@@ -145,5 +145,5 @@ class DStifKernelTestClassBase : public DLogicalChannel
     };
 
 #endif      // STIFKERNELTESTCLASSBASE_H
-            
+
 // End of File

@@ -49,58 +49,44 @@ DMemSpyDriverLogChanContainerBase::~DMemSpyDriverLogChanContainerBase()
 
 
 
+DObject* DMemSpyDriverLogChanContainerBase::CheckedOpen(TMemSpyDriverContainerType aContainerType, DObject* aObject, TBool aQuick)
+	{
+	__ASSERT_CRITICAL;
+	__ASSERT_DEBUG(aObject != NULL, MemSpyDriverUtils::Fault( __LINE__ ));
+    const TObjectType expectedType = ObjectTypeFromMemSpyContainerType(aContainerType);
 
-
-
-DObject* DMemSpyDriverLogChanContainerBase::CheckIfObjectIsInContainer( TMemSpyDriverContainerType aContainerType, DObject* aSearchFor, TBool aQuick )
-    {
-	__ASSERT_DEBUG( aSearchFor != NULL, MemSpyDriverUtils::Fault( __LINE__ ) );
-    const TObjectType expectedType = ObjectTypeFromMemSpyContainerType( aContainerType );
-    TRACE( Kern::Printf("DMemSpyDriverLogChanContainerBase::CheckIfObjectIsInContainer - START - aSearchFor: 0x%08x, expectedType: %d", aSearchFor, expectedType ));
-
-    DObject* ret = NULL;
-    
-    // Quick mode means we just check container ids and we trust that the object
-    // will exist.
-    if ( aQuick )
+    // Quick mode means we just check container ids and we trust that the object will exist.
+	// [TomS: not entirely convinced we can ever be certain of that]
+    TInt err = KErrNotFound;
+    if (aQuick)
         {
-        const TObjectType objectType = OSAdaption().DThread().GetObjectType( *aSearchFor );
-        TRACE( Kern::Printf("DMemSpyDriverLogChanContainerBase::CheckIfObjectIsInContainer - aSearchFor.iContainerID: %d", objectType ) );
-        if  ( objectType == expectedType )
+		LOG("quick CheckedOpen of %08x", aObject);
+        const TObjectType objectType = OSAdaption().DThread().GetObjectType(*aObject);
+        if (objectType == expectedType)
             {
-            ret = aSearchFor;
+            err = aObject->Open();
             }
         }
-    else
-        {
-        // Full check to see if the specified object is part of the container
-        DObjectCon* container = Kern::Containers()[ expectedType ];
+	else
+		{
+        DObjectCon* container = Kern::Containers()[expectedType];
         container->Wait();
-        NKern::LockSystem();
-
         const TInt count = container->Count();
-        for(TInt i=0; i<count; i++)
+        for (TInt i = 0; i < count; i++)
             {
-            DObject* object = (*container)[ i ];
-
-            // Do the two match?
-            if  ( object == aSearchFor )
+            DObject* object = (*container)[i];
+            if (object == aObject)
                 {
-                TRACE( Kern::Printf("    found match: %O", object));
+                err = aObject->Open();
+				break;
+				}
+			}
+		container->Signal();
+		}
 
-                ret = object;
-                break;
-                }
-            }
-
-        NKern::UnlockSystem();
-        container->Signal();
-        }
-
-    TRACE( Kern::Printf("DMemSpyDriverLogChanContainerBase::CheckIfObjectIsInContainer - END - ret: 0x%08x", ret ));
-    TRACE( Kern::Printf(" ") );
-    return ret;
-    }
+	LOG("CheckedOpen(%d, 0x%08x, quick=%d) returned error %d", aContainerType, aObject, aQuick, err);
+	return (err == KErrNone) ? aObject : NULL;
+	}
 
 
 

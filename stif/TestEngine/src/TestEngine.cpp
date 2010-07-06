@@ -755,6 +755,15 @@ CStifLogger* CTestEngineServer::Logger()
 */
 void CTestEngine::ConstructL( CTestEngineServer* aServer )
     {
+    // Log version info
+    TInt majorV;
+    TInt minorV;
+    TInt buildV;
+    TBuf<30> relDate;
+    TStifUtil::STIFVersion(majorV, minorV, buildV, relDate);
+    RDebug::Print(_L( "STIF startup... version %d.%d.%d (%S)"), majorV, minorV, buildV, &relDate);
+
+
     // Second-phase construct base class
     //CSession2::CreateL();
 
@@ -769,6 +778,7 @@ void CTestEngine::ConstructL( CTestEngineServer* aServer )
     // Initialize the object container from Server
     iContainer = iTestEngineServer->NewContainerL();
 
+    __TRACE(KInit, (_L( "STIF startup... version %d.%d.%d (%S)"), majorV, minorV, buildV, &relDate));
     __TRACE( KInit, ( _L( "CTestEngine::ConstructL: Test Engine Created" ) ) );
 
    
@@ -6201,5 +6211,4 @@ EXPORT_C TInt StartEngine()
 
     }
 
-
-//  End of File
+// End of File

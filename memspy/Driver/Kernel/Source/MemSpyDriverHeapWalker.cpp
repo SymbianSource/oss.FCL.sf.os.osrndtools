@@ -21,22 +21,14 @@
 #include "MemSpyDriverUtils.h"
 
 // Defines
-#define __NEXT_CELL(p)				((RMemSpyDriverRHeapBase::SCell*)(((TUint8*)p)+p->len))
 #define PRINTDEBUG( a ) { if ( PrintDebug() ) a; }
 
 
-RMemSpyDriverHeapWalker::RMemSpyDriverHeapWalker( RMemSpyDriverRHeapBase& aHeap, TBool aDebugAllocator )
-:   iHeap( aHeap ), iIsDebugAllocator( aDebugAllocator ), iPrintDebug( EFalse ), iObserver( NULL )
-    {
-    InitialiseStats();
-    }
-
-
-RMemSpyDriverHeapWalker::RMemSpyDriverHeapWalker( RMemSpyDriverRHeapBase& aHeap, TBool aDebugAllocator, MMemSpyHeapWalkerObserver& aObserver )
-:   iHeap( aHeap ), iIsDebugAllocator( aDebugAllocator ), iPrintDebug( EFalse ), iObserver( &aObserver )
-    {
-    InitialiseStats();
-    }
+RMemSpyDriverHeapWalker::RMemSpyDriverHeapWalker(RMemSpyDriverRHeapBase& aHeap, MMemSpyHeapWalkerObserver* aObserver)
+	: iHeap(aHeap), iPrintDebug(EFalse), iObserver(aObserver)
+	{
+	InitialiseStats();
+	}
 
 
 TInt RMemSpyDriverHeapWalker::Traverse()
@@ -44,7 +36,7 @@ TInt RMemSpyDriverHeapWalker::Traverse()
 // Walk the heap calling the info function.
 //
 	{
-    PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - START - delta: 0x%08x", iHeap.ClientToKernelDelta() ));
+    PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - START"));
     InitialiseStats();
     if  ( iObserver )
         {
@@ -53,135 +45,64 @@ TInt RMemSpyDriverHeapWalker::Traverse()
         }
 
     PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - heap walk init complete" ));
-    TAny* heapBase = KernelAddress( iHeap.iBase );
-    TAny* heapTop = KernelAddress( iHeap.iTop );
-	PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - kernel-side chunk address: 0x%08x, chunkBase: 0x%08x, heapBase: 0x%08x, heapTop: 0x%08x", iHeap.ChunkKernelAddress(), iHeap.Chunk().iBase, heapBase, heapTop));
 
-    TRACE_DATA( MemSpyDriverUtils::DataDump("%lS", (TUint8*) iHeap.ChunkKernelAddress(), iHeap.Chunk().iSize, iHeap.Chunk().iSize ) );
-   
-	TInt nestingLevel = 0;
-	TInt allocationNumber = 0;
-	//
-	RMemSpyDriverRHeapBase::SCell* pC = (RMemSpyDriverRHeapBase::SCell*) heapBase;		// allocated cells
-	RMemSpyDriverRHeapBase::SCell* pF = &iHeap.iFree;				            // free cells
-	PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - before while loop entry - pC: 0x%08x, pF: 0x%08x, heapBase: 0x%08x, heapTop: 0x%08x", pC, pF, heapBase, heapTop));
-    //
-    while( ( pF == &iHeap.iFree ) || ( pF >= heapBase && pF < heapTop ) )
+	TInt err = iHeap.Helper()->Walk(&CellCallback, this);
+    FinaliseStats();
+    //PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - END - pF: 0x%08x, pC: 0x%08x, heapBase: 0x%08x, heapTop: 0x%08x", pF, pC, heapBase, heapTop));
+	return err;
+	}
+
+TBool RMemSpyDriverHeapWalker::CellCallback(RAllocatorHelper& aHelper, TAny* aContext, RAllocatorHelper::TExtendedCellType aCellType, TLinAddr aCellAddress, TInt aLength)
+	{
+	return static_cast<RMemSpyDriverHeapWalker*>(aContext)->DoCellCallback(aHelper, aCellType, aCellAddress, aLength);
+	}
+
+TBool RMemSpyDriverHeapWalker::DoCellCallback(RAllocatorHelper& aHelper, RAllocatorHelper::TExtendedCellType aCellType, TLinAddr aCellAddress, TInt aLength)
+	{
+	TAny* cellAddress = (TAny*)aCellAddress;
+	TMemSpyDriverCellType memspyCellType = (TMemSpyDriverCellType)aCellType; // We make sure these use the same values
+	switch (aCellType)
 		{
-        pF = (RMemSpyDriverRHeapBase::SCell*) KernelAddress( pF->next );				// next free cell
-	    PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - pC: 0x%08x, pF: 0x%08x, heapBase: 0x%08x, heapTop: 0x%08x", pC, pF, heapBase, heapTop));
-
-        if  ( pF )
-        	{
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - freeCell:       0x%08x", pF ));
-
-            if  ( pF >= heapBase && pF < heapTop )
-                {
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - freeCell->next: 0x%08x", pF->next ));
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - freeCell->len:  0x%08x", pF->len ));
-                }
-            else
-                {
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - FATAL ERROR - freeCell:  0x%08x is outside heap bounds!", pF ));
-                }
-
-            PRINTDEBUG( Kern::Printf(" "));
-            }
-		
-        if  (!pF)
-            {
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - next free cell address is NULL"));
-			pF = (RMemSpyDriverRHeapBase::SCell*) heapTop;		// to make size checking work
-            }
-		else if (  (TUint8*) pF < heapBase || (TUint8*) pF >= heapTop || (KernelAddress( pF->next ) && KernelAddress( pF->next ) <= pF ) )
-			{
-			// free cell pointer off the end or going backwards
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadFreeCellAddress: 0x%08x", pF ));
-            NotifyCell( EMemSpyDriverBadFreeCellAddress, UserAddress(pF), 0 );
-			return KErrAbort;
-			}
-		else
-			{
-			TInt l = pF->len;
-			if ( l< iHeap.iMinCell || (l & (iHeap.iAlign-1)))
-				{
-				// free cell length invalid
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadFreeCellSize: 0x%08x", pF ));
-		        NotifyCell( EMemSpyDriverBadFreeCellSize, UserAddress(pF), l );
-			    return KErrAbort;
-				}
-			}
-
-        while ( pC != pF )				// walk allocated cells up to next free cell
-			{
-    	    if  ( pC )
-        	    {
-                // The 'next' cell field is only applicable if the cell is a 'free' cell, hence we only print the cell's
-                // address, its length, and its _calculated_ next cell (based upon address + length). Calc length is done
-                // a bit later on...
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - allocCell:       0x%08x", pC ));
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - allocCell->len:  0x%08x", pC->len ));
-                PRINTDEBUG( Kern::Printf(" "));
-                }
-            
-            TInt l = pC->len;
-			if (l<iHeap.iMinCell || (l & (iHeap.iAlign-1)))
-				{
-				// allocated cell length invalid
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadAllocatedCellSize: 0x%08x", pC ));
-		        NotifyCell( EMemSpyDriverBadAllocatedCellSize, UserAddress(pC), l );
-			    return KErrAbort;
-				}
-
-            // ALLOCATED CELL
-            if  ( iIsDebugAllocator )
-                {
-                RMemSpyDriverRHeapBase::SDebugCell* debugCell = (RMemSpyDriverRHeapBase::SDebugCell*) pC;
-                nestingLevel = debugCell->nestingLevel;
-                allocationNumber = debugCell->allocCount;
-                }
-
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EGoodAllocatedCell: 0x%08x", pC ));
-	        if  ( NotifyCell( EMemSpyDriverGoodAllocatedCell, UserAddress(pC), l, nestingLevel, allocationNumber ) == EFalse )
-                {
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - END1 - KErrAbort on NotifyCell..."));
-			    return KErrAbort;
-                }
-
-			RMemSpyDriverRHeapBase::SCell* pN = (RMemSpyDriverRHeapBase::SCell*) __NEXT_CELL( pC );
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - allocCell next:  0x%08x", pN ));
-			if (pN > pF)
-				{
-				// cell overlaps next free cell
-                PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadAllocatedCellAddress: 0x%08x", pC ));
-		        NotifyCell( EMemSpyDriverBadAllocatedCellAddress, UserAddress(pC), l );
-			    return KErrAbort;
-				}
-
-            pC = pN;
-			}
-
-        PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - freeCell before exit check is: 0x%08x", pF ));
-        if  ((TUint8*) pF >= heapTop )
-            {
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - freeCell reached top of heap -> done"));
-			break;		// reached end of heap
-            }
-		
-        pC = (RMemSpyDriverRHeapBase::SCell*) __NEXT_CELL(pF);	// step to next allocated cell
-
-        // FREE CELL
-        PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EGoodFreeCell: 0x%08x", pF ));
-        if  ( NotifyCell( EMemSpyDriverGoodFreeCell, UserAddress(pF), pF->len ) == EFalse )
-            {
-            PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - END2 - KErrAbort on NotifyCell..."));
-			return KErrAbort;
-            }
+		case RAllocatorHelper::EHeapBadFreeCellAddress:
+			PRINTDEBUG(Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadFreeCellAddress: 0x%08x", cellAddress));
+			NotifyCell(memspyCellType, cellAddress, 0);
+			return EFalse;
+		case RAllocatorHelper::EHeapBadFreeCellSize:
+			PRINTDEBUG(Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadFreeCellSize: 0x%08x", cellAddress));
+			NotifyCell(memspyCellType, cellAddress, aLength);
+			return EFalse;
+		case RAllocatorHelper::EHeapBadAllocatedCellSize:
+			PRINTDEBUG(Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadAllocatedCellSize: 0x%08x", cellAddress));
+			NotifyCell(memspyCellType, cellAddress, aLength);
+			return EFalse;
+		case RAllocatorHelper::EHeapBadAllocatedCellAddress:
+			PRINTDEBUG(Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EBadAllocatedCellAddress: 0x%08x", cellAddress));
+			NotifyCell(memspyCellType, cellAddress, aLength);
+			return EFalse;
+		default:
+			break;
 		}
 
-    FinaliseStats();
-    PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - END - pF: 0x%08x, pC: 0x%08x, heapBase: 0x%08x, heapTop: 0x%08x", pF, pC, heapBase, heapTop));
-    return KErrNone;
+	if (aCellType & RAllocatorHelper::EAllocationMask)
+		{
+		PRINTDEBUG(Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EGoodAllocatedCell: 0x%08x", cellAddress));
+		TInt nestingLevel = -1;
+		aHelper.GetCellNestingLevel(cellAddress, nestingLevel);
+		TInt allocCount = aHelper.AllocCountForCell(cellAddress);
+		if (allocCount < 0) allocCount = -1; // This is what NotifyCell expects
+		return NotifyCell(memspyCellType, cellAddress, aLength, nestingLevel, allocCount);
+		}
+	else if (aCellType & RAllocatorHelper::EFreeMask)
+		{
+		PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::Traverse() - EGoodFreeCell: 0x%08x", cellAddress));
+		return NotifyCell(memspyCellType, cellAddress, aLength);
+		}
+	else if (aCellType & RAllocatorHelper::EBadnessMask)
+		{
+		NotifyCell(memspyCellType, cellAddress, aLength);
+		return EFalse;
+		}
+	return ETrue; // For any new types that get added
 	}
 
 
@@ -219,9 +140,7 @@ void RMemSpyDriverHeapWalker::CopyStatsTo( TMemSpyHeapStatisticsRHeap& aStats )
     alloc.SetLargestCellAddress( (TAny*) iStats.iLargestCellAddressAlloc );
     alloc.SetLargestCellSize( iStats.iLargestCellSizeAlloc );
 
-    // Copy common info
-    TMemSpyHeapStatisticsRHeapCommon& common = aStats.StatsCommon();
-    common.SetTotalCellCount( iStats.iNumberOfWalkedCells );
+	aStats.iCommittedFreeSpace = iHeap.Helper()->CommittedFreeSpace();
 
 	PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::CopyStatsTo() - END"));
     }
@@ -232,56 +151,6 @@ void RMemSpyDriverHeapWalker::SetObserver( MMemSpyHeapWalkerObserver* aObserver 
     PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::SetObserver() - aObserver: 0x%08x", aObserver ));
     iObserver = aObserver;
     }
-
-
-TAny* RMemSpyDriverHeapWalker::KernelAddress( TAny* aUserAddress, TUint aDelta )
-    {
-    TAny* ret = NULL;
-    //
-    if  ( aUserAddress )
-        {
-	    TRACE_HEAP( Kern::Printf("RMemSpyDriverHeapWalker::KernelAddress() - aUserAddress: 0x%08x", aUserAddress));
-        ret = (TUint8*) aUserAddress + aDelta;
-        }
-    //
-	TRACE_HEAP( Kern::Printf("RMemSpyDriverHeapWalker::KernelAddress() - ret: 0x%08x", ret));
-    return ret;
-    }
-
- 
-TAny* RMemSpyDriverHeapWalker::UserAddress( TAny* aKernelAddress, TUint aDelta )
-    {
-    TAny* ret = NULL;
-    //
-    if  ( aKernelAddress )
-        {
-	    TRACE_HEAP( Kern::Printf("RMemSpyDriverHeapWalker::UserAddress() - aKernelAddress: 0x%08x", aKernelAddress));
-        ret = (TUint8*) aKernelAddress - aDelta;
-        }
-    //
-	TRACE_HEAP( Kern::Printf("RMemSpyDriverHeapWalker::UserAddress() - ret: 0x%08x", ret));
-    return ret;
-    }
-
-
-TAny* RMemSpyDriverHeapWalker::KernelAddress( TAny* aUserAddress) const
-    {
-    return KernelAddress( aUserAddress, iHeap.ClientToKernelDelta() );
-    }
-
-
-TAny* RMemSpyDriverHeapWalker::UserAddress( TAny* aKernelAddress ) const
-    {
-    return UserAddress( aKernelAddress, iHeap.ClientToKernelDelta() );
-    }
-
-
-RMemSpyDriverRHeapBase::SCell* RMemSpyDriverHeapWalker::CellByUserAddress( TAny* aAddress, TUint aDelta )
-    {
-    RMemSpyDriverRHeapBase::SCell* ret = (RMemSpyDriverRHeapBase::SCell*) KernelAddress( aAddress, aDelta );
-    return ret;
-    }
-
 
 TBool RMemSpyDriverHeapWalker::NotifyCell( TMemSpyDriverCellType aType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
     {
@@ -301,32 +170,9 @@ TBool RMemSpyDriverHeapWalker::NotifyCell( TMemSpyDriverCellType aType, TAny* aC
 
 void RMemSpyDriverHeapWalker::UpdateStats( TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
     {
-    switch( aCellType )
-        {
-    case EMemSpyDriverGoodAllocatedCell:
-        PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - EGoodAllocatedCell       - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellAddress, aLength, aNestingLevel, aAllocNumber ));
-        break;
-    case EMemSpyDriverGoodFreeCell:
-        PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - EGoodFreeCell            - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellAddress, aLength, aNestingLevel, aAllocNumber ));
-        break;
-    case EMemSpyDriverBadAllocatedCellSize:
-        Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - EBadAllocatedCellSize    - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellAddress, aLength, aNestingLevel, aAllocNumber );
-        break;
-    case EMemSpyDriverBadAllocatedCellAddress:
-        Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - EBadAllocatedCellAddress - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellAddress, aLength, aNestingLevel, aAllocNumber );
-        break;
-    case EMemSpyDriverBadFreeCellAddress:
-        Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - EBadFreeCellAddress      - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellAddress, aLength, aNestingLevel, aAllocNumber );
-        break;
-    case EMemSpyDriverBadFreeCellSize:
-        Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - EBadFreeCellSize         - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellAddress, aLength, aNestingLevel, aAllocNumber );
-        break;
-    default:
-        Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - UHANDLED TYPE!           - 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d, type: %d", aCellAddress, aLength, aNestingLevel, aAllocNumber, aCellType );
-        break;
-        }
+    PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::UpdateStats - type: %d address: 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", aCellType, aCellAddress, aLength, aNestingLevel, aAllocNumber ));
 
-    if  ( aCellType == EMemSpyDriverGoodFreeCell )
+    if (aCellType & EMemSpyDriverFreeCellMask)
         {
         // Update checksum
         iStats.iFreeCellCRC = iStats.iFreeCellCRC ^ reinterpret_cast<TUint32>( aCellAddress );
@@ -355,7 +201,7 @@ void RMemSpyDriverHeapWalker::UpdateStats( TMemSpyDriverCellType aCellType, TAny
             iStats.iFirstFreeCellAddress = (TLinAddr) aCellAddress;
             }
         }
-    else if ( aCellType == EMemSpyDriverGoodAllocatedCell )
+    else if (aCellType & EMemSpyDriverAllocatedCellMask)
         {
         // Track cell counts and length
         ++iStats.iAllocCellCount;
@@ -372,14 +218,10 @@ void RMemSpyDriverHeapWalker::UpdateStats( TMemSpyDriverCellType aCellType, TAny
             iStats.iLargestCellAddressAlloc = (TLinAddr) aCellAddress;
             }
         }
-    else
-        {
-        iStats.iLastFreeCellLength = aLength;
-        }
 
     iStats.iLastCellType = aCellType;
     iStats.iLastCellAddress = (TLinAddr) aCellAddress;
-    iStats.iLastCellWasFreeCell = ( aCellType == EMemSpyDriverGoodFreeCell );
+    iStats.iLastCellWasFreeCell = (aCellType & EMemSpyDriverFreeCellMask);
     ++iStats.iNumberOfWalkedCells;
     }
 
@@ -390,7 +232,7 @@ void RMemSpyDriverHeapWalker::InitialiseStats()
     iStats.iNumberOfWalkedCells = 0;
     iStats.iFirstFreeCellAddress = 0;
     iStats.iFirstFreeCellLength = 0;
-    iStats.iLastCellType = EMemSpyDriverGoodAllocatedCell;
+    iStats.iLastCellType = EMemSpyDriverAllocatedCellMask;
     iStats.iLastCellWasFreeCell = EFalse;
     iStats.iLastFreeCellLength = 0;
     iStats.iTotalFreeSpace = 0;
@@ -406,10 +248,6 @@ void RMemSpyDriverHeapWalker::InitialiseStats()
     iStats.iLargestCellAddressFreePrevious = 0;
     iStats.iSpackSpaceCellAddress = 0;
     iStats.iLastCellAddress = 0;
-
-    // These two can be identified up front
-    iStats.iFreeCellOverheadHeaderLength = RMemSpyDriverRHeapBase::FreeCellHeaderSize();
-    iStats.iAllocCellOverheadHeaderLength = RMemSpyDriverRHeapBase::AllocatedCellHeaderSize( iIsDebugAllocator );
     }
 
 
@@ -447,4 +285,3 @@ void RMemSpyDriverHeapWalker::PrintStats()
     PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::PrintStats - iLargestCellAddressAlloc     : 0x%08x", iStats.iLargestCellAddressAlloc ) );
     PRINTDEBUG( Kern::Printf("RMemSpyDriverHeapWalker::PrintStats - iFreeCellCRC                 : 0x%08x", iStats.iFreeCellCRC ) );
     }
-

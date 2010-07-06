@@ -242,3 +242,5 @@ inline TBool AssertTrue(const TBool& aCondition)
 	}
 
 #endif
+
+// End of File

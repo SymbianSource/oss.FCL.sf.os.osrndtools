@@ -2784,7 +2784,7 @@ void CTestCommandNotifier::Start()
     {
     __TRACE(KVerbose, (_L("CTestEventNotifier::StartL")));
 
-    TInt res = iTestExecution.NotifyCommand2(iCommandPckg, iParamsPckg, iStatus, KErrNone);
+    iTestExecution.NotifyCommand2(iCommandPckg, iParamsPckg, iStatus, KErrNone);
     SetActive();
     }
 

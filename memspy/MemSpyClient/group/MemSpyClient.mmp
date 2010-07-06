@@ -24,7 +24,7 @@ UID 0 0x2002EA8E
 VENDORID	VID_DEFAULT
 SMPSAFE
 
-CAPABILITY PowerMgmt SwEvent ReadUserData WriteUserData ReadDeviceData WriteDeviceData
+CAPABILITY PowerMgmt SwEvent ReadUserData WriteUserData ReadDeviceData WriteDeviceData CommDD MultimediaDD DRM TrustedUI ProtServ DiskAdmin NetworkControl AllFiles NetworkServices LocalServices Location SurroundingsDD UserEnvironment
 
 SOURCEPATH ../src
 SOURCE 		memspysession.cpp 
@@ -34,6 +34,7 @@ SOURCE		memspyapiheap.cpp
 SOURCE 		memspyapikernelobjectitem.cpp 
 SOURCE		memspyapithread.cpp 
 SOURCE		memspyapithreadinfoitem.cpp
+SOURCE		memspyapimemorytrackingcycle.cpp
 
 USERINCLUDE ../inc
 
@@ -49,7 +50,6 @@ LIBRARY			cone.lib
 LIBRARY			eikcore.lib
 LIBRARY			fbscli.lib 
 LIBRARY 		PlatformEnv.lib
-
 LIBRARY         MemSpyEngine.lib
 
-EXPORTUNFROZEN
+//EXPORTUNFROZEN

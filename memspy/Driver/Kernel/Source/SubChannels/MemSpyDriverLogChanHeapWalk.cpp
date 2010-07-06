@@ -124,7 +124,7 @@ TBool DMemSpyDriverLogChanHeapWalk::IsHandler( TInt aFunction ) const
 TInt DMemSpyDriverLogChanHeapWalk::WalkHeapInit( TMemSpyDriverInternalWalkHeapParamsInit* aParams )
     {
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapInit() - START"));
-    __ASSERT_ALWAYS( !iHeapWalkInitialised && iWalkHeap.ChunkIsInitialised() == EFalse, MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkPending ) );
+    __ASSERT_ALWAYS( !iHeapWalkInitialised && iWalkHeap.Helper() == NULL, MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkPending ) );
 
     TInt r = Kern::ThreadRawRead( &ClientThread(), aParams, &iHeapWalkInitialParameters, sizeof(TMemSpyDriverInternalWalkHeapParamsInit) );
     if  ( r == KErrNone )
@@ -141,8 +141,8 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapInit( TMemSpyDriverInternalWalkHeapPa
                 TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapInit - thread: %O", thread));
 
                 // Open client's heap
-                DChunk* userHeapChunk = NULL;
-                r = OpenUserHeap( *thread, iHeapWalkInitialParameters.iRHeapVTable, iWalkHeap, userHeapChunk );
+                r = iWalkHeap.OpenUserHeap(*thread, iHeapWalkInitialParameters.iDebugAllocator);
+
                 TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapInit - opening client heap returned: %d", r) );
 
                 if  ( r == KErrNone )
@@ -154,7 +154,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapInit( TMemSpyDriverInternalWalkHeapPa
 
                     // Walk the client's heap
                     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapInit - calling heap walker constructor..."));
-                    RMemSpyDriverHeapWalker heapWalker( iWalkHeap, iHeapWalkInitialParameters.iDebugAllocator );
+                    RMemSpyDriverHeapWalker heapWalker(iWalkHeap);
                     
                     TMemSpyDriverLogChanHeapWalkObserver observer( *this );
                     heapWalker.SetObserver( &observer );
@@ -169,7 +169,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapInit( TMemSpyDriverInternalWalkHeapPa
                 if  ( r < KErrNone )
                     {
                     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapInit - error scenario - releasing kernel heap chunk copy" ));
-                    iWalkHeap.DisassociateWithKernelChunk();
+                    iWalkHeap.Close();
                     }
                 }
             else
@@ -199,7 +199,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapNextCell( TUint aTid, TMemSpyDriverIn
     {
     const TInt walkedHeapCellCount = iWalkHeapCells.Count();
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapNextCell() - START - current cell count: %d", walkedHeapCellCount));
-    __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.ChunkIsInitialised(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
+    __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.Helper(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
 
     // Open the original thread
 	TInt r = OpenTempObject( aTid, EThread );
@@ -257,12 +257,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapClose()
         TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapClose - heap walk was still open..."));
       	NKern::ThreadEnterCS();
 
-        if  ( iWalkHeap.ChunkIsInitialised() )
-            {
-            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapClose - removing chunk (%O) from process", &iWalkHeap.Chunk() ) );
-            iWalkHeap.DisassociateWithKernelChunk();
-            iWalkHeap.Reset();
-            }
+		iWalkHeap.Close();
 
         // Discard handled cells
         iWalkHeapCells.Reset();
@@ -279,10 +274,9 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapClose()
 
 TInt DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData(TMemSpyDriverInternalWalkHeapCellDataReadParams* aParams)
     {
-    __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.ChunkIsInitialised(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
+    __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.Helper(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
     //
-    const TBool debugEUser = iHeapWalkInitialParameters.iDebugAllocator;
-	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData() - START - thread id: %d, vtable: 0x%08x, debugAllocator: %d", iHeapWalkInitialParameters.iTid, iHeapWalkInitialParameters.iRHeapVTable, debugEUser));
+	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData() - START - thread id: %d, vtable: 0x%08x", iHeapWalkInitialParameters.iTid, iHeapWalkInitialParameters.iRHeapVTable));
     //
 	TMemSpyDriverInternalWalkHeapCellDataReadParams params;
     TInt r = Kern::ThreadRawRead( &ClientThread(), aParams, &params, sizeof(TMemSpyDriverInternalWalkHeapCellDataReadParams) );
@@ -306,92 +300,58 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData(TMemSpyDriverInternalWal
             {
             // Check we can find the cell in the cell list...
             const TMemSpyDriverInternalWalkHeapParamsCell* cell = CellInfoForSpecificAddress( params.iCellAddress );
-            if  ( cell == NULL )
-                {
-                // Maybe the client tried the base address of the cell data.
-                // try to take the header into account and retry.
-                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - didnt find matching cell for address: 0x%08x... trying address minus allocatedCellHeaderSize", params.iCellAddress ));
-
-                const TUint32 cellHeaderSize = (TUint32) RMemSpyDriverRHeapBase::AllocatedCellHeaderSize( debugEUser );
-        
-                TUint32 addr = (TUint32) params.iCellAddress;
-                addr -= cellHeaderSize;
-                params.iCellAddress = (TAny*) addr;
-                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - new address: 0x%08x", params.iCellAddress ));
-        
-                // Last try
-                cell = CellInfoForSpecificAddress( params.iCellAddress );
-                }
 
             TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - cell: 0x%08x for address: 0x%08x", cell, params.iCellAddress ));
 
             if  ( cell )
                 {
-                const TBool isValidCell = iWalkHeap.CheckCell( cell->iCellAddress, cell->iLength );
-                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - isValidCell: %d", isValidCell ));
-        
-                if  ( isValidCell )
+                const TInt cellLen = cell->iLength;
+                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - cellLen: %d", cellLen ));
+
+                if  ( params.iReadLen <= cellLen )
                     {
-                    // Check the length request is valid
-                    const TInt cellLen = cell->iLength;
-                    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - cellLen: %d", cellLen ));
 
-                    if  ( params.iReadLen <= cellLen )
+                    // Get user side descriptor length info
+         	        TInt destLen = 0;
+        	        TInt destMax = 0;
+                    TUint8* destPtr = NULL;
+
+                    r = Kern::ThreadGetDesInfo( &ClientThread(), params.iDes, destLen, destMax, destPtr, ETrue );
+        	        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - user side descriptor: 0x%08x (0x%08x), len: %8d, maxLen: %8d, r: %d", params.iDes, destPtr, destLen, destMax, r ));
+
+                    // Work out the start offset for the data...
+                    if  ( r == KErrNone && destMax >= params.iReadLen )
                         {
-                        const TInt cellHeaderSize = RMemSpyDriverRHeapBase::CellHeaderSize( *cell, debugEUser );
-        	            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - cellHeaderSize: %8d", cellHeaderSize ));
+                        const TAny* srcPos = ((TUint8*) cell->iCellAddress);
+        	            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - srcPos: 0x%08x", srcPos ));
 
-                        // Get user side descriptor length info
-         	            TInt destLen = 0;
-        	            TInt destMax = 0;
-                        TUint8* destPtr = NULL;
+                        // Read some data 
+                        r = Kern::ThreadRawRead( thread, srcPos, destPtr, params.iReadLen );
+    	                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - read from thread returned: %d", r));
 
-                        r = Kern::ThreadGetDesInfo( &ClientThread(), params.iDes, destLen, destMax, destPtr, ETrue );
-        	            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - user side descriptor: 0x%08x (0x%08x), len: %8d, maxLen: %8d, r: %d", params.iDes, destPtr, destLen, destMax, r ));
-
-                        // Work out the start offset for the data...
-                        if  ( r == KErrNone && destMax >= params.iReadLen )
+                        if  ( r == KErrNone )
                             {
-                            const TAny* srcPos = ((TUint8*) cell->iCellAddress) + cellHeaderSize;
-        	                TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - srcPos: 0x%08x", srcPos ));
-
-                            // Read some data 
-                            r = Kern::ThreadRawRead( thread, srcPos, destPtr, params.iReadLen );
-    	                    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - read from thread returned: %d", r));
-
-                            if  ( r == KErrNone )
-                                {
-                                // Client will update descriptor length in this situation.
-                                r = params.iReadLen;
-                                }
-                            else if ( r == KErrBadDescriptor )
-                                {
-                                MemSpyDriverUtils::PanicThread( ClientThread(), EPanicBadDescriptor );
-                                }
-                            }
-                        else
-                            {
-                            if  ( r != KErrBadDescriptor )
-                                {
-                                r = KErrArgument;                
-            	                Kern::Printf( "DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - error - user-descriptor isnt big enough for requested data" );
-                                }
-                            else
-                                {
-            	                Kern::Printf( "DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - error - bad or non-writable user-side descriptor" );
-                                }
+                            // Client will update descriptor length in this situation.
+                            r = params.iReadLen;
                             }
                         }
                     else
                         {
-                        r = KErrArgument;
-        	            Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - error - read length is bigger than cell length");
+                        if  ( r != KErrBadDescriptor )
+                            {
+                            r = KErrArgument;                
+            	            Kern::Printf( "DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - error - user-descriptor isnt big enough for requested data" );
+                            }
+                        else
+                            {
+            	            Kern::Printf( "DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - error - bad or non-writable user-side descriptor" );
+                            }
                         }
                     }
                 else
                     {
                     r = KErrArgument;
-                    Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - invalid cell address: 0x%08x", cell);
+        	        Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - error - read length is bigger than cell length");
                     }
                 }
             else
@@ -413,17 +373,16 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData(TMemSpyDriverInternalWal
     	Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData - thread not found");
 		}
     //
-    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData() - END"));
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData() - END result=%d", r));
     return r;
     }
 
 
 TInt DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo( TAny* aCellAddress, TMemSpyDriverInternalWalkHeapParamsCell* aParams )
     {
-    __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.ChunkIsInitialised(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
+    __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.Helper(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
     //
-    const TBool debugEUser = iHeapWalkInitialParameters.iDebugAllocator;
-    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo() - START - thread id: %d, vtable: 0x%08x, debugAllocator: %d", iHeapWalkInitialParameters.iTid, iHeapWalkInitialParameters.iRHeapVTable, debugEUser));
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo() - START - thread id: %d, vtable: 0x%08x", iHeapWalkInitialParameters.iTid, iHeapWalkInitialParameters.iRHeapVTable));
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo - cell: 0x%08x", aCellAddress));
 
     // Open the original thread
@@ -450,16 +409,6 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo( TAny* aCellAddress, TMem
     if  ( cell == NULL )
         {
         TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo - no exact match for address: 0x%08x...", aCellAddress));
-
-        // Maybe the client tried the base address of the cell data.
-        // try to take the header into account and retry.
-        const TUint32 cellHeaderSize = (TUint32) RMemSpyDriverRHeapBase::AllocatedCellHeaderSize( debugEUser );
-        TUint32 addr = (TUint32) aCellAddress;
-        addr -= cellHeaderSize;
-        
-        TAny* cellByRawStartingAddress = (TAny*) addr;
-        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo - trying to search by start of cell address: 0x%08x (cellHeaderSize: %d)", cellByRawStartingAddress, cellHeaderSize));
-        cell = CellInfoForSpecificAddress( cellByRawStartingAddress );
         
         // If the cell still wasn't found, then let's look for any heap cell that contains
         // the client-specified address (i.e. find the heap cell that contains the specified
@@ -473,18 +422,9 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo( TAny* aCellAddress, TMem
 
     if  ( cell )
         {
-        const TBool isValidCell = iWalkHeap.CheckCell( cell->iCellAddress, cell->iLength );
-        if  ( isValidCell )
-            {
-            // Have enough info to write back to client now
-            TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo - returning... cellType: %1d, addr: 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", cell->iCellType, cell->iCellAddress, cell->iLength, cell->iNestingLevel, cell->iAllocNumber ));
-            r = Kern::ThreadRawWrite( &ClientThread(), aParams, cell, sizeof(TMemSpyDriverInternalWalkHeapParamsCell) );
-            }
-        else
-            {
-            r = KErrArgument;
-            Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo - invalid cell address: 0x%08x", cell);
-            }
+        // Have enough info to write back to client now
+        TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo - returning... cellType: %1d, addr: 0x%08x, len: %8d, nestingLev: %8d, allocNum: %8d", cell->iCellType, cell->iCellAddress, cell->iLength, cell->iNestingLevel, cell->iAllocNumber ));
+        r = Kern::ThreadRawWrite( &ClientThread(), aParams, cell, sizeof(TMemSpyDriverInternalWalkHeapParamsCell) );
         }
     else
         {
@@ -494,7 +434,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo( TAny* aCellAddress, TMem
     
     CloseTempObject();
     //
-    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo() - END"));
+    TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo() - END result=%d", r));
     return r;
     }
 
@@ -576,7 +516,7 @@ const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalk::Cel
 
 
 
-TBool DMemSpyDriverLogChanHeapWalk::WalkerHandleHeapCell( TInt aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
+TBool DMemSpyDriverLogChanHeapWalk::WalkerHandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
     {
     TInt error = KErrNone;
     //

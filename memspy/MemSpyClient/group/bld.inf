@@ -25,6 +25,7 @@ PRJ_EXPORTS
 ../inc/memspyheapdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspyheapdata.h)
 ../inc/memspythreaddata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspythreaddata.h)
 ../inc/memspythreadinfoitemdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspythreadinfoitemdata.h)
+../inc/memspymemorytrackingcycledata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspymemorytrackingcycledata.h)
 
 ../inc/memspyapiprocess.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiprocess.h)
 ../inc/memspyapikernelobject.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapikernelobject.h)
@@ -32,6 +33,7 @@ PRJ_EXPORTS
 ../inc/memspyapiheap.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiheap.h)
 ../inc/memspyapithread.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapithread.h)
 ../inc/memspyapithreadinfoitem.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapithreadinfoitem.h)
+../inc/memspyapimemorytrackingcycle.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapimemorytrackingcycle.h)
 
 PRJ_MMPFILES
 MemSpyClient.mmp

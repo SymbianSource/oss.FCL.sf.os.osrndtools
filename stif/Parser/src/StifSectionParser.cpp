@@ -1104,4 +1104,4 @@ const TPtrC CStifSectionParser::Des()
 
 // ================= OTHER EXPORTED FUNCTIONS =================================
 
-//  End of File
+// End of File

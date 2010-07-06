@@ -293,4 +293,4 @@ void TDes8LoggerOverflowHandler::Overflow( TDes8& aDes )
 // ================= OTHER EXPORTED FUNCTIONS =================================
 // None
 
-//  End of File
+// End of File

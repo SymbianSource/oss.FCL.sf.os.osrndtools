@@ -888,4 +888,4 @@ void CStifParser::HandleSpecialMarks( TPtr& aBuf )
 
     }
 
-//  End of File
+// End of File

@@ -301,5 +301,5 @@ class CLoggerSetting
     };
 
 #endif // SETTING_SERVER_H
-    
+
 // End of File

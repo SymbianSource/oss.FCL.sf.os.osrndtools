@@ -947,4 +947,4 @@ TInt CLoggerSetting::StoreEngineSettings(const RMessage2& aMessage)
     return KErrNone;
     }
 
-//  End of File
+// End of File

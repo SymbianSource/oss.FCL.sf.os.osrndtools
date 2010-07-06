@@ -35,80 +35,6 @@ class CActiveScheduler;
 class CTrapCleanup;
 
 
-
-class TMemSpyHeapObjectDataRHeap
-    {
-public:
-    inline TMemSpyHeapObjectDataRHeap()
-        : iAccessCount( 0 ),
-          iHandleCount( 0 ),
-          iHandles( NULL ),
-          iFlags( 0 ),
-          iCellCount( 0 ),
-          iTotalAllocSize ( 0 ),
-          //
-          iMinLength( 0 ),
-          iMaxLength( 0 ),
-          iOffset ( 0 ),
-          iGrowBy( 0 ),
-          iChunkHandle ( 0 ),
-          iBase( NULL ),
-          iTop( NULL ),
-          iAlign( 0 ),
-          iMinCell( 0 ),
-          iPageSize( 0 ),
-          iNestingLevel( 0 ),
-          iAllocCount( 0 ),
-          iFailRate( 0 ),
-          iFailed( EFalse ),
-          iFailAllocCount( 0 ),
-          iRand( 0 ),
-          iTestData( NULL )
-        {
-        }
-
-public: // API
-    inline TUint8* Base() const { return iBase; }
-    inline TUint Size() const { return iTop - iBase; }
-
-public: // From RAllocator
-	TInt iAccessCount;
-	TInt iHandleCount;
-	TInt* iHandles;
-	TUint32 iFlags;
-	TInt iCellCount;
-	TInt iTotalAllocSize;
-
-public: // From RHeap
-	TInt iMinLength;
-	TInt iMaxLength;
-	TInt iOffset;
-	TInt iGrowBy;
-	TInt iChunkHandle;
-    RFastLock iLock;
-	TUint8* iBase;
-	TUint8* iTop;
-	TInt iAlign;
-	TInt iMinCell;
-	TInt iPageSize;
-#ifdef __SYMBIAN_KERNEL_HYBRID_HEAP__
-	struct SCell { TInt len; SCell* next; };
-    SCell iFree;
-#else
-    RHeap::SCell iFree;
-#endif
-	TInt iNestingLevel;
-	TInt iAllocCount;
-    RAllocator::TAllocFail iFailType;
-	TInt iFailRate;
-	TBool iFailed;
-	TInt iFailAllocCount;
-	TInt iRand;
-	TAny* iTestData;
-    };
-
-
-
 /**
  * Base class for MemSpy RHeap statistics
  */
@@ -205,33 +131,6 @@ public:
     TUint32 iChecksum;
     };
 
-
-
-
-
-/**
- * RHeap statistics for common cell types
- */
-class TMemSpyHeapStatisticsRHeapCommon
-    {
-public: // Constructors
-    inline TMemSpyHeapStatisticsRHeapCommon()
-        : iTotalCellCount( 0 )
-        {
-        }
-
-public:
-    inline TUint TotalCellCount() const { return iTotalCellCount; }
-    inline void SetTotalCellCount( TUint aValue ) { iTotalCellCount = aValue; }
-
-private:
-    TUint iTotalCellCount;
-    };
-
-
-
-
-
 /**
  * RHeap statistics class
  */
@@ -239,6 +138,7 @@ class TMemSpyHeapStatisticsRHeap
     {
 public: // Constructors
     inline TMemSpyHeapStatisticsRHeap()
+		: iCommittedFreeSpace(0)
         {
         }
 
@@ -248,14 +148,14 @@ public: // API
     //
     inline TMemSpyHeapStatisticsRHeapAllocated& StatsAllocated() { return iStatisticsAllocated; }
     inline const TMemSpyHeapStatisticsRHeapAllocated& StatsAllocated() const { return iStatisticsAllocated; }
-    //
-    inline TMemSpyHeapStatisticsRHeapCommon& StatsCommon() { return iStatisticsCommon; }
-    inline const TMemSpyHeapStatisticsRHeapCommon& StatsCommon() const { return iStatisticsCommon; }
+
 
 private: // Data members
-    TMemSpyHeapStatisticsRHeapCommon iStatisticsCommon;
     TMemSpyHeapStatisticsRHeapFree iStatisticsFree;
     TMemSpyHeapStatisticsRHeapAllocated iStatisticsAllocated;
+
+public: // I am fed up of all these pointless inline accessors...
+	TInt iCommittedFreeSpace; // The amount of committed memory that isn't payload data in allocated or free cells
     };
 
 
@@ -275,10 +175,15 @@ public: // Constructors
           iChunkHandle( NULL ),
           iChunkBaseAddress( NULL ),
           iDebugAllocator( EFalse ),
-          iHeaderSizeFree( 0 ),
-          iHeaderSizeAllocated( 0 ),
+          //iHeaderSizeFree( 0 ),
+          //iHeaderSizeAllocated( 0 ),
           iIsUserThread( ETrue ),
-          iSharedHeap( EFalse )
+		  iVTable(0),
+          iSharedHeap( EFalse ),
+          iHeapSize(0),
+          iAllocatorAddress(NULL),
+		  iMinHeapSize(0),
+		  iMaxHeapSize(0)
         {
         }
 
@@ -358,12 +263,6 @@ public: // API
     inline TAny* ChunkBaseAddress() const { return iChunkBaseAddress; }
     inline void SetChunkBaseAddress( TAny* aValue ) { iChunkBaseAddress = aValue; }
     //
-    inline TUint HeaderSizeFree() const { return iHeaderSizeFree; }
-    inline void SetHeaderSizeFree( TUint aValue ) { iHeaderSizeFree = aValue; }
-    //
-    inline TUint HeaderSizeAllocated() const { return iHeaderSizeAllocated; }
-    inline void SetHeaderSizeAllocated( TUint aValue ) { iHeaderSizeAllocated = aValue; }
-    //
     inline TBool IsDebugAllocator() const { return iDebugAllocator; }
     inline void SetDebugAllocator( TBool aValue ) { iDebugAllocator = aValue; }
     //
@@ -375,28 +274,22 @@ public: // API
     //
     inline TUint VTable() const { return iVTable; }
     inline void SetVTable( TUint aValue ) { iVTable = aValue; }
-    //
-    inline TUint ClassSize() const { return iClassSize; }
-    inline void SetClassSize( TUint aValue ) { iClassSize = aValue; }
 
 private: // Data members
     TBuf8< KMaxFullName * 2 > iChunkName;
+public:
     TUint iChunkSize;
     TAny* iChunkHandle;
     TAny* iChunkBaseAddress;
     TBool iDebugAllocator;
-    TUint iHeaderSizeFree;
-    TUint iHeaderSizeAllocated;
     TBool iSharedHeap;
     TBool iIsUserThread;
     TUint iVTable;
-    TUint iClassSize;
+	TUint iHeapSize; // Committed size - generally the same as iChunkSize (except maybe for kernel heap)
+	TAny* iAllocatorAddress; // replacement for things using the RHeap base address
+	TUint iMinHeapSize; // Minimum committed size
+	TUint iMaxHeapSize; // Max committed size
     };
-
-
-
-
-
 
 
 /**
@@ -413,15 +306,17 @@ public: // API
     inline TMemSpyHeapMetaDataRHeap& MetaData() { return iMetaData; }
     inline const TMemSpyHeapMetaDataRHeap& MetaData() const { return iMetaData; }
     //
-    inline TMemSpyHeapObjectDataRHeap& ObjectData() { return iObjectData; }
-    inline const TMemSpyHeapObjectDataRHeap& ObjectData() const { return iObjectData; }
+    //inline TMemSpyHeapObjectDataRHeap& ObjectData() { return iObjectData; }
+    //inline const TMemSpyHeapObjectDataRHeap& ObjectData() const { return iObjectData; }
     //
     inline TMemSpyHeapStatisticsRHeap& Statistics() { return iStatistics; }
     inline const TMemSpyHeapStatisticsRHeap& Statistics() const { return iStatistics; }
 
+	inline TInt Overhead() const { return iMetaData.iHeapSize - iStatistics.StatsAllocated().TypeSize() - iStatistics.iCommittedFreeSpace; }
+
 private: // Data members
     TMemSpyHeapMetaDataRHeap iMetaData;
-    TMemSpyHeapObjectDataRHeap iObjectData;
+    //TMemSpyHeapObjectDataRHeap iObjectData;
     TMemSpyHeapStatisticsRHeap iStatistics;
     };
 

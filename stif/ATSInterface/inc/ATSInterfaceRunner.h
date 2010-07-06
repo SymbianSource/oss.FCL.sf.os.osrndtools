@@ -253,5 +253,5 @@ class CActiveTimer
     };
 
 #endif // ATS_INTERFACE_RUNNER_H
-    
+
 // End of File

@@ -48,6 +48,7 @@ enum THtiCommand
     EHtiHideConsole    = 0x09,
     EHtiInstanceId     = 0x0A,
     EHtiDebugPrint     = 0x0B,
+    EHtiRestartServices= 0x0C,
     EHtiError          = 0xFF
     };
 
@@ -70,6 +71,8 @@ const static TInt KHtiServiceListRecordLength = KHtiServiceNameLength + 4;
 _LIT( KHtiWatchDogMatchPattern, "HtiWatchDog*" );
 _LIT( KHtiDeviceRebootExeOS,    "HtiDeviceRebootOS.exe" );
 _LIT( KHtiDeviceRebootExeUI,    "HtiDeviceRebootUI.exe" );
+_LIT( KHtiRestartExeName,       "HtiRestart.exe");
+
 _LIT( KParamNormalRfs, "rfsnormal" );
 _LIT( KParamDeepRfs,   "rfsdeep" );
 
@@ -876,6 +879,7 @@ void CHtiDispatcher::HandleSystemMessageL( const TDesC8& aMessage )
                         User::LeaveIfError(DispatchOutgoingErrorMessage( KErrArgument,
                                       KErrDescrInvalidParameter,
                                       KHtiSystemServiceUid ) );
+                        break;
                         }
                     ShutdownAndRebootDeviceL();
                     }
@@ -894,6 +898,43 @@ void CHtiDispatcher::HandleSystemMessageL( const TDesC8& aMessage )
                     }
                     break;
 
+                case EHtiRestartServices:
+                    {
+                    HTI_LOG_TEXT("RESTARTSERVISE");
+                    if(aMessage.Length() != 1 && aMessage.Length() != 5)
+                        {
+                        User::LeaveIfError(DispatchOutgoingErrorMessage( KErrArgument,
+                                                    KErrDescrInvalidParameter,
+                                                    KHtiSystemServiceUid ) );
+                        break;
+                        }
+                    
+                    //stop all requests
+                    //cancel just incoming request
+                    //after all outgoing messages sent system will go down
+                    iListener->Cancel();
+
+                    // kill the watchdog, so HTI stays stopped
+                    KillHtiWatchDogL();
+                    
+                    TUint milliseconds = 0;
+                    if(aMessage.Length() == 5)
+                        {
+                        milliseconds = aMessage[1] + ( aMessage[2] << 8 )
+                                + ( aMessage[3] << 16 )
+                                + ( aMessage[4] << 24 );
+                        }
+                    
+                    TBuf<20> buf;
+                    buf.Format(_L("%d"), milliseconds * 1000);
+                    
+                    RProcess htiProcess;
+                    User::LeaveIfError( htiProcess.Create(
+                            KHtiRestartExeName, buf ) );
+                    htiProcess.Resume();
+                    htiProcess.Close();
+                    break;
+                    }
                 case EHtiReset:
                     {
                     HTI_LOG_TEXT( "RESET" );

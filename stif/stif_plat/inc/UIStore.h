@@ -268,6 +268,14 @@ class CUIStore
         IMPORT_C TInt LoadTestSet( const TDesC& aSetName );
 
         /**
+        * Unload active test set.
+        *
+        * Returns Symbian OS error code.
+        */
+        IMPORT_C TInt UnloadTestSet( const TDesC& aSetName );
+        
+        
+        /**
         * Load saved test cases.
         *
         * Returns Symbian OS error code.

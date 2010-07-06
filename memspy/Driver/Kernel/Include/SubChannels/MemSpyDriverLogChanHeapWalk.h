@@ -61,7 +61,7 @@ private: // Internal methods
     const TMemSpyDriverInternalWalkHeapParamsCell* CellInfoForSpecificAddress( TAny* aAddress ) const;
 
 private: // Heap walker callback
-    TBool WalkerHandleHeapCell( TInt aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
+    TBool WalkerHandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
 
 private:
     TBool iHeapWalkInitialised;
@@ -85,7 +85,7 @@ public:
 
 public: // From MHeapWalkerObserver
     void HandleHeapWalkInit() { }
-    TBool HandleHeapCell( TInt aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
+    TBool HandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
         {
         return iChannel.WalkerHandleHeapCell( aCellType, aCellAddress, aLength, aNestingLevel, aAllocNumber );
         }

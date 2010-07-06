@@ -216,15 +216,8 @@ TBool CMemSpyEngineHelperSysMemTrackerEntryHeap::HasHeapSizeChanged() const
 
 TBool CMemSpyEngineHelperSysMemTrackerEntryHeap::HaveFreeCellsChanged() const
     {
-    TBool changed = 
-        ( iCurrent.AsRHeap().ObjectData().iFree.next != iLast.AsRHeap().ObjectData().iFree.next ) ||
-        ( iCurrent.AsRHeap().ObjectData().iFree.len != iLast.AsRHeap().ObjectData().iFree.len );
-    //
-    if ( !changed )
-        {
-        changed |= ( iCurrent.AsRHeap().Statistics().StatsFree().TypeCount() != iLast.AsRHeap().Statistics().StatsFree().TypeCount() );
-        changed |= ( iCurrent.AsRHeap().Statistics().StatsFree().SlackSpaceCellSize() != iLast.AsRHeap().Statistics().StatsFree().SlackSpaceCellSize() );
-        }
+    TBool changed = ( iCurrent.AsRHeap().Statistics().StatsFree().TypeCount() != iLast.AsRHeap().Statistics().StatsFree().TypeCount() ) ||
+		( iCurrent.AsRHeap().Statistics().StatsFree().TypeSize() != iLast.AsRHeap().Statistics().StatsFree().TypeSize() );
     //
     return changed;
     }
@@ -296,7 +289,7 @@ TMemSpyEngineSysMemTrackerType CMemSpyEngineHelperSysMemTrackerCycleChangeHeap::
 
 void CMemSpyEngineHelperSysMemTrackerCycleChangeHeap::OutputHeaderL( CMemSpyEngineOutputSink& aSink, CMemSpyEngineHelperSysMemTrackerCycle& /*aCycle*/ )
     {
-    _LIT( KHeaderHeap, "Type, Thread, Chunk, Handle, Base Addr, Size, Min, Max, 1st Free Addr, 1st Free Len, Alloc Count, Alloc Space, Free Count, Free Space, Free Slack, F.Largest, A.Largest, Attribs");
+    _LIT( KHeaderHeap, "Type, Thread, Chunk, Handle, Heap Addr, Size, Min, Max, 1st Free Addr, 1st Free Len, Alloc Count, Alloc Space, Free Count, Free Space, Free Slack, F.Largest, A.Largest, Attribs");
     aSink.OutputLineL( KHeaderHeap );
     }
 
@@ -315,7 +308,6 @@ void CMemSpyEngineHelperSysMemTrackerCycleChangeHeap::OutputContentL( CMemSpyEng
     TPtr pBuf(buf->Des());
 
     const TMemSpyHeapMetaDataRHeap& metaData = iCurrent.AsRHeap().MetaData();
-    const TMemSpyHeapObjectDataRHeap& objectData = iCurrent.AsRHeap().ObjectData();
     const TMemSpyHeapStatisticsRHeap& stats = iCurrent.AsRHeap().Statistics();
 
     // Strip any process & thread
@@ -326,12 +318,12 @@ void CMemSpyEngineHelperSysMemTrackerCycleChangeHeap::OutputContentL( CMemSpyEng
                  iThreadName, 
                  &pChunkName,
                  metaData.ChunkHandle(),
-                 objectData.Base(),
+                 /*objectData.Base(),*/ metaData.iAllocatorAddress,
                  metaData.ChunkSize(),
-                 objectData.iMinLength,
-                 objectData.iMaxLength,
-                 objectData.iFree.next,
-                 objectData.iFree.len,
+                 /*objectData.iMinLength,*/ metaData.iMinHeapSize,
+                 /*objectData.iMaxLength,*/ metaData.iMaxHeapSize,
+                 /*objectData.iFree.next,*/ NULL, //TODO
+                 /*objectData.iFree.len,*/ 0,
                  stats.StatsAllocated().TypeCount(),
                  stats.StatsAllocated().TypeSize(),
                  stats.StatsFree().TypeCount(),
@@ -371,18 +363,22 @@ void CMemSpyEngineHelperSysMemTrackerCycleChangeHeap::OutputDataL( CMemSpyEngine
         {
         // Starts a data Stream
         aCycle.DataStreamBeginL( aSink, *iThreadName );
+        
+        TInt err = KErrNone;
 
         if  ( IsKernel() )
             {
-            engine.HelperHeap().OutputHeapDataKernelL( KMemSpyEngineSinkDoNotCreateOwnDataStream );
+            TRAP(err, engine.HelperHeap().OutputHeapDataKernelL( KMemSpyEngineSinkDoNotCreateOwnDataStream ));
             }
         else if ( thread )
             {
-            engine.HelperHeap().OutputHeapDataUserL( *thread, KMemSpyEngineSinkDoNotCreateOwnDataStream ); 
+            TRAP(err, engine.HelperHeap().OutputHeapDataUserL( *thread, KMemSpyEngineSinkDoNotCreateOwnDataStream )); 
             }
 
         // End the stream (commit the file)
         aCycle.DataStreamEndL( aSink );
+        
+        User::LeaveIfError(err);
         }
     }
 

@@ -52,6 +52,11 @@
 #include <memspy/engine/memspyenginehelperwindowserver.h>
 #include <memspy/engine/memspyenginehelpercondvar.h>
 
+#ifdef _DEBUG
+#define LOG(args...) RDebug::Printf(args)
+#else
+#define LOG(args...)
+#endif
 
 CMemSpyEngineImp::CMemSpyEngineImp( RFs& aFsSession, CMemSpyEngine& aEngine )
 :   iFsSession( aFsSession ), iEngine( aEngine )
@@ -61,20 +66,16 @@ CMemSpyEngineImp::CMemSpyEngineImp( RFs& aFsSession, CMemSpyEngine& aEngine )
 
 CMemSpyEngineImp::~CMemSpyEngineImp()
     {
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - START" );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - START" );
 
     if  ( iMidwife )
         {
         iMidwife->RemoveObserver( *this );
         }
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - deleting helpers..." );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - deleting helpers..." );
     delete iHelperSysMemTracker;
-    //delete iServer;
+    delete iServer;
     delete iHelperKernelContainers;
     delete iHelperFbServ;
     delete iHelperHeap;
@@ -94,54 +95,36 @@ CMemSpyEngineImp::~CMemSpyEngineImp()
     
     iHelperWindowServerLoader.Close();
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - deleting utilities..." );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - deleting utilities..." );
     delete iChunkWatcher;
     delete iUndertaker;
     delete iMidwife;
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - destroying containers..." );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - destroying containers..." );
     iContainers.ResetAndDestroy();
     iContainers.Close();
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - destroying driver..." );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - destroying driver..." );
     if  ( iMemSpyDriver )
         {
         iMemSpyDriver->Close();
         delete iMemSpyDriver;
         }
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - destroying sink..." );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - destroying sink..." );
     delete iSink;
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::~CMemSpyEngineImp() - END" );
-#endif
+    LOG( "CMemSpyEngineImp::~CMemSpyEngineImp() - END" );
     }
 
 
-void CMemSpyEngineImp::ConstructL( TBool aStartServer )
+void CMemSpyEngineImp::ConstructL()
     {
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructL() - START" );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructL() - START" );
     //
     iFsSession.SetSessionPath( _L("\\") );
     
-    // Starting the server before the driver connection is made
-    // ensures that only one instance of MemSpy can run (either the S60
-    // UI or the console UI ).
-    if (aStartServer)
-    	{
-		iServer = CMemSpyEngineServer::NewL( iEngine );
-    	}
+    iServer = CMemSpyEngineServer::NewL( iEngine );
     
     iMemSpyDriver = new(ELeave) RMemSpyDriverClient();
     const TInt error = Driver().Open();
@@ -166,96 +149,60 @@ void CMemSpyEngineImp::ConstructL( TBool aStartServer )
     iHelperSysMemTracker = CMemSpyEngineHelperSysMemTracker::NewL( iEngine );
     iMidwife->AddObserverL( *this );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructL() - END" );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructL() - END" );
     }
 
 
 void CMemSpyEngineImp::ConstructHelpersL()
     {
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - START" );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - START" );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Heap..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Heap..." );
     iHelperHeap = CMemSpyEngineHelperHeap::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Stack..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Stack..." );
     iHelperStack = CMemSpyEngineHelperStack::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Code Segments..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Code Segments..." );
     iHelperCodeSegment = CMemSpyEngineHelperCodeSegment::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Chunk..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Chunk..." );
     iHelperChunk = CMemSpyEngineHelperChunk::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Thread..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Thread..." );
     iHelperThread = CMemSpyEngineHelperThread::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Process..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Process..." );
     iHelperProcess = CMemSpyEngineHelperProcess::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Server..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Server..." );
     iHelperServer = CMemSpyEngineHelperServer::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - AO..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - AO..." );
     iHelperActiveObject = CMemSpyEngineHelperActiveObject::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - Kernel Containers..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - Kernel Containers..." );
     iHelperKernelContainers = CMemSpyEngineHelperKernelContainers::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - File System..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - File System..." );
     iHelperFileSystem = CMemSpyEngineHelperFileSystem::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - ECOM..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - ECOM..." );
     iHelperECom = CMemSpyEngineHelperECom::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - FBSERV..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - FBSERV..." );
     iHelperFbServ = CMemSpyEngineHelperFbServ::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - ROM..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - ROM..." );
     iHelperROM = CMemSpyEngineHelperROM::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - RAM..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - RAM..." );
     iHelperRAM = CMemSpyEngineHelperRAM::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - WindowServer..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - WindowServer..." );
     
     TInt err = iHelperWindowServerLoader.Load( _L("memspywindowserverhelper.dll") );
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - WindowServer load err: %d", err );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - WindowServer load err: %d", err );
     if ( !err )
         {
 #ifdef __WINS__ // ordinal is different 
@@ -265,18 +212,19 @@ void CMemSpyEngineImp::ConstructHelpersL()
 #endif
         if ( entry != NULL )
             {
-            iHelperWindowServer = (MMemSpyEngineHelperWindowServer*) entry();
+			typedef MMemSpyEngineHelperWindowServer* (*TEntryFn)(void);
+			TRAP(err, iHelperWindowServer = ((TEntryFn)entry)());
+			if (err)
+				{
+				LOG("err from memspywindowserverhelper.dll - %d", err);
+				}
             }
         }
     
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - CondVar..." );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - CondVar..." );
     iHelperCondVar = CMemSpyEngineHelperCondVar::NewL( iEngine );
 
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::ConstructHelpersL() - END" );
-#endif
+    LOG( "CMemSpyEngineImp::ConstructHelpersL() - END" );
     }
 
 
@@ -337,12 +285,14 @@ TMemSpySinkType CMemSpyEngineImp::SinkType()
     return iSink->Type();
     }
 
-
 void CMemSpyEngineImp::InstallSinkL( TMemSpySinkType aType )
+	{
+	InstallSinkL( aType, KNullDesC );
+	}
+
+void CMemSpyEngineImp::InstallSinkL( TMemSpySinkType aType, const TDesC& aRootFolder )
     {
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::InstallSinkL() - START - switching sink from %d to %d...", (iSink != NULL ? iSink->Type() : -1), aType );
-#endif
+    LOG( "CMemSpyEngineImp::InstallSinkL() - START - switching sink from %d to %d...", (iSink != NULL ? iSink->Type() : -1), aType );
     //
     CMemSpyEngineOutputSink* sink = NULL;
     //
@@ -352,16 +302,14 @@ void CMemSpyEngineImp::InstallSinkL( TMemSpySinkType aType )
         sink = CMemSpyEngineOutputSinkDebug::NewL( iEngine );
         break;
     case ESinkTypeFile:
-        sink = CMemSpyEngineOutputSinkFile::NewL( iEngine );
+        sink = CMemSpyEngineOutputSinkFile::NewL( iEngine, aRootFolder );
         break;
         }
     //
     delete iSink;
     iSink = sink;
     //
-#ifdef _DEBUG
-    RDebug::Printf( "CMemSpyEngineImp::InstallSinkL() - END - sink type: %d", iSink->Type() );
-#endif
+    LOG( "CMemSpyEngineImp::InstallSinkL() - END - sink type: %d", iSink->Type() );
     }
 
 

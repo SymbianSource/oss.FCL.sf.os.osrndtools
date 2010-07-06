@@ -29,9 +29,6 @@
 // Commandline includes
 #include "../CommandLine/group/bld.inf"
 
-// Console UI
-#include "../Console/group/bld.inf"
-
 // MemSpyServer
 #include "../MemSpyServer/group/bld.inf"
 

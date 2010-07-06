@@ -67,4 +67,5 @@ EXPORTS
 	?WalkHeapReadCellData@RMemSpyDriverClient@@QAEHPAXAAVTDes8@@H@Z @ 66 NONAME ; int RMemSpyDriverClient::WalkHeapReadCellData(void *, class TDes8 &, int)
 	?GetCondVarSuspendedThreads@RMemSpyDriverClient@@QAEHPAXPAPAXAAH@Z @ 67 NONAME ; int RMemSpyDriverClient::GetCondVarSuspendedThreads(void *, void * *, int &)
 	?GetCondVarSuspendedThreadInfo@RMemSpyDriverClient@@QAEHPAXAAVTMemSpyDriverCondVarSuspendedThreadInfo@@@Z @ 68 NONAME ; int RMemSpyDriverClient::GetCondVarSuspendedThreadInfo(void *, class TMemSpyDriverCondVarSuspendedThreadInfo &)
+	?GetHeapInfoUser@RMemSpyDriverClient@@QAEHAAVTMemSpyHeapInfo@@IAAV?$RArray@VTMemSpyDriverFreeCell@@@@H@Z @ 69 NONAME ; int RMemSpyDriverClient::GetHeapInfoUser(class TMemSpyHeapInfo &, unsigned int, class RArray<class TMemSpyDriverFreeCell> &, int)
 

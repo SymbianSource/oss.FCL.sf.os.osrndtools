@@ -380,6 +380,7 @@ CMemSpyEngineSinkMetaData::CMemSpyEngineSinkMetaData( TBool aOverwrite, TBool aU
 
 EXPORT_C CMemSpyEngineSinkMetaData::~CMemSpyEngineSinkMetaData()
     {
+	delete iRoot;
     delete iContext;
     delete iFolder;
     delete iExtension;
@@ -387,8 +388,9 @@ EXPORT_C CMemSpyEngineSinkMetaData::~CMemSpyEngineSinkMetaData()
     }
 
 
-void CMemSpyEngineSinkMetaData::ConstructL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, const TTime& aFolderTime )
+void CMemSpyEngineSinkMetaData::ConstructL( const TDesC& aRoot, const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, const TTime& aFolderTime )
     {
+	iRoot = aRoot.AllocL();
     iContext = aContext.AllocL();
     iFolder = aFolder.AllocL();
     iExtension = aExtension.AllocL();
@@ -407,15 +409,24 @@ EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL()
     return CMemSpyEngineSinkMetaData::NewL( KNullDesC, KNullDesC, KNullDesC, ETrue, ETrue );
     }
 
+EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL(  const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp )
+	{
+	return NewL( KNullDesC, aContext, aFolder, aExtension, aOverwrite, aUseFileTimeStamp );
+	}
 
-EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp )
+EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp, const TTime& aFolderTimeStamp )
+    {
+    return NewL( KNullDesC, aContext, aFolder, aExtension, aOverwrite, aUseFileTimeStamp, aFolderTimeStamp );
+    }
+
+EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL( const TDesC& aRoot, const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp )
     {
     // Create a dummy time, we'll clear it after ConstructL() returns...
     TTime now; now.HomeTime();
 
     CMemSpyEngineSinkMetaData* self = new(ELeave) CMemSpyEngineSinkMetaData( aOverwrite, aUseFileTimeStamp );
     CleanupStack::PushL( self );
-    self->ConstructL( aContext, aFolder, aExtension, now );
+    self->ConstructL( aRoot, aContext, aFolder, aExtension, now );
     CleanupStack::Pop( self );
 
     // Clear folder time stamp
@@ -423,14 +434,11 @@ EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL( const TDesC
     return self;
     }
 
-
-EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp, const TTime& aFolderTimeStamp )
+EXPORT_C CMemSpyEngineSinkMetaData* CMemSpyEngineSinkMetaData::NewL( const TDesC& aRoot, const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp, const TTime& aFolderTimeStamp )
     {
     CMemSpyEngineSinkMetaData* self = new(ELeave) CMemSpyEngineSinkMetaData( aOverwrite, aUseFileTimeStamp );
     CleanupStack::PushL( self );
-    self->ConstructL( aContext, aFolder, aExtension, aFolderTimeStamp );
+    self->ConstructL( aRoot, aContext, aFolder, aExtension, aFolderTimeStamp );
     CleanupStack::Pop( self );
     return self;
     }
-
-

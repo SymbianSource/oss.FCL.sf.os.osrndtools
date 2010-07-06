@@ -300,12 +300,11 @@ HBufC8* CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC( CMemSpyThread& aF
     // Get the heap info - we need this for verification purposes
     TMemSpyHeapInfo info;
     TInt err = iEngine.Driver().GetHeapInfoUser( info, aFbServThread.Id() );
-    if ( err == KErrNone && info.Type() != TMemSpyHeapInfo::ETypeRHeap )
+    if ( err == KErrNone && info.Type() == TMemSpyHeapInfo::ETypeUnknown )
         {
         err = KErrNotSupported;
         }
     User::LeaveIfError( err );
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC() - allocated cell header length is: %d", info.AsRHeap().MetaData().HeaderSizeAllocated() ));
 
     // Now walk the heap!
     err = iEngine.Driver().WalkHeapInit( aFbServThread.Id() );
@@ -324,13 +323,12 @@ HBufC8* CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC( CMemSpyThread& aF
             err = iEngine.Driver().WalkHeapNextCell( aFbServThread.Id(), cellType, cellAddress, cellLength, cellNestingLevel, cellAllocationNumber, cellHeaderSize, cellPayloadAddress );
             TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC() - cellIndex[%d] err: %d, cellLength: %d, cellAllocationNumber: %d, cellType: %d", cellIndex, err, cellLength, cellAllocationNumber, cellType));
 
-            if  ( err == KErrNone && cellType == EMemSpyDriverGoodAllocatedCell )
+            if  ( err == KErrNone && (cellType & EMemSpyDriverAllocatedCellMask))
                 {
                 // We know we are looking for a relatively large *allocated* cell.
-                if  ( cellLength >= KFbServExpectedMinimumCellSize && cellLength <= KFbServExpectedMaximumCellSize && cellType == EMemSpyDriverGoodAllocatedCell )
+                if  ( cellLength >= KFbServExpectedMinimumCellSize && cellLength <= KFbServExpectedMaximumCellSize )
                     {
-                    const TInt payloadLength = cellLength - info.AsRHeap().MetaData().HeaderSizeAllocated();
-                    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC() - cell was long enough. Full cell len: %d, header: %d, therefore dataLen: %d", cellLength, info.AsRHeap().MetaData().HeaderSizeAllocated(), payloadLength));
+                    const TInt payloadLength = cellLength;
 
                     // This is *probably* the right cell. Let's get the data and check.
                     HBufC8* data = HBufC8::NewLC( payloadLength );
@@ -345,9 +343,9 @@ HBufC8* CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC( CMemSpyThread& aF
                         //iEngine.Sink().OutputBinaryDataL( KHeapDumpDataFormat, pData.Ptr(), (const TUint8*) cellAddress, pData.Length() );
                     
                         // Check the data
-                        const TUint heapSize = info.AsRHeap().ObjectData().Size();
-                        const TUint heapBaseAddress = (TUint) info.AsRHeap().ObjectData().Base();
-                        const TBool correctHeapCellLocated = VerifyCorrectHeapCellL( *data, cellAddress, cellPayloadAddress, heapBaseAddress, heapSize );
+                        const TUint heapMaxSize = info.AsRHeap().MetaData().iMaxHeapSize;
+                        const TUint heapBaseAddress = (TUint) info.AsRHeap().MetaData().ChunkBaseAddress();
+                        const TBool correctHeapCellLocated = VerifyCorrectHeapCellL( *data, cellAddress, cellPayloadAddress, heapBaseAddress, heapMaxSize );
                         TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC() - verified: %d", correctHeapCellLocated));
 
                         if  ( correctHeapCellLocated )
@@ -404,7 +402,7 @@ void CMemSpyEngineHelperFbServ::ReadCObjectConInfoL( TAny* aCellAddress, RArray<
     TInt err = iEngine.Driver().WalkHeapGetCellInfo( aCellAddress, cellType, cellLength, cellNestingLevel, cellAllocationNumber, cellHeaderSize, cellPayloadAddress );
     TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - err: %d, cellAddress: 0x%08x, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, aCellAddress, cellLength, cellAllocationNumber, cellType));
 
-    if  ( err == KErrNone && cellType == EMemSpyDriverGoodAllocatedCell )
+	if (err == KErrNone && (cellType & EMemSpyDriverAllocatedCellMask))
         {
         // Check that the cell size meets our expectations - it should be a CObjectCon cell.
         const TInt expectedCellSize = sizeof(CObjectCon*) + cellHeaderSize;
@@ -520,7 +518,7 @@ HBufC8* CMemSpyEngineHelperFbServ::LocateBitmapArrayHeapCellDataLC( TAny*& aArra
     TInt err = iEngine.Driver().WalkHeapGetCellInfo( aArrayCellAddress, cellType, cellLength, cellNestingLevel, cellAllocationNumber, cellHeaderSize, cellPayloadAddress );
     TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::LocateCFbTopHeapCellDataLC() - err: %d, cellAddress: 0x%08x, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, aArrayCellAddress, cellLength, cellAllocationNumber, cellType));
 
-    if  ( err == KErrNone && cellType == EMemSpyDriverGoodAllocatedCell )
+    if (err == KErrNone && (cellType & EMemSpyDriverAllocatedCellMask))
         {
         // Check that the cell size meets our expectations. 
         // The cell should be a very specific length
@@ -577,13 +575,13 @@ void CMemSpyEngineHelperFbServ::ParseCellDataAndExtractHandlesL( const TDesC8& a
     }
 
 
-TBool CMemSpyEngineHelperFbServ::VerifyCorrectHeapCellL( const TDesC8& aData, TAny* aCellAddress, TAny* aPayloadAddress, TUint aHeapStartingAddress, TUint aHeapSize )
+TBool CMemSpyEngineHelperFbServ::VerifyCorrectHeapCellL( const TDesC8& aData, TAny* aCellAddress, TAny* aPayloadAddress, TUint aHeapStartingAddress, TUint aHeapMaxSize )
     {
     (void) aPayloadAddress;
     (void) aCellAddress;
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::VerifyCorrectHeapCellL() - START - aDataLen: %d, aCellAddress: 0x%08x, aPayloadAddress: 0x%08x, aHeapStartingAddress: 0x%08x, aHeapSize: %d", aData.Length(), aCellAddress, aPayloadAddress, aHeapStartingAddress, aHeapSize ));
+    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::VerifyCorrectHeapCellL() - START - aDataLen: %d, aCellAddress: 0x%08x, aPayloadAddress: 0x%08x, aHeapStartingAddress: 0x%08x, aHeapSize: %d", aData.Length(), aCellAddress, aPayloadAddress, aHeapStartingAddress, aHeapMaxSize ));
 
-    const TUint KFbServHeapCeilingAddress = aHeapStartingAddress + aHeapSize;
+    const TUint KFbServHeapCeilingAddress = aHeapStartingAddress + aHeapMaxSize;
 
     // Whether we can use this cell's data...
     TBool correctCell = EFalse;
@@ -746,7 +744,7 @@ CMemSpyEngineHelperFbServ::CBitmapObject* CMemSpyEngineHelperFbServ::GetBitmapOb
     TInt err = iEngine.Driver().WalkHeapGetCellInfo( aCellAddress, cellType, cellLength, cellNestingLevel, cellAllocationNumber, cellHeaderSize, cellPayloadAddress );
     TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - err: %d, cellAddress: 0x%08x, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, aCellAddress, cellLength, cellAllocationNumber, cellType));
 
-    if  ( err == KErrNone && cellType == EMemSpyDriverGoodAllocatedCell )
+    if (err == KErrNone && (cellType & EMemSpyDriverAllocatedCellMask))
         {
         // Check that the cell size meets our expectations - it should be a CBitmapObject, but without the additional "this" pointer
         // which we have tacked onto the object.

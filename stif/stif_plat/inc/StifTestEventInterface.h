@@ -180,5 +180,5 @@ class TEventIf
 typedef TPckg<TEventIf> TEventIfPckg;
  
 #endif      // TESTEVENTINTERFACE_H
-            
+
 // End of File
