@@ -1106,6 +1106,4 @@ GLDEF_C TInt E32Main()
     return err;
     }
 
-//  End of File
-
 // End of File

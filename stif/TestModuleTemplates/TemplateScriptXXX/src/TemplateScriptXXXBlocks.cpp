@@ -160,3 +160,5 @@ TInt CTemplateScriptXXX::?member_function(
 // None
 
 //  [End of File] - Do not remove
+
+// End of File

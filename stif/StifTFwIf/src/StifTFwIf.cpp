@@ -1842,4 +1842,4 @@ void CStifTFw::DeleteData()
     iMasterArray.Reset();
     }
 
-//  End of File
+// End of File

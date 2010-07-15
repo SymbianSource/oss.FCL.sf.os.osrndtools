@@ -172,5 +172,5 @@ class TEvent
     };
 
 #endif      // TESTSERVEREVENT_H
-            
+
 // End of File

@@ -103,3 +103,5 @@ inline T* CStackDeprecated<T, StackOwnsEntry>::Last() const
 	
 
 #endif // __CSTACKDEPRECATED_INL__
+
+// End of File

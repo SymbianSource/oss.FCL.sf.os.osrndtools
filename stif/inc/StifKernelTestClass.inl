@@ -75,5 +75,5 @@ TInt RStifKernelTestClass::RunMethod( const TDesC8&  aMethodName,
     }
 
 #endif      // STIFKERNELTESTCLASS_INL
-            
+
 // End of File

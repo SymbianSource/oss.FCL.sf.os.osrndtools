@@ -186,6 +186,10 @@ TInt DMemSpyDriverLogChanStack::GetStackData( TMemSpyDriverInternalStackDataPara
                 stackSize = threadAdaption.GetSupervisorStackSize( *thread );
                 stackBase = threadAdaption.GetSupervisorStackBase( *thread );
                 }
+            //We have a stack so setting it as available
+            if(stackSize!=0 &&  stackBase!=0)
+                stackAvailable=ETrue;
+            
             TRACE( Kern::Printf("DMemSpyDriverLogChanStack::GetStackData() - stackAvailable: %d", stackAvailable ));
             //           
             if  ( stackAvailable )

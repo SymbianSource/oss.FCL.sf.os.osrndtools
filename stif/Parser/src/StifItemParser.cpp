@@ -1244,4 +1244,4 @@ EXPORT_C CStifItemParser::TParsingType CStifItemParser::ParsingType()
 
 // ================= OTHER EXPORTED FUNCTIONS =================================
 
-//  End of File
+// End of File

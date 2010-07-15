@@ -1031,7 +1031,53 @@ EXPORT_C TInt CUIStore::CreateTestSet( const TDesC& aSetName )
 */ 
 EXPORT_C TInt CUIStore::RemoveTestSet( const TDesC& aSetName )
     {
+    TInt err = UnloadTestSet( aSetName );
+    if ( err != KErrNone )
+        {
+        return err;
+        }
     
+    TFileName setfile;
+    setfile.Append(KUIStoreDefaultDir);
+    setfile.Append(aSetName);
+    RFs fs;
+    err = fs.Connect();
+    if( err != KErrNone )
+        {
+        fs.Close();
+        return err;
+        }
+    err = fs.Delete( setfile );
+    if ( err != KErrNone )
+        {
+        fs.Close();
+        return err;    
+        }
+    
+    return KErrNone;   
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CUIStore
+
+    Method: UnloadTestSet
+
+    Description: Unloads active test set.
+
+    Parameters: TDesC& aSetName: in: test set name (Max length is KMaxName)
+    
+    Return Values: Symbian OS error code
+
+    Errors/Exceptions: None
+
+    Status: Draft
+
+-------------------------------------------------------------------------------
+*/ 
+EXPORT_C TInt CUIStore::UnloadTestSet( const TDesC& aSetName )
+    {    
     TPtrC setName;
     TFileName tmp;
     TInt ret = ParseTestSetName( aSetName, setName, tmp );
@@ -1070,25 +1116,8 @@ EXPORT_C TInt CUIStore::RemoveTestSet( const TDesC& aSetName )
         }
     
     delete setInfo;
-    TFileName setfile;
-    setfile.Append(KUIStoreDefaultDir);
-    setfile.Append(aSetName);
-    RFs fs;
-    TInt err=fs.Connect();
-    if(err!=KErrNone)
-    {
-    fs.Close();
-    return err;
-    }
-    err=fs.Delete(setfile);
-    if(err!=KErrNone)
-    {
-    fs.Close();
-    return err;    
-    }
     
-    return KErrNone;
-    
+    return KErrNone;    
     }
 
 /*

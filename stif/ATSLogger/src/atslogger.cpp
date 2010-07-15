@@ -1113,5 +1113,4 @@ EXPORT_C const TPtrC CAtsLogger::ErrorMessage(const TInt& aError)
 		}
 	}
 
-
 // End of File

@@ -19,9 +19,7 @@
 #define MEMSPYDRIVEROBJECTSSHAREDRHEAP_H
 
 // System includes
-#include <e32cmn.h>
-#include <e32ldr.h>
-#include <e32ldr_private.h>
+#include <u32std.h>
 #ifndef __KERNEL_MODE__
 #include <e32debug.h>
 #endif
@@ -93,7 +91,12 @@ public: // From RHeap
 	TInt iAlign;
 	TInt iMinCell;
 	TInt iPageSize;
+#ifdef __SYMBIAN_KERNEL_HYBRID_HEAP__
+	struct SCell { TInt len; SCell* next };
+    SCell iFree;
+#else
     RHeap::SCell iFree;
+#endif
 	TInt iNestingLevel;
 	TInt iAllocCount;
     RAllocator::TAllocFail iFailType;

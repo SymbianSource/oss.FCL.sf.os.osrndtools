@@ -1,7 +1,7 @@
 ===============================================================================
 
-RELEASE NOTES - MEMSPY v1.2.0
-RELEASED 27th October 2009 
+RELEASE NOTES - MEMSPY v1.2.1
+RELEASED 15th June 2010 
 
 SUPPORTS S60 5.0+
 
@@ -28,17 +28,10 @@ Main Features:
 
 ===============================================================================
 
-What's New in v1.2.0
+What's New in v1.2.1
 ====================
-- Feature: Tracking modes introduced for simplify System Wide Memory Tracking
-  settings.
-- Feature: System Wide Memory Tracking categories can now be selected.
-- Feature: Heap data captured during System Wide Memory Tracking can be
-  filtered by thread name.
-- Feature: Shared heaps can now be detected with S60 UI and trace output.
-- Feature: Batch files for running MemSpy functions can now be executed from
-  command line.
-- Change: Command line interface documented in User's Guide.
+- Fix: Stack dumps fixed.
+
 
 ===============================================================================
 
@@ -100,6 +93,17 @@ Known Issues:
 
 Version History:
 ================
+Version 1.2.0 - 27th October 2009
+------------------------------
+- Feature: Tracking modes introduced for simplify System Wide Memory Tracking
+  settings.
+- Feature: System Wide Memory Tracking categories can now be selected.
+- Feature: Heap data captured during System Wide Memory Tracking can be
+  filtered by thread name.
+- Feature: Shared heaps can now be detected with S60 UI and trace output.
+- Feature: Batch files for running MemSpy functions can now be executed from
+  command line.
+- Change: Command line interface documented in User's Guide.
 
 Version 1.1.0 - 22nd July 2009
 ------------------------------

@@ -967,7 +967,12 @@ TInt DMemSpyDriverLogChanHeapBase::OpenKernelHeap( RMemSpyDriverRHeapKernelFromC
     TRACE_KH( Kern::Printf("DMemSpyDriverLogChanHeapBase::OpenKernelHeap(CP) - open err: %d", r ) );
     if  ( r == KErrNone )
         {
+#ifdef __SYMBIAN_KERNEL_HYBRID_HEAP__
+		// RAllocator::Size() not exported on hybrid heap
+		const TInt heapSize = heap->DebugFunction(RAllocator::EGetSize);
+#else
         const TInt heapSize = heap->Size();
+#endif
         TRACE_KH( Kern::Printf("DMemSpyDriverLogChanHeapBase::OpenKernelHeap(CP) - heapSize: %d, heap: 0x%08x, chunkBase: 0x%08x", heapSize, heap, chunk->Base() ) );
 
         // Make a new chunk that we can copy the kernel heap into. We cannot lock the system the entire time
@@ -1010,7 +1015,7 @@ TInt DMemSpyDriverLogChanHeapBase::OpenKernelHeap( RMemSpyDriverRHeapKernelFromC
                 TRACE_KH( Kern::Printf("DMemSpyDriverLogChanHeapBase::OpenKernelHeap(CP) - heapCopyChunk->iSize: 0x%08x, heapCopyChunk->iBase: 0x%08x, heapCopyChunkAddress: 0x%08x, physicalAddress: 0x%08x", heapCopyChunk->iSize, heapCopyChunk->iBase, heapCopyChunkAddress, physicalAddress));
 
                 NKern::LockSystem();
-                const TUint32 copyLength = Min( heap->Size(), heapSize );
+                const TUint32 copyLength = heapSize; // TODO Min( heap->Size(), heapSize );
 
                 TRACE_KH( Kern::Printf("DMemSpyDriverLogChanHeapBase::OpenKernelHeap(CP) - trying to copy %d (vs orig estimate of %d) bytes from kernel allocator address: 0x%08x", copyLength, heapSize, heap->Base() ));
                 memcpy( (TUint8*) heapCopyChunkAddress, heap, copyLength );

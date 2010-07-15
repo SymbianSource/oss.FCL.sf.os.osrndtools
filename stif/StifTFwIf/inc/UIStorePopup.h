@@ -178,5 +178,5 @@ class CUIStorePopup
 
 
 #endif // STIF_TFW_IF_REMOTE_H
-    
+
 // End of File

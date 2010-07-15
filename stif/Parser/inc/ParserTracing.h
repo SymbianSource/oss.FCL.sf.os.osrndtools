@@ -43,5 +43,5 @@ const TUint KDebugLevel      = ( KError );
 #endif
 
 #endif // STIFPARSERTRACING_H
-    
+
 // End of File

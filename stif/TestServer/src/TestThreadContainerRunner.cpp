@@ -531,6 +531,8 @@ void CTestThreadContainerRunner::RunL()
 		    delete iTestThreadContainer;
 			}
 			break;
+		case ENone:
+			break;
 		}
 		
 	iCurrentOperation = ENone;

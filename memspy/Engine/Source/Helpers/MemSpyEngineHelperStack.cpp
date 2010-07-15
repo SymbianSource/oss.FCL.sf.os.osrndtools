@@ -250,22 +250,36 @@ EXPORT_C void CMemSpyEngineHelperStack::OutputStackDataL( const CMemSpyThread& a
 
         if  ( r == KErrNone )
             {
-            while ( r == KErrNone )
-                {
-                iEngine.Sink().OutputBinaryDataL( KStackDataPrefix, pData.Ptr(), (const TUint8*) info.iUserStackBase, pData.Length() );
-                //
-                if  ( remaining > 0 )
+            if ( aType == EMemSpyDriverDomainUser ) {
+                while ( r == KErrNone )
                     {
-                    info.iUserStackBase += pData.Length();
-                    r = iEngine.Driver().GetStackDataNext( aThread.Id(), pData, remaining, aType, aEntireStack );
+                    iEngine.Sink().OutputBinaryDataL( KStackDataPrefix, pData.Ptr(), (const TUint8*) info.iUserStackBase, pData.Length() );
+                    //
+                    if  ( remaining > 0 )
+                        {
+                        info.iUserStackBase += pData.Length();
+                        r = iEngine.Driver().GetStackDataNext( aThread.Id(), pData, remaining, aType, aEntireStack );
+                        }
+                    else
+                        {
+                        break;
+                        }
                     }
-                else
-                    {
-                    break;
-                    }
-                }
             }
-
+            else if ( aType == EMemSpyDriverDomainKernel ) {
+                while ( r == KErrNone ) {
+                
+                    iEngine.Sink().OutputBinaryDataL( KStackDataPrefix, pData.Ptr(), (const TUint8*) info.iSupervisorStackBase, pData.Length() );
+                    //
+                    if  ( remaining > 0 ) {
+                        info.iSupervisorStackBase += pData.Length();
+                        r = iEngine.Driver().GetStackDataNext( aThread.Id(), pData, remaining, aType, aEntireStack );
+                    }
+                    else {
+                         break;
+                    }
+               }
+            }
         }
     CleanupStack::PopAndDestroy( data );
 
@@ -276,6 +290,7 @@ EXPORT_C void CMemSpyEngineHelperStack::OutputStackDataL( const CMemSpyThread& a
     iEngine.Sink().OutputLineFormattedL( KMemSpyMarkerStackData, &KMemSpySinkTagClose, (TUint) aThread.Id() );
     iEngine.Sink().DataStreamEndL();
     }
+}    
 
 
 EXPORT_C void CMemSpyEngineHelperStack::OutputStackInfoForDeviceL()

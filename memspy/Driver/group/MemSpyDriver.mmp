@@ -83,5 +83,4 @@ MACRO           MCL_FIND_HANDLES
     MACRO       MCL_DOBJECTIX_DUPLICATION
 #endif
 
-
 #include <kernel/kern_ext.mmh>

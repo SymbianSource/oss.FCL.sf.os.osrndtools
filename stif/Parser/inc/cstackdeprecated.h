@@ -52,3 +52,5 @@ public:
 #pragma warning ( default : 4127 ) // conditional expression is constant
 
 #endif // __CSTACK_HDEPRECATED__
+
+// End of File

@@ -86,3 +86,5 @@ STIF_TESTDEFINE(test1)
 /**
  * END OF TEST CASES SECTION
  */
+
+// End of File

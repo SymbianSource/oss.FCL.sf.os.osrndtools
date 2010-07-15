@@ -274,7 +274,6 @@ NONSHARABLE_CLASS(CTCTestCase)
         CTCTestCase( CTestCombiner* testCombiner,
                      TInt aExpectedResult,
                      TFullTestResult::TCaseExecutionResult aCategory,
-                     const TDesC& aTestCaseArguments,
                      CTCTestModule* aModule ); //--PYTHON--
 
         /**
@@ -598,5 +597,5 @@ NONSHARABLE_CLASS(CTCTestModule)
     };
     
 #endif        // TESTCASE_H  
-                
+
 // End of File

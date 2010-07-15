@@ -10,22 +10,23 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
-* 
-* Description: STIF version declaration
+*
+* Description:  Build information file for HtiRestart
 *
 */
 
-#ifndef VERSION_H_
-#define VERSION_H_
 
-#define STIF_MAJOR_VERSION 7
-#define STIF_MINOR_VERSION 3
-#define STIF_BUILD_VERSION 35
+PRJ_PLATFORMS
 
-#define STIF_REL_DATE "15th June 2010"
+DEFAULT
 
-#define TO_UNICODE(text) _L(text) 
+PRJ_EXPORTS
 
-#endif /*VERSION_H_*/
+PRJ_TESTEXPORTS
+
+PRJ_MMPFILES
+HtiRestart.mmp
+
+PRJ_TESTMMPFILES
 
 // End of File

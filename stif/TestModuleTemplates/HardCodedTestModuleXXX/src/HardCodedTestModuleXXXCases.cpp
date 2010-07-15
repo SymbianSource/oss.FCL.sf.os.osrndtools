@@ -268,3 +268,5 @@ TInt CHardCodedTestModuleXXX::LoopTest( TTestResult& aResult )
     }
 */
 //  [End of File] - do not remove
+
+// End of File

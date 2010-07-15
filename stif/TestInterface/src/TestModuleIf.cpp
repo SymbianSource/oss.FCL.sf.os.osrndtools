@@ -1743,4 +1743,4 @@ EXPORT_C TInt CSTIFTestMeasurement::Stop()
 
     }
 
-//  End of File
+// End of File
