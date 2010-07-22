@@ -22,11 +22,11 @@
 
 // User includes
 #include "MemSpyDriverOpCodes.h"
-#include "RBuildQueryableHeap.h"
 #include <memspy/driver/memspydriverconstants.h>
 #include <memspy/driver/memspydriverobjectsshared.h>
 #include "MemSpyDriverStreamReaderImp.h"
 #include "MemSpyDriverObjectsInternal.h"
+#include "heaputils.h"
 
 // Constants
 const TInt KMemSpyClientBufferGrowSize = 0x1000 * 8; // 32kb
@@ -511,7 +511,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
             TMemSpyHeapInfoRHeap& rHeapInfo = aInfo.AsRHeap();
             TMemSpyHeapMetaDataRHeap& metaData = rHeapInfo.MetaData();
             metaData.SetVTable( RHeapVTable() );
-            metaData.SetClassSize( sizeof( RHeap ) );
+            //metaData.SetClassSize( sizeof( RHeap ) );
             }
         }
     else if ( r == KErrNotSupported )
@@ -523,9 +523,14 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
 	return r;
     }
 
-
 EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUint aTid, RArray< TMemSpyDriverFreeCell >& aFreeCells )
-    {
+	{
+	return GetHeapInfoUser(aInfo, aTid, aFreeCells, EFalse);
+	}
+
+// For the record I don't think this function should be exported, but since the one above was I'm going with the flow. -TomS
+EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, TUint aTid, RArray<TMemSpyDriverCell>& aCells, TBool aCollectAllocatedCellsAsWellAsFree)
+	{
     TMemSpyDriverInternalHeapRequestParameters params;
     //
     params.iTid = aTid;
@@ -533,8 +538,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
     params.iDebugAllocator = DebugEUser();
     params.iMasterInfo = &aInfo;
     params.iBuildFreeCellList = ETrue;
+	params.iBuildAllocCellList = aCollectAllocatedCellsAsWellAsFree;
+
     //
-    aFreeCells.Reset();
+    aCells.Reset();
     ResetStreamBuffer();
 	TInt r = DoControl( EMemSpyDriverOpCodeHeapInfoGetUser, &params );
 	//
@@ -548,7 +555,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
             TMemSpyHeapInfoRHeap& rHeapInfo = aInfo.AsRHeap();
             TMemSpyHeapMetaDataRHeap& metaData = rHeapInfo.MetaData();
             metaData.SetVTable( RHeapVTable() );
-            metaData.SetClassSize( sizeof( RHeap ) );
+            //metaData.SetClassSize( sizeof( RHeap ) );
             }
 
         // Resize transfer buffer to make room for free cells. We only make the buffer
@@ -561,10 +568,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
         // Now fetch the heap data
         if  ( r == KErrNone )
             {
-            r = DoControl( EMemSpyDriverOpCodeHeapInfoFetchFreeCells, &iBuffer );
+            r = DoControl( EMemSpyDriverOpCodeHeapInfoFetchCellList, &iBuffer );
             if  ( r == KErrNone )
                 {
-                TRAP( r, ReadHeapInfoFreeCellsFromXferBufferL( aFreeCells ) );
+                TRAP( r, ReadHeapInfoFreeCellsFromXferBufferL( aCells ) );
                 }
             }
         }
@@ -663,6 +670,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapData( TUint aTid, TUint32 aFreeCellChe
     params.iDes = &aDest;
     params.iChecksum = aFreeCellChecksum;
     params.iRemaining = -1;
+	params.iReadAddress = 0;
     aDest.Zero();
     //
 	TInt r = DoControl( EMemSpyDriverOpCodeHeapDataGetUser, &params, NULL );
@@ -688,6 +696,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapDataNext( TUint aTid, TDes8& aDest, TU
     params.iDes = &aDest;
     params.iChecksum = 0;
     params.iRemaining = aAmountRemaining;
+	params.iReadAddress = aReadAddress;
     aDest.Zero();
     //
 	TInt r = DoControl( EMemSpyDriverOpCodeHeapDataGetUser, &params, NULL );
@@ -790,7 +799,7 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapInit( TUint aTid )
 
 EXPORT_C TInt RMemSpyDriverClient::WalkHeapNextCell( TUint aTid, TMemSpyDriverCellType& aCellType, TAny*& aCellAddress, TInt& aLength, TInt& aNestingLevel, TInt& aAllocNumber, TInt& aCellHeaderSize, TAny*& aCellPayloadAddress )
     {
-    aCellType = EMemSpyDriverGoodAllocatedCell;
+    aCellType = EMemSpyDriverBadCellMask;
     aCellAddress = NULL;
     aLength = 0;
     aNestingLevel = 0;
@@ -803,14 +812,11 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapNextCell( TUint aTid, TMemSpyDriverCe
     //
 	if  ( r == KErrNone )
 	    {
-        RBuildQueryableHeap* heap = static_cast< RBuildQueryableHeap* >( &User::Allocator() );
-        //
         aCellType = (TMemSpyDriverCellType) params.iCellType;
         aCellAddress = params.iCellAddress;
         aLength = params.iLength;
         aNestingLevel = params.iNestingLevel;
         aAllocNumber = params.iAllocNumber;
-        aCellHeaderSize = heap->CellHeaderSize( aCellType );
         aCellPayloadAddress = ((TUint8*) aCellAddress) + aCellHeaderSize;
         }
     //
@@ -839,7 +845,7 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapReadCellData( TAny* aCellAddress, TDe
 
 EXPORT_C TInt RMemSpyDriverClient::WalkHeapGetCellInfo( TAny*& aCellAddress, TMemSpyDriverCellType& aCellType, TInt& aLength, TInt& aNestingLevel, TInt& aAllocNumber, TInt& aCellHeaderSize, TAny*& aCellPayloadAddress )
     {
-    aCellType = EMemSpyDriverGoodAllocatedCell;
+    aCellType = EMemSpyDriverBadCellMask;
     aLength = 0;
     aNestingLevel = 0;
     aAllocNumber = 0;
@@ -851,14 +857,11 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapGetCellInfo( TAny*& aCellAddress, TMe
     //
 	if  ( r == KErrNone )
 	    {
-        RBuildQueryableHeap* heap = static_cast< RBuildQueryableHeap* >( &User::Allocator() );
-        //
         aCellAddress = params.iCellAddress;
         aCellType = (TMemSpyDriverCellType) params.iCellType;
         aLength = params.iLength;
         aNestingLevel = params.iNestingLevel;
         aAllocNumber = params.iAllocNumber;
-        aCellHeaderSize = heap->CellHeaderSize( aCellType );
         aCellPayloadAddress = ((TUint8*) aCellAddress) + aCellHeaderSize;
         }
     //
@@ -1401,10 +1404,15 @@ TUint RMemSpyDriverClient::RHeapVTable()
 
 TBool RMemSpyDriverClient::DebugEUser()
     {
-    RHeap* heap = static_cast< RHeap* >( &User::Allocator() );
-    RBuildQueryableHeap* queryHeap = static_cast< RBuildQueryableHeap* >( heap );
-    const TBool isDebugEUser = queryHeap->IsDebugEUser();
-    return isDebugEUser;
+	LtkUtils::RAllocatorHelper allocHelper;
+	TBool result = EFalse;
+	TInt err = allocHelper.Open(&User::Allocator());
+	if (!err)
+		{
+		result = allocHelper.AllocatorIsUdeb();
+		allocHelper.Close();
+		}
+	return result;
     }
 
 
@@ -1435,7 +1443,7 @@ void RMemSpyDriverClient::ReadHeapInfoFreeCellsFromXferBufferL( RArray<TMemSpyDr
         for( TInt i=0; i<count; i++ )
             {
             TMemSpyDriverFreeCell entry;
-            entry.iType = stream.ReadInt32L();
+            entry.iType = (TMemSpyDriverCellType)stream.ReadInt32L();
             entry.iAddress = reinterpret_cast< TAny* >( stream.ReadUint32L() );
             entry.iLength = stream.ReadInt32L();
             aFreeCells.AppendL( entry );
@@ -1462,10 +1470,11 @@ static void PrintHeapInfo( const TMemSpyHeapInfo& aInfo )
     {
 #if defined( _DEBUG ) && !defined( __WINS__ )
     const TMemSpyHeapInfoRHeap& rHeapInfo = aInfo.AsRHeap();
-    const TMemSpyHeapObjectDataRHeap& rHeapObjectData = rHeapInfo.ObjectData();
+    //const TMemSpyHeapObjectDataRHeap& rHeapObjectData = rHeapInfo.ObjectData();
     const TMemSpyHeapStatisticsRHeap& rHeapStats = rHeapInfo.Statistics();
     const TMemSpyHeapMetaDataRHeap& rHeapMetaData = rHeapInfo.MetaData();
 
+	/*
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - RAllocator                                      -");
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
@@ -1501,6 +1510,7 @@ static void PrintHeapInfo( const TMemSpyHeapInfo& aInfo )
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - RHeap::iRand:                   %d", rHeapObjectData.iRand);
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - RHeap::iTestData:               0x%08x", rHeapObjectData.iTestData);
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - ");
+	*/
 
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - Stats (Free)                                    -");
@@ -1524,12 +1534,6 @@ static void PrintHeapInfo( const TMemSpyHeapInfo& aInfo )
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - ");
 
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - Stats (Common)                                  -");
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - total cell count:               %d", rHeapStats.StatsCommon().TotalCellCount());
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - ");
-
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - Misc. Info                                      -");
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() ---------------------------------------------------");
     const TPtrC chunkName( rHeapMetaData.ChunkName() );
@@ -1542,8 +1546,8 @@ static void PrintHeapInfo( const TMemSpyHeapInfo& aInfo )
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - user thread:                    %d", rHeapMetaData.IsUserThread() );
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - thread id:                      %d", aInfo.Tid() );
     RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - process id:                     %d", aInfo.Pid() );
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - cell header size (free):        %d", rHeapMetaData.HeaderSizeFree());
-    RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - cell header size (alloc):       %d", rHeapMetaData.HeaderSizeAllocated());
+    //RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - cell header size (free):        %d", rHeapMetaData.HeaderSizeFree());
+    //RDebug::Printf("RMemSpyDriverClient::PrintHeapInfo() - cell header size (alloc):       %d", rHeapMetaData.HeaderSizeAllocated());
 #else
     (void) aInfo;
 #endif

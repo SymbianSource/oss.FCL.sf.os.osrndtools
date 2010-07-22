@@ -121,4 +121,4 @@ void CSTIFUnitXXX::OOMTestFinalizeL( const TFileName& /*aTestCaseFile*/,
 #undef STIFUNIT_OOMTESTFINALIZEL
 #endif
 
-//  End of File
+// End of File

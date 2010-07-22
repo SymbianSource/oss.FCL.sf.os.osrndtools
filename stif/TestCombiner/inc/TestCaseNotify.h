@@ -526,6 +526,5 @@ NONSHARABLE_CLASS(CTestCommandNotifier): public CActive
     };
 
 #endif // TEST_CASE_NOTIFY_H
-     
-                
+
 // End of File

@@ -845,7 +845,7 @@ void CStifParser::ParseCommentsOff( TPtr& aBuf )
 //
 //    Method: HandleSpecialMarks
 //
-//    Description: Handles special marks.( '\/\/', '\/\*' and '*/\/' ). This
+//    Description: Handles special marks.( '\/' and '\*' ). This
 //         		   is used when ECStyleComments comment type is used.
 //
 //    Parameters: TPtr& aBuf: inout: section to parsed
@@ -862,70 +862,30 @@ void CStifParser::HandleSpecialMarks( TPtr& aBuf )
     {
     TLex lex( aBuf );
     TInt firstPos( 0 );
-    TInt secondPos( 0 );
-
-    //        // => \/\/ => //
-    //        /* => \/\* => /*
-    //        */ => \*\/ => */
-  
+    
+    //        Replace \/ with /
+    //        Replace \* with *
+    
     do
         {
+        //RDebug::Print( _L("Print : %S"), &aBuf );
         firstPos = lex.Offset();
         TChar get = lex.Get();
         // Check is '\'
         if( get == '\\' ) 
             {
-            // Peek next character( '/' )
-            if( lex.Peek() == '/' )
+            firstPos = (lex.Offset()-1);
+            // Peek next character( '/' or '*' )
+            if( lex.Peek() == '/' || lex.Peek() == '*')
                 {
-                lex.Inc();
-                secondPos = lex.Offset();
-                // Peek next character( '\' )
-                if( lex.Peek() == '\\' )
-                    {
-                    lex.Inc();
-                    // Peek next character( '/' )
-                    if( lex.Peek() == '/' )
-                        {
-                        // Delete mark '\/\/' and replace this with '//'
-                        aBuf.Delete( secondPos, 1 );
-                        aBuf.Delete( firstPos, 1 );
-                        lex = aBuf;
-                        }
-                    // Peek next character( '/' )
-                    else if( lex.Peek() == '*' )
-                        {
-						// Delete mark '\/\*' and replace this with '/*'                        
-                        aBuf.Delete( secondPos, 1 );
-                        aBuf.Delete( firstPos, 1 );
-                        lex = aBuf;
-                        }
-                    }
-                }
-            // Peek next character( '/' )
-            else if( lex.Peek() == '*' )
-                {
-                lex.Inc();
-                secondPos = lex.Offset();
-                // Peek next character( '\' )
-                if( lex.Peek() == '\\' )
-                    {
-                    lex.Inc();
-                    // Peek next character( '/' )
-                    if( lex.Peek() == '/' )
-                        {
-                        // Delete mark '\*\/' and replace this with '*\'
-                        aBuf.Delete( secondPos, 1 );
-                        aBuf.Delete( firstPos, 1 );
-                        lex = aBuf;
-                        }
-                    }
+                aBuf.Delete (firstPos,1);
+                lex = aBuf;
                 }
             }
+           
         firstPos = 0;
-        secondPos = 0;
         } while ( !lex.Eos() );
 
     }
 
-//  End of File
+// End of File

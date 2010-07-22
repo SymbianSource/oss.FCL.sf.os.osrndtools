@@ -139,6 +139,7 @@ TPtrC TTCKeywords::RunOptArg( TInt aArg )
         (TText*)L"category",
         (TText*)L"timeout",
         (TText*)L"title",
+        (TText*)L"args",
         };
 
     if( aArg >= (TInt)(sizeof( runOptArgs )/sizeof(TText*)) )

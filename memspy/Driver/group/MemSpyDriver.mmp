@@ -69,6 +69,11 @@ USERINCLUDE     ../Shared
 USERINCLUDE     ../Kernel/Include
 USERINCLUDE     ../Kernel/Include/SubChannels
 
+// New Allocator support
+MACRO			STANDALONE_ALLOCHELPER
+SOURCEPATH      ../Shared
+SOURCE          heaputils.cpp
+
 OS_LAYER_KERNEL_SYSTEMINCLUDE
 
 START WINS

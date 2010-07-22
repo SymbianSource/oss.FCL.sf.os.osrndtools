@@ -76,7 +76,7 @@ TInt32* RMemSpyMemStreamWriter::WriteInt32( TInt32 aValue )
         }
     else
         {
-        TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteInt32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __RETURN_ADDRESS() ) );
+        //TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteInt32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __RETURN_ADDRESS() ) );
         }
     //
     return ret;
@@ -96,7 +96,7 @@ TUint32* RMemSpyMemStreamWriter::WriteUint32( TUint32 aValue )
         }
     else
         {
-        TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteUint32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __RETURN_ADDRESS() ) );
+        //TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteUint32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __RETURN_ADDRESS() ) );
         }
     //
     return ret;

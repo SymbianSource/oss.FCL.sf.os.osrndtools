@@ -67,6 +67,10 @@ EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession )
     return self;
     }
 
+EXPORT_C CMemSpyEngine* CMemSpyEngine::NewL( RFs& aFsSession, TBool aStartServer )
+    {
+    return NewL(aFsSession);
+    }
 
 EXPORT_C RFs& CMemSpyEngine::FsSession()
     {
@@ -118,9 +122,18 @@ EXPORT_C TMemSpySinkType CMemSpyEngine::SinkType()
 
 EXPORT_C void CMemSpyEngine::InstallSinkL( TMemSpySinkType aType )
     {
-    iImp->InstallSinkL( aType );
+    iImp->InstallSinkL( aType, KNullDesC );
     }
 
+EXPORT_C void CMemSpyEngine::InstallDebugSinkL()
+    {
+    iImp->InstallSinkL( ESinkTypeDebug, KNullDesC );
+    }
+
+EXPORT_C void CMemSpyEngine::InstallFileSinkL( const TDesC& aRootFolder )
+    {
+    iImp->InstallSinkL( ESinkTypeFile, aRootFolder );
+    }
 
 EXPORT_C void CMemSpyEngine::ListOpenFilesL()
     {

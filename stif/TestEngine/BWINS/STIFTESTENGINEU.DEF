@@ -61,4 +61,5 @@ EXPORTS
 	?StoreEngineSettings@RSettingServer@@QAEHAAUTEngineSettings@@@Z @ 60 NONAME ; int RSettingServer::StoreEngineSettings(struct TEngineSettings &)
 	?GetFormatL@CSTIFTestFrameworkSettings@@QAEHPAVCStifSectionParser@@VTPtrC16@@AAW4TLoggerType@CStifLogger@@AAH@Z @ 61 NONAME ; int CSTIFTestFrameworkSettings::GetFormatL(class CStifSectionParser *, class TPtrC16, enum CStifLogger::TLoggerType &, int &)
 	?AddTestCaseResultToTestReport@RTestEngine@@QAEHABVTTestInfo@@ABVTFullTestResult@@H@Z @ 62 NONAME ; int RTestEngine::AddTestCaseResultToTestReport(class TTestInfo const &, class TFullTestResult const &, int)
+	?RunTestCase@RTestCase@@QAEXAAV?$TPckg@VTFullTestResult@@@@ABVTDesC16@@AAVTRequestStatus@@@Z @ 63 NONAME ; void RTestCase::RunTestCase(class TPckg<class TFullTestResult> &, class TDesC16 const &, class TRequestStatus &)
 

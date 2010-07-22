@@ -179,5 +179,4 @@ EXPORT_C CSTIFTestMeasurementImplementation* LibEntryL(
 
     }
 
-
-//  End of File
+// End of File

@@ -78,6 +78,7 @@ DMemSpyInspectedProcess::~DMemSpyInspectedProcess()
 
 TInt DMemSpyInspectedProcess::Open( DProcess* aProcess )
     {
+	__ASSERT_CRITICAL;
     TRACE( Kern::Printf("DMemSpyInspectedProcess::Open() - START - this: 0x%08x, aProcess: 0x%08x (%O)", this, aProcess, aProcess ));
 
     TInt error = KErrNone;
@@ -128,7 +129,7 @@ TInt DMemSpyInspectedProcess::Open( DProcess* aProcess )
 
 TInt DMemSpyInspectedProcess::NotifyOnChange( DThread* aThread, TRequestStatus* aRequestStatus, TMemSpyDriverProcessInspectionInfo* aInfo )
     {
-	Kern::MutexWait( *iLock );
+	Lock();
 
     TInt err = KErrInUse;
     const TBool notificationQueued = NotifyOnChangeQueued();
@@ -158,9 +159,7 @@ TInt DMemSpyInspectedProcess::NotifyOnChange( DThread* aThread, TRequestStatus* 
 			CompleteClientsRequest( KErrNone, &cachedChange->iInfo );
 			
 			// Discard cached entry
-            NKern::ThreadEnterCS();
 			delete cachedChange;
-            NKern::ThreadLeaveCS();
 			}
         else if ( iAmDead )
             {
@@ -174,14 +173,14 @@ TInt DMemSpyInspectedProcess::NotifyOnChange( DThread* aThread, TRequestStatus* 
 	//
     TRACE( Kern::Printf("DMemSpyInspectedProcess::NotifyOnChange() - END - this: 0x%08x, err: %d", this, err ) );
 
-	Kern::MutexSignal( *iLock );
+	Unlock();
     return err;
     }
 
 
 TInt DMemSpyInspectedProcess::NotifyOnChangeCancel()
     {
-	Kern::MutexWait( *iLock );
+	Lock();
     TRACE( Kern::Printf("DMemSpyInspectedProcess::NotifyOnChangeCancel() - START - this: 0x%08x, queued: %d, iChangeObserverThread: 0x%08x, iChangeObserverRS: 0x%08x", this, NotifyOnChangeQueued(), iChangeObserverThread, iChangeObserverRS ) );
     //
     if  ( NotifyOnChangeQueued() )
@@ -194,7 +193,7 @@ TInt DMemSpyInspectedProcess::NotifyOnChangeCancel()
         }
 	//
     TRACE( Kern::Printf("DMemSpyInspectedProcess::NotifyOnChangeCancel() - END - this: 0x%08x", this ) );
-	Kern::MutexSignal( *iLock );
+	Unlock();
 
     return KErrNone;
     }
@@ -204,9 +203,9 @@ TBool DMemSpyInspectedProcess::NotifyOnChangeQueued() const
     {
     TRACE( Kern::Printf("DMemSpyInspectedProcess::NotifyOnChangeQueued() - START - this: 0x%08x", this ) );
     //
-	Kern::MutexWait( *iLock );
+	Lock();
     const TBool queued = ( iChangeObserverRS != NULL );
-	Kern::MutexSignal( *iLock );
+	Unlock();
     //
     TRACE( Kern::Printf("DMemSpyInspectedProcess::NotifyOnChangeQueued() - END - this: 0x%08x, queued: %d", this, queued ) );
     return queued;
@@ -449,10 +448,9 @@ void DMemSpyInspectedProcess::EMHandleProcessUpdated( DProcess& aProcess )
     const TUint procId = iDevice.OSAdaption().DProcess().GetId( aProcess );
     if  ( procId == iProcessId )
         {
-	    Kern::MutexWait( *iLock );
+	    Lock();
 
         TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleProcessUpdated() - START - this: 0x%08x, iProcess: 0x%08x (%O)", this, iProcess, iProcess ) );
-	    NKern::ThreadEnterCS();
 
         // Mark all tracked chunks as dirty whilst we work out
         // what is and isn't mapped into the process
@@ -476,10 +474,9 @@ void DMemSpyInspectedProcess::EMHandleProcessUpdated( DProcess& aProcess )
             CompleteClientsRequest( KErrNone, &iInfoCurrent );
             }
 
-        NKern::ThreadLeaveCS();
         TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleProcessUpdated() - END - this: 0x%08x", this ) );
 
-        Kern::MutexSignal( *iLock );
+        Unlock();
         }
     }
 
@@ -491,10 +488,9 @@ void DMemSpyInspectedProcess::EMHandleProcessRemoved( DProcess& aProcess )
 
     if  ( pid == iProcessId )
         {
-	    Kern::MutexWait( *iLock );
+	    Lock();
 
         TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleProcessRemoved() - START - this: 0x%08x", this ) );
-	    NKern::ThreadEnterCS();
 
         // We will implement a multi phased approach to the process being removed.
         //
@@ -529,10 +525,9 @@ void DMemSpyInspectedProcess::EMHandleProcessRemoved( DProcess& aProcess )
         // Stop listening to events since we've drained everything now...
         iAmDead = ETrue;
 
-        NKern::ThreadLeaveCS();
         TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleProcessRemoved() - END - this: 0x%08x", this ) );
 
-        Kern::MutexSignal( *iLock );
+        Unlock();
         }
     }
 
@@ -600,7 +595,7 @@ void DMemSpyInspectedProcess::EMHandleThreadKilled( DThread& aThread )
 
 void DMemSpyInspectedProcess::EMHandleThreadChanged( DThread& /*aThread*/ )
     {
-	Kern::MutexWait( *iLock );
+	Lock();
 
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleThreadChanged() - START - this: 0x%08x", this ) );
 
@@ -608,7 +603,6 @@ void DMemSpyInspectedProcess::EMHandleThreadChanged( DThread& /*aThread*/ )
     // We must be careful to only access the members of aThread that still
     // exist as if it is being destroyed, the object may be in an intermediate
     // state.
-	NKern::ThreadEnterCS();
 
     // All we are really interested in is recalculating the stack usage
     // for the process... 
@@ -617,19 +611,17 @@ void DMemSpyInspectedProcess::EMHandleThreadChanged( DThread& /*aThread*/ )
     // Always inform observer about new results.
     CompleteClientsRequest( KErrNone, &iInfoCurrent );
 
-    NKern::ThreadLeaveCS();
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleThreadChanged() - END - this: 0x%08x", this ) );
 
-    Kern::MutexSignal( *iLock );
+    Unlock();
     }
 
 
 void DMemSpyInspectedProcess::EMHandleChunkAdd( DChunk& aChunk )
     {
-	Kern::MutexWait( *iLock );
+	Lock();
 
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleChunkAdd() - START - this: 0x%08x, aChunk: 0x%08x (%O)", this, &aChunk, &aChunk ) );
-	NKern::ThreadEnterCS();
 
     // Is this chunk related to our process somehow?
     if  ( IsChunkRelevantToOurProcess( aChunk ) )
@@ -656,19 +648,17 @@ void DMemSpyInspectedProcess::EMHandleChunkAdd( DChunk& aChunk )
             }
         }
 
-    NKern::ThreadLeaveCS();
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleChunkAdd() - END - this: 0x%08x", this ) );
 
-    Kern::MutexSignal( *iLock );
+    Unlock();
     }
 
 
 void DMemSpyInspectedProcess::EMHandleChunkUpdated( DChunk& aChunk )
     {
-	Kern::MutexWait( *iLock );
+	Lock();
 
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleChunkUpdated() - START - this: 0x%08x, aChunk: 0x%08x [S: %8d] (%O)", this, &aChunk, aChunk.Size(), &aChunk ) );
-	NKern::ThreadEnterCS();
 
     // Is this chunk mapped into our process?
     TMemSpyTrackedChunk* trackedEntry = TrackedChunkByHandle( &aChunk );
@@ -712,19 +702,17 @@ void DMemSpyInspectedProcess::EMHandleChunkUpdated( DChunk& aChunk )
             }
         }
 
-    NKern::ThreadLeaveCS();
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleChunkUpdated() - END - this: 0x%08x", this ) );
 
-    Kern::MutexSignal( *iLock );
+    Unlock();
     }
 
 
 void DMemSpyInspectedProcess::EMHandleChunkDeleted( DChunk& aChunk )
     {
-	Kern::MutexWait( *iLock );
+	Lock();
 
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleChunkDeleted() - START - this: 0x%08x", this ) );
-	NKern::ThreadEnterCS();
 
     // Is this chunk mapped into our process?
     TMemSpyTrackedChunk* trackedEntry = TrackedChunkByHandle( &aChunk );
@@ -742,10 +730,9 @@ void DMemSpyInspectedProcess::EMHandleChunkDeleted( DChunk& aChunk )
             }
         }
 
-    NKern::ThreadLeaveCS();
     TRACE( Kern::Printf("DMemSpyInspectedProcess::EMHandleChunkDeleted() - END - this: 0x%08x", this ) );
 
-    Kern::MutexSignal( *iLock );
+    Unlock();
     }
 
 
@@ -884,6 +871,7 @@ TBool DMemSpyInspectedProcess::IsHeapChunk( DChunk& aChunk, const TName& aName )
         TRACE( Kern::Printf("DMemSpyInspectedProcess::IsHeapChunk() - firstThread: 0x%08x (%O)", firstThread, firstThread ) );
         if  ( firstThread != NULL )
             {
+			NKern::ThreadEnterCS();
             TInt err = firstThread->Open();
             TRACE( Kern::Printf("DMemSpyInspectedProcess::IsHeapChunk() - firstThread open result: %d", err ) );
 
@@ -912,6 +900,7 @@ TBool DMemSpyInspectedProcess::IsHeapChunk( DChunk& aChunk, const TName& aName )
                 TRACE( Kern::Printf("DMemSpyInspectedProcess::IsHeapChunk() - closing first thread..." ) );
             	Kern::SafeClose( (DObject*&) firstThread, NULL );
                 }
+			NKern::ThreadLeaveCS();
             }
         }
     //
@@ -1116,6 +1105,7 @@ TBool DMemSpyInspectedProcess::UpdateStatistics()
 
 void DMemSpyInspectedProcess::FindChunks( DProcess& aProcess )
     {
+	__ASSERT_CRITICAL;
     TRACE( Kern::Printf("DMemSpyInspectedProcess::FindChunks() - START - this: 0x%08x", this ) );
   
     DMemSpyDriverOSAdaptionDChunk& chunkAdaption = iDevice.OSAdaption().DChunk();
@@ -1125,9 +1115,11 @@ void DMemSpyInspectedProcess::FindChunks( DProcess& aProcess )
     if  ( processAdaption.IsHandleIndexValid( aProcess ) )
         {
 	    MemSpyObjectIx* processHandles = processAdaption.GetHandles( aProcess );
-        MemSpyObjectIx_Wait( processHandles );
-
+		
+		MemSpyObjectIx_HandleLookupLock();
         const TInt count = processHandles->Count();
+		MemSpyObjectIx_HandleLookupUnlock();
+
         TRACE( Kern::Printf("DMemSpyInspectedProcess::FindChunks() - got: %d handles...", count ) );
 
 	    for( TInt i=0; i<count; i++ )
@@ -1135,9 +1127,11 @@ void DMemSpyInspectedProcess::FindChunks( DProcess& aProcess )
             TRACE( Kern::Printf("DMemSpyInspectedProcess::FindChunks() - checking handle index: %2d", i ) );
 
     	    // Get a handle from the process container...
-            NKern::LockSystem();
+            MemSpyObjectIx_HandleLookupLock();
+			if (i >= processHandles->Count()) break; // Count may have changed in the meantime
     	    DObject* object = (*processHandles)[ i ];
-            NKern::UnlockSystem();
+			if (object && object->Open() != KErrNone) object = NULL;
+			MemSpyObjectIx_HandleLookupUnlock();
 
             const TObjectType objectType = ( object ? chunkAdaption.GetObjectType( *object ) : EObjectTypeAny );
             TRACE( Kern::Printf("DMemSpyInspectedProcess::FindChunks() - object: 0x%08x, type: %2d (%O)", object, objectType, object ) );
@@ -1179,9 +1173,8 @@ void DMemSpyInspectedProcess::FindChunks( DProcess& aProcess )
                         }
                     }
                 }
+			if (object) object->Close(NULL);
     	    }
-
-        MemSpyObjectIx_Signal( processHandles );
         }
 
     TRACE( Kern::Printf("DMemSpyInspectedProcess::FindChunks() - END - this: 0x%08x", this ) );
@@ -1235,6 +1228,17 @@ void DMemSpyInspectedProcess::ResetPendingChanges()
     }
 
 
+void DMemSpyInspectedProcess::Lock() const
+	{
+	NKern::ThreadEnterCS();
+	Kern::MutexWait(*iLock);
+	}
+
+void DMemSpyInspectedProcess::Unlock() const
+	{
+	Kern::MutexSignal(*iLock);
+	NKern::ThreadLeaveCS();
+	}
 
 
 

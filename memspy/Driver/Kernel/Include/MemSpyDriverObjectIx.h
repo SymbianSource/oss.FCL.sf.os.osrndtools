@@ -126,8 +126,8 @@ public:
 	// common operations
     RMemSpyObjectIx();
 
-    static void Wait();
-	static void Signal();
+    //static void Wait();
+	//static void Signal();
 
     inline TInt Count()
 		{ return iCount; }
@@ -137,7 +137,7 @@ public:
 public:
 	// uncommon operations
 	DObject* operator[](TInt aIndex);
-	TInt At(DObject* aObject);
+	TBool Find(DObject* aObject);
 
 private:
 	TRWSpinLock		iRWL;
@@ -171,11 +171,11 @@ public:
 public:
 	DObject* At(TInt aHandle,TInt aUniqueID);
 	DObject* At(TInt aHandle);
-	TInt At(DObject* aObject);
+	TBool Find(DObject* aObject);
 	TInt Count(DObject* aObject);
 	DObject* operator[](TInt aIndex);
-	static void Wait( DMemSpyObjectIx* aObjectIndex );
-	static void Signal( DMemSpyObjectIx* aObjectIndex );
+	//static void Wait( DMemSpyObjectIx* aObjectIndex );
+	//static void Signal( DMemSpyObjectIx* aObjectIndex );
 	inline TInt Count();
 	inline TInt ActiveCount();
 
@@ -206,29 +206,32 @@ inline TInt DMemSpyObjectIx::ActiveCount()
 #if MCL_ROBJECTIX_DUPLICATION
 
     #define MemSpyObjectIx                                          RMemSpyObjectIx
-    #define MemSpyObjectIx_Wait( IX )                               RMemSpyObjectIx::Wait()
-    #define MemSpyObjectIx_Signal( IX )                             RMemSpyObjectIx::Signal()
+    //#define MemSpyObjectIx_Wait( IX )                               RMemSpyObjectIx::Wait()
+    //#define MemSpyObjectIx_Signal( IX )                             RMemSpyObjectIx::Signal()
     #define MemSpyObjectIx_GetHandlePointer_Thread( DTHREAD )       reinterpret_cast< MemSpyObjectIx* >( &DTHREAD.iHandles )
     #define MemSpyObjectIx_GetHandlePointer_Process( DPROCESS )     reinterpret_cast< MemSpyObjectIx* >( &DPROCESS.iHandles )
 
 #elif MCL_DOBJECTIX_DUPLICATION
 
     #define MemSpyObjectIx                                          DMemSpyObjectIx
-    #define MemSpyObjectIx_Wait( IX )                               DMemSpyObjectIx::Wait( IX )
-    #define MemSpyObjectIx_Signal( IX )                             DMemSpyObjectIx::Signal( IX )
+    //#define MemSpyObjectIx_Wait( IX )                               DMemSpyObjectIx::Wait( IX )
+    //#define MemSpyObjectIx_Signal( IX )                             DMemSpyObjectIx::Signal( IX )
     #define MemSpyObjectIx_GetHandlePointer_Thread( DTHREAD )       reinterpret_cast< MemSpyObjectIx* >( DTHREAD.iHandles )
     #define MemSpyObjectIx_GetHandlePointer_Process( DPROCESS )     reinterpret_cast< MemSpyObjectIx* >( DPROCESS.iHandles )
 
 #else
 
     #define MemSpyObjectIx                  DObjectIx
-    #define MemSpyObjectIx_Wait( IX )       
-    #define MemSpyObjectIx_Signal( IX )     
+    //#define MemSpyObjectIx_Wait( IX )       
+    //#define MemSpyObjectIx_Signal( IX )     
     #define MemSpyObjectIx_IsValid_Thread( DTHREAD )    ( DTHREAD.iHandles != NULL )
     #define MemSpyObjectIx_IsValid_Process( DPROCESS )  ( DPROCESS.iHandles != NULL )
     #define MemSpyObjectIx_GetHandlePointer_Thread( DTHREAD )       reinterpret_cast< MemSpyObjectIx* >( DTHREAD.iHandles )
     #define MemSpyObjectIx_GetHandlePointer_Process( DPROCESS )     reinterpret_cast< MemSpyObjectIx* >( DPROCESS.iHandles )
 
 #endif
+
+#define MemSpyObjectIx_HandleLookupLock()							NKern::LockSystem()
+#define MemSpyObjectIx_HandleLookupUnlock()							NKern::UnlockSystem()
 
 #endif

@@ -125,6 +125,8 @@ _LIT(KXMLTotalTag,               "<Total>");
 _LIT(KXMLTotalTagEnd,            "</Total>");
 _LIT(KXMLVersionTag,             "<Version>");
 _LIT(KXMLVersionTagEnd,          "</Version>");
+_LIT(KXMLSTIFVersionTag,         "<STIFVersion>");
+_LIT(KXMLSTIFVersionTagEnd,      "</STIFVersion>");
 
 // LOCAL CONSTANTS AND MACROS
 // None
@@ -613,6 +615,21 @@ void CTestReport::WriteHeaderL()
         {
         WriteLineL( _L( "%S" ), &date );
         WriteLineL( _L( "%S" ), &clock );
+        }
+
+    // Add STIF version info
+    TInt majorV;
+    TInt minorV;
+    TInt buildV;
+    TBuf<30> relDate;
+    TStifUtil::STIFVersion(majorV, minorV, buildV, relDate);
+    if(iXML)
+        {
+        WriteLineL(_L("%S%d.%d.%d (%S)%S"), &KXMLSTIFVersionTag, majorV, minorV, buildV, &relDate, &KXMLSTIFVersionTagEnd);
+        }
+    else
+        {
+        WriteLineL(_L("v.%d.%d.%d (%S)"), majorV, minorV, buildV, &relDate);
         }
     
     if ( iReportMode & ETestReportSummary )

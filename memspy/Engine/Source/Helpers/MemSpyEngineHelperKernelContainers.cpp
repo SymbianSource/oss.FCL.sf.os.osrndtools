@@ -76,7 +76,7 @@ EXPORT_C CMemSpyEngineGenericKernelObjectContainer* CMemSpyEngineHelperKernelCon
     {
     CMemSpyEngineGenericKernelObjectContainer* container = CMemSpyEngineGenericKernelObjectContainer::NewLC();
     //
-    for( TInt i=EMemSpyDriverContainerTypeFirst; i<=EMemSpyDriverContainerTypeChunk; i++ ) //EMemSpyDriverContainerTypeLast
+    for( TInt i=EMemSpyDriverContainerTypeFirst; i<=EMemSpyDriverContainerTypeLast; i++ )
         {
         const TMemSpyDriverContainerType type = static_cast< TMemSpyDriverContainerType >( i );
         //

@@ -101,7 +101,7 @@ EXPORT_C CMemSpyEngineActiveObjectArray* CMemSpyEngineHelperActiveObject::Active
     //RDebug::Printf("CMemSpyEngineHelperActiveObject::ActiveObjectListLC() - allocated cell header length is: %d", iHeapInfo.iHeapCellHeaderLengthAllocated);
 
     // Do we have a ROM-based scheduler pointer?
-    if  ( scheduler != NULL && iHeapInfo.Type() == TMemSpyHeapInfo::ETypeRHeap )
+    if  ( scheduler != NULL && iHeapInfo.Type() != TMemSpyHeapInfo::ETypeUnknown )
         {
         //RDebug::Printf("CMemSpyEngineHelperActiveObject::ActiveObjectListLC() - scheduler: 0x%08x", scheduler);
 
@@ -149,9 +149,9 @@ HBufC8* CMemSpyEngineHelperActiveObject::SchedulerHeapCellDataLC( TAny*& aCellAd
     //RDebug::Printf("CMemSpyEngineHelperActiveObject::SchedulerHeapCellDataLC() - err: %d, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, cellLength, cellAllocationNumber, cellType);
     User::LeaveIfError( err );
     
-    if  ( cellType == EMemSpyDriverGoodAllocatedCell )
+	if (cellType & EMemSpyDriverAllocatedCellMask)
         {
-        const TInt payloadLength = cellLength - iHeapInfo.AsRHeap().MetaData().HeaderSizeAllocated();
+        const TInt payloadLength = cellLength;
         HBufC8* data = HBufC8::NewLC( payloadLength );
         TPtr8 pData( data->Des() );
         //
@@ -281,9 +281,9 @@ TAny* CMemSpyEngineHelperActiveObject::ReadActiveObjectDataL( TAny* aCellAddress
     //RDebug::Printf("CMemSpyEngineHelperActiveObject::ReadActiveObjectDataL() - err: %d, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, cellLength, cellAllocationNumber, cellType);
     User::LeaveIfError( err );
     
-    if  ( cellType == EMemSpyDriverGoodAllocatedCell )
+    if (cellType & EMemSpyDriverAllocatedCellMask)
         {
-        const TInt payloadLength = cellLength - iHeapInfo.AsRHeap().MetaData().HeaderSizeAllocated();
+        const TInt payloadLength = cellLength;
         //RDebug::Printf("CMemSpyEngineHelperActiveObject::ReadActiveObjectDataL() - payloadLength: %d", payloadLength);
 
         // const TInt payloadLength = Max( 512, cellLength - iHeapInfo.iHeapCellHeaderLengthAllocated ); // Prevent negative payload lengths?

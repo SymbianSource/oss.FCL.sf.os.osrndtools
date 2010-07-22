@@ -21,147 +21,51 @@
 #include <bacline.h>
 #include <bautils.h>
 #include <memspyengineclientinterface.h>
+#include <memspysession.h>
 #include <memspy/engine/memspyenginehelpersysmemtrackerconfig.h>
 
 // User includes
 #include "MemSpyCommands.h"
 
-
+/*
 CMemSpyCommandLine::CMemSpyCommandLine()
-    {
+    {	
     }
+*/
 
+CMemSpyCommandLine::CMemSpyCommandLine( CConsoleBase& aConsole )
+	: CActive( EPriorityHigh ), iConsole( aConsole )
+    {	
+	CActiveScheduler::Add( this );
+    }
 
 CMemSpyCommandLine::~CMemSpyCommandLine()
     {
-    if ( iMemSpy )
+	Cancel();
+	
+    if ( iMemSpySession )
         {
-        iMemSpy->Close();
+        iMemSpySession->Close();
         }
-    delete iMemSpy;
+    delete iMemSpySession;
     iFsSession.Close();
     }
 
 
 void CMemSpyCommandLine::ConstructL()
     {
-    User::LeaveIfError( iFsSession.Connect() );
-    iMemSpy = new(ELeave) RMemSpyEngineClientInterface();
-    ConnectToMemSpyL();
+    User::LeaveIfError( iFsSession.Connect() );   
+    iMemSpySession = new(ELeave) RMemSpySession();
+    ConnectToMemSpyL();                    
     }
 
-
-CMemSpyCommandLine* CMemSpyCommandLine::NewLC()
+CMemSpyCommandLine* CMemSpyCommandLine::NewLC( CConsoleBase& aConsole )
     {
-    CMemSpyCommandLine* self = new(ELeave) CMemSpyCommandLine();
+    CMemSpyCommandLine* self = new(ELeave) CMemSpyCommandLine( aConsole );
     CleanupStack::PushL( self );
     self->ConstructL();
     return self;
     }
-
-
-void CMemSpyCommandLine::PerformBatchL( const TDesC& aFileName )
-    {
-    TInt err = KErrNone;
-    RFile file;
-    err = file.Open( iFsSession, aFileName, EFileRead );
-    TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformBatchL() - START - this: 0x%08x, openErr: %d, fileName: %S"), this, err, &aFileName ) );
-    User::LeaveIfError( err );
-
-    CleanupClosePushL( file );
-    CDesCArray* lines = ReadLinesL( file );
-    CleanupStack::PopAndDestroy( &file );
-    CleanupStack::PushL( lines );
-    
-    const TInt count = lines->Count();
-    TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - got %d lines", count ) );
-    iIsBatch = ETrue;
-    for( TInt i=0; i<count; i++ )
-        {
-        const TPtrC pLine( (*lines)[ i ] );
-        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - processing line[%03d] \"%S\""), i, &pLine ) );
-    
-        // Must be at least 3 chars big, i.e. '[' and <command> and then ']'
-        if  ( pLine.Length() <= 2 || pLine[ 0 ] != '[' )
-            {
-            TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - ignoring line: \"%S\""), &pLine ) );
-            }
-        else if  ( pLine[0] == '[' )
-            {
-            // Try to find end of command...
-            const TInt posOfClosingArgChar = pLine.Locate( ']' );
-            if  ( posOfClosingArgChar >= 2 )
-                {
-                // Get command
-                const TPtrC pCommand( pLine.Mid( 1, posOfClosingArgChar - 1 ) );
-                TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - got command: %S"), &pCommand ) );
-
-                // Next, try to get any args
-                CDesCArrayFlat* args = new(ELeave) CDesCArrayFlat( 2 );
-                CleanupStack::PushL( args );
-
-                // There must be a mandatory space between closing ] and start of args...
-                // E.g.:
-                //
-                //  [CMD] ARG
-                //
-                const TInt remainderLength = pLine.Length() - posOfClosingArgChar;
-                if  ( remainderLength > 1 )
-                    {
-                    const TPtrC remainder( pLine.Mid( posOfClosingArgChar + 1 ) );
-                    TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - got remainder: %S"), &pLine ) );
-
-                    // Extract arguments separated by tabs or space characters
-                    // and store in arguments array
-                    HBufC* argText = HBufC::NewLC( pLine.Length() + 1 );
-                    TPtr pArgText( argText->Des() );
-                    for( TInt j=0; j<remainder.Length(); j++ )
-                        {
-                        const TChar c( remainder[ j ] );
-                        //
-                        if  ( c == '\t' || c == ' ' )
-                            {
-                            pArgText.Trim();
-                            if  ( pArgText.Length() )
-                                {
-                                TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - arg[%02d] %S"), args->Count(), &pArgText ) );
-                                args->AppendL( pArgText );
-                                pArgText.Zero();
-                                }
-                            }
-                        else
-                            {
-                            pArgText.Append( c );
-                            }
-                        }
-
-                    // Save leftovers...
-                    pArgText.Trim();
-                    if  ( pArgText.Length() )
-                        {
-                        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - arg[%02d] %S"), args->Count(), &pArgText ) );
-                        args->AppendL( pArgText );
-                        }
-
-                    CleanupStack::PopAndDestroy( argText );
-                    }
-
-                // Now we can perform the operation!
-                PerformSingleOpL( pCommand, *args );
-
-                CleanupStack::PopAndDestroy( args );
-                }
-            }
-
-        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - processing line: \"%S\""), &pLine ) );
-        }
-
-    iIsBatch = EFalse;
-    
-    CleanupStack::PopAndDestroy( lines );
-    TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformBatchL() - END - this: 0x%08x, fileName: %S"), this, &aFileName ) );
-    }
-
 
 void CMemSpyCommandLine::PerformOpL( const CCommandLineArguments& aCommandLine )
     {
@@ -218,125 +122,187 @@ void CMemSpyCommandLine::PerformSingleOpL( const TDesC& aCommand, const CDesCArr
     batchFile.Append( aCommand );
     
     TInt err = KErrNotSupported;
-    if  ( aCommand.CompareF( KMemSpyCmdSWMTForceUpdate ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - SWMT_ForceUpdate", this ) );
-        if ( paramCount > 0 )
-            {
-            TInt categories( 0 );
-            TName threadNameFilter;
-            TRAP( err, ParseSWMTParametersL( aParameters, categories, threadNameFilter ) );            
-            if ( !err )
-                {
-                err = iMemSpy->SystemWideMemoryTrackerCategoriesSet( categories );
-                if ( !err && threadNameFilter.Length() > 0 )
-                    {
-                    err = iMemSpy->SystemWideMemoryTrackerThreadFilterSet( threadNameFilter );
-                    }
-                }
-            }
-        if ( !err )
-            {
-            err = iMemSpy->PerformOperation( EMemSpyClientServerOpSystemWideMemoryTrackingForceUpdate );
-            }
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdSWMTReset ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - SWMT_Reset", this ) );
-        err = iMemSpy->PerformOperation( EMemSpyClientServerOpSystemWideMemoryTrackingReset );
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdHeapDumpKernel ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_DumpKernel", this ) );
-        err = iMemSpy->PerformOperation( EMemSpyClientServerOpHeapData, KMemSpyClientServerThreadIdKernel );
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdHeapCompact ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_Compact", this ) );
-        err = iMemSpy->PerformOperation( EMemSpyClientServerOpHeapInfoCompact );
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdContainer ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Container", this ) );
-        err = iMemSpy->PerformOperation( EMemSpyClientServerOpEnumerateKernelContainerAll );
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdBitmapsSave ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Bitmaps_Save", this ) );
-        err = iMemSpy->SaveAllBitmaps();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdRamDisableAknIconCache ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Ram_DisableAknIconCache", this ) );
-        err = iMemSpy->DisableAknIconCache();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdOutputToFile ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Output_ToFile", this ) );
-        err = iMemSpy->SwitchOutputModeFile();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdOutputToTrace ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Output_ToTrace", this ) );
-        err = iMemSpy->SwitchOutputModeTrace();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdUiSendToBackground ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - UI_Background", this ) );
-        err = iMemSpy->SendToBackground();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdUiBringToForeground ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - UI_Foreground", this ) );
-        err = iMemSpy->BringToForeground();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdUiExit ) == 0 )
-        {
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - UI_Exit", this ) );
-        err = iMemSpy->Exit();
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdHeapDump ) == 0 )
-        {
-        if  ( paramCount == 0 )
-            {
-            // Dump heap data for all threads
-            TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_Dump (all threads)", this ) );
-            err = iMemSpy->PerformOperation( EMemSpyClientServerOpHeapData );
-            }
-        else if ( paramCount >= 1 )
-            {
-            // Dump heap data for named thread
-            const TPtrC pThreadName( aParameters[ 0 ] );
-            TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_Dump (%S)"), this, &pThreadName ) );
-            err = iMemSpy->PerformOperation( EMemSpyClientServerOpHeapData, pThreadName );
-            }
-        }
-    else if ( aCommand.CompareF( KMemSpyCmdOpenFile ) == 0 )
-        {
-        if  ( paramCount == 0 )
-            {
-            // Dump heap data for all threads
-            TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - OpenFile (all threads)", this ) );
-            err = iMemSpy->PerformOperation( EMemSpyClientServerOpOpenFiles );
-            }
-        else if ( paramCount >= 1 )
-            {
-            // Dump heap data for named thread
-            const TPtrC pThreadName( aParameters[ 0 ] );
-            TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - OpenFile (%S)"), this, &pThreadName ) );
-            err = iMemSpy->PerformOperation( EMemSpyClientServerOpOpenFiles, pThreadName );
-            }
-        }
-    else if ( !iIsBatch && FindBatchFile( batchFile ) == KErrNone )
-        {
-        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Batch file: %S"), this, &batchFile ) );
-        PerformBatchL( batchFile );
-        }
-    else
-        {
-        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Unsupported Command: %S"), this, &aCommand ) );
-        }
+    TInt error = KErrNotSupported;
+    
+    // --- HELP
+    if ( aCommand.CompareF( KMemSpyCmdHelp1) == 0 || 
+    	 aCommand.CompareF( KMemSpyCmdHelp2) == 0 ||
+    	 aCommand.CompareF( KMemSpyCmdHelp3) == 0 ||
+    	 aCommand.CompareF( KMemSpyCmdHelp4) == 0 )
+    	{
+		iConsole.Write( KHelpMessage );
+		iConsole.Write( KMemSpyCLINewLine );		
+		iConsole.Write( KHelpOutputCommand );
+		iConsole.Write( KHelpOutputToFileCommand );
+		iConsole.Write( KHelpHeapDumpCommand );
+		iConsole.Write( KHelpSwmtCommand );
+		iConsole.Write( KHelpKillServerCommand );
+		iConsole.Write( KMemSpyCLINewLine );
+		iConsole.Write( KHelpCommand );
 
+	    // Show input prompt.
+	    iCommandPromptPos = iConsole.CursorPos();
+	    RedrawInputPrompt();
+	    WaitForInput();
+	    
+	    CActiveScheduler::Start();
+    	}
+    // --- OUTPUT
+    //TODO: directory option to be added
+    else if  ( aCommand.CompareF( KMemSpyCmdOutput ) == 0 )	//change output mode   
+    	{    						
+		if( paramCount >= 1 )
+			{
+			if( aParameters[0].CompareF( KMemSpyCmdOutputParameterFile ) == 0 )
+				{
+				if( paramCount == 2 )
+					{
+					TBuf<KMaxFileName> directory;
+					directory.Copy( aParameters[1] );
+					iMemSpySession->SwitchOutputToFileL( directory );
+					}
+				else
+					{
+					iMemSpySession->SwitchOutputToFileL( KNullDesC );
+					}
+				}
+			else if( aParameters[0].CompareF( KMemSpyCmdOutputParameterTrace ) == 0)
+				{
+				TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Output Trace", this ) );
+				iMemSpySession->SwitchOutputToTraceL();
+				}
+			}		           
+    	}    	
+    // --- HEAP DUMP    
+    else if ( aCommand.CompareF( KMemSpyCmdHeapDump) == 0 )    	
+		{		
+		RedrawStatusMessage( KHeapDumpMessage );
+		
+		if( paramCount == 0 ) // no parameter - dump all heap data + kernel heap at the end
+			{		
+		
+			TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_Dump (all threads)", this ) );			
+			// Dump heap data for all threads - Thread agnostic operation					
+			iMemSpySession->OutputHeapData();
+			// Dump kernel heap data
+			iMemSpySession->OutputThreadHeapDataL( KMemSpyClientServerThreadIdKernel );					
+			}
+		else if( paramCount >= 1)
+			{
+			if( aParameters[0].CompareF( KMemSpyCmdHeapDumpParameterAll ) == 0 )
+				{
+				iMemSpySession->OutputHeapData();				
+				iMemSpySession->OutputThreadHeapDataL( KMemSpyClientServerThreadIdKernel );				
+				}
+			else if( aParameters[0].CompareF( KMemSpyCmdHeapDumpParameterKernel ) == 0 )
+				{
+				TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_DumpKernel", this ) );
+				iMemSpySession->OutputThreadHeapDataL( KMemSpyClientServerThreadIdKernel );				
+				}
+			else
+				{				
+				// Dump heap data for named thread - filter
+				const TPtrC pThreadName( aParameters[0] );
+				TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - Heap_Dump (%S)"), this, &pThreadName ) );				
+				iMemSpySession->OutputThreadHeapDataL( pThreadName );
+				}
+  			}
+		}
+    
+    // --- SYSTEM WIDE MEMORY TRACKING    
+    else if( aCommand.CompareF( KMemSpyCmdSwmt ) == 0 )
+    	{    
+		RedrawStatusMessage( KSWMTMessage );
+    		
+		TInt categories( 0 );
+		TName threadNameFilter;
+		
+		if( paramCount == 0 ) //default state -> "dumpnow" command with "all" categories
+			{
+			TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - this: 0x%08x - dumpnow command", this ) );
+			TInt category = TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryAll;
+			iMemSpySession->SetSwmtCategoriesL( category );			
+			iMemSpySession->ForceSwmtUpdateL();			
+			}
+		else if( paramCount >= 1)
+			{
+			const TPtrC pParam( aParameters[0] );
+			if( pParam.CompareF( KMemSpyCmdSwmtParameterStarttimer) == 0 ) // "starttimer" - start tracking
+				{
+				TInt result(0);
+				categories = TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryAll;
+				iMemSpySession->SetSwmtTimerIntervalL( KMemSpySysMemTrackerConfigMinTimerPeriod );
+				
+				if( paramCount >= 2 ) // user gave some optional parameters - <categories> or <value in seconds>
+					{					
+					TLex lex( aParameters[1] );
+				    if ( lex.Val( result ) == KErrNone ) //if 2nd parameter is not number, then parse parameters
+				    	{
+						if( result >= KMemSpySysMemTrackerConfigMinTimerPeriod && result <= KMemSpySysMemTrackerConfigMaxTimerPeriod )
+							{
+							iMemSpySession->SetSwmtTimerIntervalL( result );							;
+							}											
+				    	}				   
+				    TRAP( err, ParseSWMTParametersL( aParameters, categories, threadNameFilter) );
+					}																				
+				
+				//if( !err )
+				//	{
+					/*
+					_LIT( KPressS, "Press 's' to stop the timer " );
+					iConsole.Write( KPressS );
+					
+					iCommandPromptPos = iConsole.CursorPos();					
+					RedrawInputPrompt();					
+					WaitForInput();
+					*/
+					    
+					iMemSpySession->StartSwmtTimerL();
+					
+					//CActiveScheduler::Start();									
+				//	}	
+				}
+			else if( pParam.CompareF( KMemSpyCmdSwmtParameterStoptimer) == 0 ) // "stoptime" - stop tracking
+				{
+				iMemSpySession->StopSwmtTimerL();
+				}
+			else if( pParam.CompareF( KMemSpyCmdSwmtParameterDumpnow ) == 0 ) // "dumpnow" - runs one tracking cycle (CmdSWMT_ForceUpdate before)
+				{
+				categories = TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryAll;
+				if( paramCount >= 2 ) // user gave some optional parameters - <categories>
+					{
+					TRAP( err, ParseSWMTParametersL( aParameters, categories, threadNameFilter) );
+					}				
+																
+				if( !err )
+					{
+					iMemSpySession->SetSwmtCategoriesL( categories );
+					iMemSpySession->ForceSwmtUpdateL();
+					}												
+				}							
+			else //no parameters ("starttimer / stoptimer / dumpnow"), just categories / thread filter
+				 //so dumpnow is used as default with category / thread specified
+				{
+				TRAP( err, ParseSWMTParametersL( aParameters, categories, threadNameFilter) );
+				if( !err )
+					{
+					iMemSpySession->SetSwmtCategoriesL( categories );
+					if( threadNameFilter.Length() > 0 )
+						{
+						iMemSpySession->SetSwmtFilter( threadNameFilter );
+						}
+					}								
+					iMemSpySession->ForceSwmtUpdateL();				
+				}
+			}
+    	}
+    // --- KILL SERVER
+    else if ( aCommand.CompareF( KMemSpyCmdKillServer ) == 0 )
+    	{    
+    	}
+    
+   // RedrawStatusMessage();   
+    
     TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::PerformSingleOpL() - END - err: %d, this: 0x%08x, cmd: %S" ), err, this, &aCommand ) );
 
     // Calculate duration
@@ -364,7 +330,7 @@ void CMemSpyCommandLine::ConnectToMemSpyL()
     {
     TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::ConnectToMemSpyL() - START - this: 0x%08x", this ) );
 
-    TInt err = iMemSpy->Connect();
+    TInt err = iMemSpySession->Connect();
     TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::ConnectToMemSpyL() - connect #1 err: %d, this: 0x%08x", err, this ) );
 
     if  ( err == KErrNotFound )
@@ -390,47 +356,48 @@ void CMemSpyCommandLine::LaunchMemSpyL()
 
     TInt err = KErrGeneral;
     RProcess proc;
+    
+    // Try to run server first
+    err = proc.Create( KMemSpyProcessName0, KNullDesC );
+    if ( err == KErrNone )
+    	{
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create server process successfully... - this: 0x%08x", this ) );
 
-    // First try with s60 UI
-    err = proc.Create( KMemSpyProcessName1, KNullDesC );
-    if  ( err == KErrNone )
-        {
-        TFullName fullName;
-        proc.FullName( fullName );
-        TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create S60 UI process successfully... - this: 0x%08x, name: %S"), this, &fullName ) );
+		TRequestStatus status;
+		proc.Rendezvous( status );
+		proc.Resume();
 
-        TRequestStatus status;
-        proc.Rendezvous( status );
-        proc.Resume();
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
 
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
-        User::WaitForRequest( status );
-        err = status.Int();
-        proc.Close();
+		User::WaitForRequest( status );
+		err = status.Int();
+		proc.Close();
 
-        TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
-        }
-    if  ( err != KErrNone )
-        {
-        // Try console UI
-        err = proc.Create( KMemSpyProcessName2, KNullDesC );
-        if  ( err == KErrNone )
-            {
-            TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create Console UI process successfully... - this: 0x%08x", this ) );
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
+    	}
 
-            TRequestStatus status;
-            proc.Rendezvous( status );
-            proc.Resume();
-
-            TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
-
-            User::WaitForRequest( status );
-            err = status.Int();
-            proc.Close();
-
-            TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
-            }
-        }
+    // If server is not available, try with s60 UI
+    if ( err != KErrNone )
+    	{
+		err = proc.Create( KMemSpyProcessName1, KNullDesC );
+		if  ( err == KErrNone )
+			{
+			TFullName fullName;
+			proc.FullName( fullName );
+			TRACE( RDebug::Print( _L("[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Create S60 UI process successfully... - this: 0x%08x, name: %S"), this, &fullName ) );
+	
+			TRequestStatus status;
+			proc.Rendezvous( status );
+			proc.Resume();
+	
+			TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - MemSpy resumed, waiting for Rendezvous... - this: 0x%08x", this ) );
+			User::WaitForRequest( status );
+			err = status.Int();
+			proc.Close();
+	
+			TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - Rendezvous complete: %d, this: 0x%08x", err, this ) );
+			}
+    	}
 
     TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::LaunchMemSpyL() - final error: %d, this: 0x%08x", err, this ) );
     User::LeaveIfError( err );
@@ -534,11 +501,12 @@ void CMemSpyCommandLine::ParseSWMTParametersL( const CDesCArray& aParameters, TI
     // In that case other parameters are ignored.
     TLex lex( aParameters[ 0 ] );
     if ( lex.Val( result ) != KErrNone )
-        {
+        {		
         // Parameters were given in text form:
         const TInt count( aParameters.Count() );
         for ( TInt i = 0; i < count ; i++ )
             {
+			lex = aParameters[ i ]; //check if num.
             if ( aParameters[i].CompareF( KMemSpyCmdSWMTTypeHeap ) == 0 )
                 result |= TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryUserHeap |
                           TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryKernelHeap;
@@ -565,17 +533,31 @@ void CMemSpyCommandLine::ParseSWMTParametersL( const CDesCArray& aParameters, TI
                 result |= TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryFileServerCache;
             else if ( aParameters[i].CompareF( KMemSpyCmdSWMTTypeSystemMemory ) == 0 )
                 result |= TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategorySystemMemory;
-            else if ( aParameters[i].CompareF( KMemSpyCmdSWMTTypeWindowGroup ) == 0 )
-                result |= TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryWindowGroups;
-            else if ( aParameters[i].Find( KMemSpyCmdSWMTTypeHeapFilter ) == 0 )
-                {
-                aFilter.Copy( aParameters[i].Right( aParameters[i].Length() -11 ) );
+            else if ( aParameters[i].CompareF( KMemSpyCmdSWMTTypeWindowGroup ) == 0 )            	
+                result |= TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryWindowGroups;            
+            else if ( aParameters[i].CompareF( KMemSpyCmdSWMTTypeAll) == 0 ) //"all" category added
+            	result = TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryAll;
+            else if ( aParameters[i].CompareF( KMemSpyCmdSwmtParameterDumpnow) == 0 || 
+            		aParameters[i].CompareF( KMemSpyCmdSwmtParameterStarttimer) == 0 || 
+            		aParameters[i].CompareF( KMemSpyCmdSwmtParameterStoptimer) == 0 )
+            	{    
+				TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine:: command parameter") );
+            	}
+            else if ( lex.Val( result ) == KErrNone )
+            	{
+				TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine:: number - timer period") );
+            	}
+            else// if ( aParameters[i].Find( KMemSpyCmdSWMTTypeHeapFilter ) == 0 )
+                {				
+                aFilter.Copy( aParameters[i].Right( aParameters[i].Length() -11 ) );              
                 }
-            else
-                User::Leave( KErrNotSupported );
+          /*  else
+            	{
+                //User::Leave( KErrNotSupported );            	            
+            	}*/
             }
         }
-    else if ( aParameters.Count() > 1 && aParameters[1].Find( KMemSpyCmdSWMTTypeHeapFilter ) == 0 )
+    else if ( aParameters.Count() > 1 )//&& aParameters[1].Find( KMemSpyCmdSWMTTypeHeapFilter ) == 0 )
         {
         aFilter.Copy( aParameters[1].Right( aParameters[1].Length() -11 ) );
         }
@@ -607,3 +589,110 @@ TInt CMemSpyCommandLine::FindFile( TDes &aFileName, const TDesC &aDirPath )
     return err;
     }
 
+
+//CLI status messages methods
+void CMemSpyCommandLine::RedrawInputPrompt()
+    {
+    iConsole.SetCursorPosAbs( iCommandPromptPos );
+    iConsole.ClearToEndOfLine();
+    iConsole.Printf( KMemSpyCLIInputPrompt, &iCommandBuffer );
+    }
+
+
+void CMemSpyCommandLine::RedrawStatusMessage()
+    {
+    RedrawStatusMessage( KNullDesC );
+    }
+
+
+void CMemSpyCommandLine::RedrawStatusMessage( const TDesC& aMessage )
+    {
+    iConsole.SetCursorPosAbs( iStatusMessagePos );
+    iConsole.ClearToEndOfLine();
+    iConsole.Write( aMessage );
+    iConsole.Write( KMemSpyCLINewLine );
+    }
+
+void CMemSpyCommandLine::WaitForInput()
+    {
+    ASSERT( !IsActive() );
+    iConsole.Read( iStatus );
+    SetActive();
+    }
+
+void CMemSpyCommandLine::DoCancel()
+    {
+    iConsole.ReadCancel();
+    }
+
+void CMemSpyCommandLine::RunL()
+    {
+    TKeyCode key = iConsole.KeyCode();
+    //
+    if  ( key == EKeyEnter || key == KMemSpyUiS60KeyCodeButtonOk || key == KMemSpyUiS60KeyCodeRockerEnter )
+        {
+        TRAP_IGNORE( ProcessCommandBufferL() );
+        }
+    else
+        {
+        TChar character( key );
+        if  ( character.IsPrint() )
+            {
+            if  ( iCommandBuffer.Length() < iCommandBuffer.MaxLength() )
+                {
+                iCommandBuffer.Append( TChar( key ) );
+                }
+
+            RedrawInputPrompt();
+            }
+        }
+
+    WaitForInput();
+    }
+
+TInt CMemSpyCommandLine::RunError( TInt aError )
+	{	
+	return KErrNone;
+	}
+
+void CMemSpyCommandLine::ProcessCommandBufferL()
+    {
+    iCommandBuffer.Trim();
+    //
+#ifdef _DEBUG
+    RDebug::Print( _L("[MCon] CMemSpyConsoleMenu::ProcessCommandBufferL() - cmd: [%S]"), &iCommandBuffer );
+#endif
+    //
+    TBool validCommand = EFalse;
+    if  ( iCommandBuffer.Length() == 1 )
+        {
+        // Reset if not recognised...
+        validCommand = ETrue;
+
+        const TChar cmd = iCommandBuffer[ 0 ]; 
+        switch( cmd )
+            {
+        	case 's':
+        	case 'S':
+        		{
+        		iMemSpy->PerformOperation( EMemSpyClientServerOpSystemWideMemoryTrackingTimerStop );
+        		
+        		CActiveScheduler::Stop();
+        		return;
+        		}
+        	case 'c':
+        	case 'C':
+        		CActiveScheduler::Stop();
+        		return;            
+        	default:
+        		validCommand = EFalse;
+        		break;
+            }
+        }    
+    if  ( !validCommand )
+        {
+        _LIT( KInvalidEntry, "*** ERROR - Invalid Command ***" );
+        RedrawStatusMessage( KInvalidEntry );
+        RedrawInputPrompt();
+        }
+    }

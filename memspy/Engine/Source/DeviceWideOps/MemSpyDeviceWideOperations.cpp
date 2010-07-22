@@ -286,9 +286,10 @@ void CMemSpyDeviceWideOperations::PerformFinalOperationL()
         break;
     case EPerEntityHeapData:
         // Complete op by outputting kernel heap data
-        pType.Set( KMemSpyUiThreadNameKernel );
-        iObserver.HandleDeviceWideOperationEvent( MMemSpyDeviceWideOperationsObserver::EOperationProgressStart, 0, pType );
-        iEngine.HelperHeap().OutputHeapDataKernelL();
+        // TODO: Uncomment after kernel heap dump is fixed
+//        pType.Set( KMemSpyUiThreadNameKernel );
+//        iObserver.HandleDeviceWideOperationEvent( MMemSpyDeviceWideOperationsObserver::EOperationProgressStart, 0, pType );
+//        iEngine.HelperHeap().OutputHeapDataKernelL();
         break;
     default:
         break;

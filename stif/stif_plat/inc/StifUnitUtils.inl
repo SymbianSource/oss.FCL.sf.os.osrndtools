@@ -91,8 +91,5 @@ inline TBool AssertTrue(const TBool& aCondition)
 		}
 	return ETrue;
 	}
-	
-
-
 
 // End of File

@@ -22,3 +22,5 @@
 #include "../stif/group/bld.inf"
 #include "../memspy/group/bld.inf"
 #include "../hti/group/bld.inf"
+#include "../piprofiler/group/bld.inf"
+#include "../analyzetool/group/bld.inf"

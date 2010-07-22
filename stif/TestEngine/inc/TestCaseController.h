@@ -176,6 +176,9 @@ class CTestCaseController
         // Test Info
         TTestInfo           iTestInfo;
 
+        // Test case arguments
+		HBufC*              iTestCaseArguments;
+        
         // Internal state
         TTestCaseStatus     iState;
 

@@ -53,5 +53,7 @@ PRJ_EXPORTS
 // Hti Watchdog
 #include "../HtiWatchDog/group/bld.inf"
 
+// Hti Restart
+#include "../HtiRestart/group/bld.inf"
 
 // End of File

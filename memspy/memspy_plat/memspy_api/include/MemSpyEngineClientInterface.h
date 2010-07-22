@@ -45,11 +45,12 @@ const TInt KMemSpyOpFlagsTypeMask               = 0x0000FFFF;
 const TInt KMemSpyOpFlagsInclusionMask          = 0xFFFF0000;
 const TInt KMemSpyOpFlagsIncludesThreadId       = 0x00010000;
 const TInt KMemSpyOpFlagsIncludesThreadName     = 0x00020000;
-
+const TInt KMemSpyOpFlagsAsyncOperation         = 0x00040000;
 // Literal constants
 _LIT( KMemSpyServerName, "MemSpyServer" );
+_LIT( KMemSpyProcessName0, "MemSpyServer.exe" );
 _LIT( KMemSpyProcessName1, "MemSpyUI.exe" );
-_LIT( KMemSpyProcessName2, "MemSpyConsole.exe" );
+//_LIT( KMemSpyProcessName2, "MemSpyConsole.exe" );
 
 //
 // Supported MemSpy operation types
@@ -258,12 +259,104 @@ enum TMemSpyClientServerOp
     EMemSpyClientServerOpSystemWideMemoryTrackingHeapDumpSet,
     
     /**
-     * [INTERNAL REQUEST]
-     */
+	 * [INTERNAL REQUEST]
+	 */
+	EMemSpyClientServerOpMarkerUiFirst,
+	
+	EMemSpyClientServerOpGetProcessCount = EMemSpyClientServerOpMarkerUiFirst,
+	
+	EMemSpyClientServerOpGetProcesses,
+	
+	EMemSpyClienServerOpGetProcessIdByName,
+	
+	EMemSpyClientServerOpGetThreadCount,
+	
+	EMemSpyClientServerOpGetThreads,
+	
+	EMemSpyClientServerOpSetThreadPriority,
+	
+	EMemSpyClientServerOpProcessSystemPermanentOrCritical,
+	
+	EMemSpyClientServerOpEndProcess,
+	
+	EMemSpyClientServerOpSwitchToProcess,
+	
+	//Threads operations
+	EMemSpyClientServerOpThreadSystemPermanentOrCritical,
+	
+	EMemSpyClientServerOpEndThread,
+	
+	EMemSpyClientServerOpSwitchToThread,
+	
+	EMemSpyClientServerOpGetInfoItemType,
+	
+	EMemSpyClientServerOpGetThreadInfoItemsCount,
+	
+	EMemSpyClientServerOpGetThreadInfoItems,
+	
+	EMemSpyClientServerOpOutputInfoHandles,
+	
+	EMemSpyClientServerOpOutputAOList,
+		
+	
+	//Kernel Objects operations
+	EMemSpyClientServerOpGetKernelObjectCount,
+	
+	EMemSpyClientServerOpGetKernelObjects,
+	
+	EMemSpyClientServerOpGetKernelObjectItemCount,
+	
+	EMemSpyClientServerOpGetKernelObjectItems,
+	
+	EMemSpyClientServerOpGetHeap,
+	
+	EMemSpyClientServerOpGetMemoryTrackingCycleCount,
+	
+	EMemSpyClientServerOpGetMemoryTrackingCycles,
+	
+	/**
+	 * [INTERNAL REQUEST]
+	 * Register for notifications of device wide operation progress.
+	 */
+	EMemSpyClientServerOpNotifyDeviceWideOperationProgress,
+	
+	/**
+	 * [INTERNAL REQUEST]
+	 * Cancel current device wide operation
+	 */
+	EMemSpyClientServerOpCancelDeviceWideOperation,	
+	
+	EMemSpyClientServerOpOutputAllContainerContents,
+	    
+	EMemSpyClientServerOpDumpKernelHeap,
+	
+	EMemSpyClientServerOpSetSwmtConfig,
+	
+	EMemSpyClientServerOpSetSwmtAutoStartProcessList,
+		
+	EMemSpyClientServerOpGetOutputSink,
+	
+	/**
+	 * [INTERNAL REQUEST]
+	 * Check if system wide memory tracking timer is running.
+	 */
+	EMemSpyClientServerOpIsSwmtRunning,
+	
+	EMemSpyClientServerOpMarkerUiLast,		
+	
+	/**
+	 * [INTERNAL REQUEST]
+	 */
     EMemSpyClientServerOpMarkerLast,
     };
 
 
+enum TMemSpyEndType
+	{
+	ETerminate,
+	EKill,
+	EPanic
+	};
 
 
 

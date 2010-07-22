@@ -361,6 +361,4 @@ EXPORT_C TInt SetRequirements( CTestModuleParam*& /*aTestModuleParam*/,
 
     }
 
-
-
-//  End of File
+// End of File

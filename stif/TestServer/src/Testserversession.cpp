@@ -1670,6 +1670,4 @@ CTestServer* CTestModule::GetTestServer()
     return iTestServer;
     }
 
-
-
-//  End of File
+// End of File

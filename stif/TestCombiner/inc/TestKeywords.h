@@ -82,6 +82,7 @@ class TTCKeywords
             ECategory,
             ECaseTimeout,
             ECaseTitle,
+            EArgs,			
             };
 
         // pause keyword optional arguments

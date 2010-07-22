@@ -170,6 +170,7 @@ TUint DMemSpyEventMonitor::EventHandler( TKernelEvent aType, TAny* a1, TAny* a2,
 TUint DMemSpyEventMonitor::HandleEvent( TKernelEvent aType, TAny* a1, TAny* /*a2*/ )
 	{ 
 	// TRACE_EM( Kern::Printf("DMemSpyEventMonitor::HandleEvent() - PRE WAIT"));
+	NKern::ThreadEnterCS();
 	Kern::MutexWait(*iLock);
 	// TRACE_EM( Kern::Printf("DMemSpyEventMonitor::HandleEvent() - POST WAIT"));
 
@@ -250,6 +251,7 @@ TUint DMemSpyEventMonitor::HandleEvent( TKernelEvent aType, TAny* a1, TAny* /*a2
 
 	// TRACE_EM( Kern::Printf("DMemSpyEventMonitor::HandleEvent() - PRE SIGNAL "));
 	Kern::MutexSignal( *iLock );
+	NKern::ThreadLeaveCS();
 	// TRACE_EM( Kern::Printf("DMemSpyEventMonitor::HandleEvent() - POST SIGNAL "));
 
 	// Allow other handlers to see this event

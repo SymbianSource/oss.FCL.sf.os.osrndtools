@@ -102,8 +102,18 @@ void CMemSpyEngineOutputList::PrintL( CMemSpyEngineOutputSink& aSink )
         for( TInt j=0; j<count; j++ )
             {
             const CMemSpyEngineOutputListItem* item = iItems[ j ];
-            maxLengthCaption = Max( maxLengthCaption, item->Caption().Length() );
-            maxLengthValue = Max( maxLengthValue, item->Value().Length() );
+			if (item->Value().Length())
+				{
+	            maxLengthCaption = Max( maxLengthCaption, item->Caption().Length() );
+	            maxLengthValue = Max( maxLengthValue, item->Value().Length() );
+				}
+			else
+				{
+				// If something doesn't have a value (ie it's a section header, represented as just a caption) then the caption
+				// shouldn't be factored into the maxcaptionlength. But consider it in maxlengthValue to make sure we actually
+				// make the overall buffers big enough
+				maxLengthValue = Max( maxLengthValue, item->Caption().Length() );
+				}
             }
 
         // Second pass - real this time - to print the values
@@ -121,7 +131,15 @@ void CMemSpyEngineOutputList::PrintL( CMemSpyEngineOutputSink& aSink )
             HBufC* value = MemSpyEngineUtils::CleanupTextLC( item->Value() );
 
             // Now format the final line, with padding.
-            pLine.Justify( *caption, maxLengthCaption + 3, ELeft, TChar(' ') );
+			if (value->Length()) 
+				{
+	            pLine.Justify( *caption, maxLengthCaption + 3, ELeft, TChar(' ') );
+				}
+			else
+				{
+				// items without value (ie just captions, ie section headers) aren't constrained by the maxLengthCaption restriction
+				pLine.Copy(*caption);
+				}
             pLine.Append( *value );
             CleanupStack::PopAndDestroy( 2, caption );
 

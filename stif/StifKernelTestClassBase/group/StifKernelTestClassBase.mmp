@@ -27,7 +27,6 @@ VENDORID        0x101FB657
 SECUREID        0x102073DD
 EPOCALLOWDLLDATA
 
-
 TARGET          StifKernelTestClassBase.dll
 TARGETTYPE      kdll
 UID             0x1000008D 0x101FB3E3
@@ -43,9 +42,4 @@ SOURCEPATH      ../src
 
 SOURCE          StifKernelTestClassBase.cpp
 
-LIBRARY         ekern.lib
-
-
-
 LANG            SC
-

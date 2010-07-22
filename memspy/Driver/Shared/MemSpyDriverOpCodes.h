@@ -56,7 +56,7 @@ enum TMemSpyDriverOpCode
 	EMemSpyDriverOpCodeHeapInfoGetUser,
 	EMemSpyDriverOpCodeHeapInfoGetKernel,
     EMemSpyDriverOpCodeHeapInfoGetIsDebugKernel,
-    EMemSpyDriverOpCodeHeapInfoFetchFreeCells,
+    EMemSpyDriverOpCodeHeapInfoFetchCellList,
     EMemSpyDriverOpCodeHeapInfoEnd,
 
     // HEAP DATA

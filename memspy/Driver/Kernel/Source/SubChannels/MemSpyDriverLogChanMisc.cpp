@@ -171,7 +171,6 @@ TInt DMemSpyDriverLogChanMisc::Impersonate( TUint32 aValue )
 
         DObjectCon* container = Kern::Containers()[ EProcess ];
         container->Wait();
-        NKern::LockSystem();
 
         const TInt count = container->Count();
         for(TInt i=0; i<count; i++)
@@ -193,9 +192,7 @@ TInt DMemSpyDriverLogChanMisc::Impersonate( TUint32 aValue )
                 }
             }
 
-        NKern::UnlockSystem();
         container->Signal();
-
     	NKern::ThreadLeaveCS();
         }
 

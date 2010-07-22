@@ -69,7 +69,8 @@ public: // Free cell related
     TUint iLargestCellAddressFreePrevious;
 
     // The overhead associated with a free cell (header length)
-    TUint iFreeCellOverheadHeaderLength;
+    //TUint iFreeCellOverheadHeaderLength;
+	TUint iReserved1;
 
     // The slace space at the end of the heap
     TUint iSlackSpace;
@@ -93,7 +94,8 @@ public: // Alloc cell related
     TLinAddr iLargestCellAddressAlloc;
    
     // The overhead associated with an allocated cell (header length)
-    TUint iAllocCellOverheadHeaderLength;
+    //TUint iAllocCellOverheadHeaderLength;
+	TUint iReserved2;
 
 public: // Common
 

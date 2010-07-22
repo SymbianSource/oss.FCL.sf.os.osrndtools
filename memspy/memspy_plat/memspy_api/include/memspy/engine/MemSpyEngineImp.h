@@ -80,6 +80,7 @@ public: // Sink related
     CMemSpyEngineOutputSink& Sink();
     TMemSpySinkType SinkType();
     void InstallSinkL( TMemSpySinkType aType );
+    void InstallSinkL( TMemSpySinkType aType, const TDesC& aRootFolder );
 
 public: // Misc
     void ListOpenFilesL();

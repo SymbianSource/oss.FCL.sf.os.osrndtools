@@ -51,10 +51,10 @@ DMemSpyDriverLogicalChannel::~DMemSpyDriverLogicalChannel()
 
     NKern::ThreadEnterCS();
     SubChannelsDestroy();
-    NKern::ThreadLeaveCS();
 
     TRACE( Kern::Printf("DMemSpyDriverLogicalChannel::~DMemSpyDriverLogicalChannel() - closing client thread..."));
     Kern::SafeClose( (DObject*&) iClientThread, NULL );
+    NKern::ThreadLeaveCS();
 
     TRACE( Kern::Printf("DMemSpyDriverLogicalChannel::~DMemSpyDriverLogicalChannel() - calling device to cleanup..."));
     MemSpyDevice().Cleanup();

@@ -22,20 +22,10 @@
 #include <nk_plat.h>
 
 #ifdef __MARM__
-
 #include <arm.h>
-// Necessary when accessing data members by steam via offsets in order
-// to prevent potential unaligned data aborts
-
-#ifdef __CC_ARM
-#define UNALIGNED_DATA_MEMBER __packed
-#endif /* __CC_ARM */
-
-#endif /* __MARM__ */
-
-#ifndef UNALIGNED_DATA_MEMBER
-#define UNALIGNED_DATA_MEMBER
 #endif
+
+// I've removed UNALIGNED_DATA_MEMBER in preference for just using memcpy to get round the potential unaligned access. -TomS
 
 // User includes
 #include "MemSpyDriverLog.h"
@@ -164,10 +154,9 @@ TExitType DMemSpyDriverOSAdaptionDThread::GetExitType( DThread& aObject ) const
     {
     DThread* dThread = &aObject;
     TUint32 pTarget = reinterpret_cast<TUint32>( dThread ) + iOffset_ExitType;
-    UNALIGNED_DATA_MEMBER TExitType* pRet = reinterpret_cast< TExitType* >( pTarget );
-    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetExitType() - aObject: 0x%08x, ret: 0x%08x", &aObject, pRet ) );
-    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetExitType() - value: %d", *pRet ) );
-    return *pRet;
+	TUint8 exitType = *reinterpret_cast<TUint8*>(pTarget);
+    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetExitType() - aObject: 0x%08x, ret: %d", &aObject, (TInt)exitType ) );
+    return (TExitType)exitType;
     }
 
 
@@ -175,10 +164,11 @@ TUint32 DMemSpyDriverOSAdaptionDThread::GetSupervisorStackBase( DThread& aObject
     {
     DThread* dThread = &aObject;
     TUint32 pTarget = reinterpret_cast<TUint32>( dThread ) + iOffset_SupervisorStackBase;
-    UNALIGNED_DATA_MEMBER TUint32* pRet = reinterpret_cast< TUint32* >( pTarget );
-    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetSupervisorStackBase() - aObject: 0x%08x, ret: 0x%08x", &aObject, pRet ) );
-    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetSupervisorStackBase() - 0x%08x: %d", *pRet ) );
-    return *pRet;
+
+	TUint32 ret;
+	memcpy(&ret, (const TAny*)pTarget, sizeof(TUint32));
+    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetSupervisorStackBase() - aObject: 0x%08x, ret: 0x%08x", &aObject, ret ) );
+    return ret;
     }
 
 
@@ -186,10 +176,11 @@ TInt DMemSpyDriverOSAdaptionDThread::GetSupervisorStackSize( DThread& aObject ) 
     {
     DThread* dThread = &aObject;
     TUint32 pTarget = reinterpret_cast<TUint32>( dThread ) + iOffset_SupervisorStackSize;
-    UNALIGNED_DATA_MEMBER TInt* pRet = reinterpret_cast< TInt* >( pTarget );
-    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetSupervisorStackSize() - aObject: 0x%08x, ret: 0x%08x", &aObject, pRet ) );
-    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetSupervisorStackSize() - value: %d", *pRet ) );
-    return *pRet;
+	
+	TInt ret;
+	memcpy(&ret, (const TAny*)pTarget, sizeof(TInt));
+    TRACE( Kern::Printf( "DMemSpyDriverOSAdaptionDThread::GetSupervisorStackSize() - aObject: 0x%08x, ret: %d", &aObject, ret ) );
+    return ret;
     }
 
 
@@ -448,9 +439,23 @@ TExitType DMemSpyDriverOSAdaptionDProcess::GetExitType( DProcess& aObject ) cons
     }
 
 
-DThread* DMemSpyDriverOSAdaptionDProcess::GetFirstThread( DProcess& aObject ) const
+DThread* DMemSpyDriverOSAdaptionDProcess::OpenFirstThread( DProcess& aProcess ) const
     {
-    return aObject.FirstThread();
+	// It appears that the system lock needs to be held while manipulating the iThreadQ
+	DThread* result = NULL;
+	NKern::LockSystem();
+	// We don't use DProcess::FirstThread() as that doesn't appear to do any checking of whether the list is empty, ie if there are no threads at all
+	SDblQueLink* threadLink = aProcess.iThreadQ.First();
+	if (threadLink != NULL && threadLink != &aProcess.iThreadQ.iA)
+		{
+		result = _LOFF(threadLink,DThread,iProcessLink);
+		if (result->Open() != KErrNone)
+			{
+			result = NULL;
+			}
+		}
+	NKern::UnlockSystem();
+    return result;
     }
 
 
@@ -545,6 +550,11 @@ TUint8* DMemSpyDriverOSAdaptionDProcess::GetAddressOfDataBssStackChunk( DProcess
     return (TUint8*)aObject.iDataBssStackChunk;
     }
 
+TBool DMemSpyDriverOSAdaptionDProcess::IsKernProcess(DProcess& aProcess) const
+	{
+	// The kernel process always has pid 1
+	return GetId(aProcess) == 1;
+	}
 
 
 
@@ -566,9 +576,32 @@ TInt DMemSpyDriverOSAdaptionDChunk::GetMaxSize( DChunk& aObject ) const
     }
 
 
-TUint8* DMemSpyDriverOSAdaptionDChunk::GetBase( DChunk& aObject ) const
+TUint8* DMemSpyDriverOSAdaptionDChunk::GetBase( DChunk& aChunk ) const
     {
-    return aObject.Base();
+    TUint8* base = aChunk.Base();
+	if (base == 0)
+		{
+		// Under flexible memory model, DChunk::Base() will return NULL (for non-fixed chunks anyway, and that means most of them)
+		// A more useful thing to return is the base address in the owning process
+		DProcess* proc = GetOwningProcess(aChunk);
+		NKern::ThreadEnterCS();
+		if (proc && proc->Open() == KErrNone)
+			{
+			// Probably shouldn't call ChunkUserBase for a non-user-owned chunk
+			if (!OSAdaption().DProcess().IsKernProcess(*proc))
+				{
+				DThread* firstThread = OSAdaption().DProcess().OpenFirstThread(*proc);
+				if (firstThread)
+					{
+					base = Kern::ChunkUserBase(&aChunk, firstThread);
+					firstThread->Close(NULL);
+					}
+				}
+			proc->Close(NULL);
+			}
+		NKern::ThreadLeaveCS();
+		}
+	return base; 
     }
 
 

@@ -28,37 +28,41 @@
 // CONSTANTS
 enum TFtpCommand
     {
-    EFtpSTOR         = 0x02,
-    EFtpSTOR_u       = 0x03,
-    EFtpRETR         = 0x04,
-    EFtpRETR_u       = 0x05,
-    EFtpLIST         = 0x06,
-    EFtpLIST_u       = 0x07,
-    EFtpMKD          = 0x08,
-    EFtpMKD_u        = 0x09,
-    EFtpRMD          = 0x0A,
-    EFtpRMD_u        = 0x0B,
-    EFtpDELE         = 0x0C,
-    EFtpDELE_u       = 0x0D,
-    EFtpCANCEL       = 0x0E,
-    EFtpFILESIZE     = 0x0F,
-    EFtpLISTDIR      = 0x10,
-    EFtpLISTDIR_u    = 0x11,
-    EFtpLISTSIZES    = 0x12,
-    EFtpLISTSIZES_u  = 0x13,
-    EFtpLISTDRIVES   = 0x14,
-    EFtpLISTDRIVES_u = 0x15,
-    EFtpRENAME       = 0x16,
-    EFtpRENAME_u     = 0x17,
-    EFtpCOPY         = 0x18,
-    EFtpCOPY_u       = 0x19,
-    EFtpMOVE         = 0x1A,
-    EFtpMOVE_u       = 0x1B,
-    EFtpSETFORCE     = 0x20,
-    EFtpCHECKSUM     = 0x30,
-    EFtpCHECKSUM_u   = 0x31,
-    EFtpFORMAT       = 0x40,
-    EFtpOK           = 0xF0,
+    EFtpSTOR                = 0x02,
+    EFtpSTOR_u              = 0x03,
+    EFtpRETR                = 0x04,
+    EFtpRETR_u              = 0x05,
+    EFtpLIST                = 0x06,
+    EFtpLIST_u              = 0x07,
+    EFtpMKD                 = 0x08,
+    EFtpMKD_u               = 0x09,
+    EFtpRMD                 = 0x0A,
+    EFtpRMD_u               = 0x0B,
+    EFtpDELE                = 0x0C,
+    EFtpDELE_u              = 0x0D,
+    EFtpCANCEL              = 0x0E,
+    EFtpFILESIZE            = 0x0F,
+    EFtpLISTDIR             = 0x10,
+    EFtpLISTDIR_u           = 0x11,
+    EFtpLISTSIZES           = 0x12,
+    EFtpLISTSIZES_u         = 0x13,
+    EFtpLISTDRIVES          = 0x14,
+    EFtpLISTDRIVES_u        = 0x15,
+    EFtpRENAME              = 0x16,
+    EFtpRENAME_u            = 0x17,
+    EFtpCOPY                = 0x18,
+    EFtpCOPY_u              = 0x19,
+    EFtpMOVE                = 0x1A,
+    EFtpMOVE_u              = 0x1B,
+    EFtpSETFORCE            = 0x20,
+    EFtpCHECKSUM            = 0x30,
+    EFtpCHECKSUM_u          = 0x31,
+    EFtpListDetail          = 0x32,
+    EFtpListDetail_u        = 0x33,
+    EFtpListDirDetail       = 0x34,
+    EFtpListDirDetail_u     = 0x35,
+    EFtpFORMAT              = 0x40,
+    EFtpOK                  = 0xF0,
     };
 
 enum TAlgorithm
@@ -283,6 +287,14 @@ protected:
     * @param aSizes if ETrue filesizes are included in the response
     */
     void HandleListL( TBool aUnicodText, TUint aReadingAtt, TBool aSizes );
+    
+    /**
+    * Handle LIST FILES DETAIL command
+    *
+    * @param aUnicodText if ETrue then response in unicode
+    * @param aReadingAtt specifies what entries to read from a dir
+    */
+    void HandleListDetailL( TBool aUnicodText, TUint aReadingAtt);
 
     /**
     * Extracts and validate file name to iFileName

@@ -137,4 +137,5 @@ EXPORTS
 	?GetLocalValue@CScriptBase@@IAEHABVTDesC16@@AAH@Z @ 136 NONAME ; int CScriptBase::GetLocalValue(class TDesC16 const &, int &)
 	?GetLocalValue@CScriptBase@@IAEHABVTDesC16@@AAN@Z @ 137 NONAME ; int CScriptBase::GetLocalValue(class TDesC16 const &, double &)
 	?GetLocalValue@CScriptBase@@IAEHABVTDesC16@@AAVTDes16@@@Z @ 138 NONAME ; int CScriptBase::GetLocalValue(class TDesC16 const &, class TDes16 &)
+	?GetTestCaseArguments@CTestModuleIf@@QBEABVTDesC16@@XZ @ 139 NONAME ; class TDesC16 const & CTestModuleIf::GetTestCaseArguments(void) const
 

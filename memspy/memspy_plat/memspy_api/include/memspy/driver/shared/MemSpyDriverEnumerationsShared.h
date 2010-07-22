@@ -24,12 +24,24 @@
 // Enumerations
 enum TMemSpyDriverCellType
 	{
-	EMemSpyDriverGoodAllocatedCell = 0,
-	EMemSpyDriverGoodFreeCell,
-	EMemSpyDriverBadAllocatedCellSize,
-	EMemSpyDriverBadAllocatedCellAddress,
-	EMemSpyDriverBadFreeCellAddress,
-	EMemSpyDriverBadFreeCellSize
+	EMemSpyDriverAllocatedCellMask	= 0x000000FF,
+	EMemSpyDriverFreeCellMask		= 0x0000FF00,
+	EMemSpyDriverBadCellMask		= 0xFF000000,
+
+	EMemSpyDriverHeapAllocation		= 0x00000001,
+	EMemSpyDriverDlaAllocation		= 0x00000002,
+	EMemSpyDriverPageAllocation		= 0x00000003,
+	EMemSpyDriverSlabAllocation		= 0x00000004,
+	
+	EMemSpyDriverHeapFreeCell		= 0x00000100,
+	EMemSpyDriverDlaFreeCell		= 0x00000200,
+	EMemSpyDriverSlabFreeCell		= 0x00000300, // Used to track free cells in partially-filled slabs
+	EMemSpyDriverSlabFreeSlab		= 0x00000400, // Used to track entirely empty slabs (that don't have a specific cell size)
+
+	EMemSpyDriverHeapBadFreeCellAddress			= 0x01000000,
+	EMemSpyDriverHeapBadFreeCellSize			= 0x02000000,
+	EMemSpyDriverHeapBadAllocatedCellSize		= 0x03000000,
+	EMemSpyDriverHeapBadAllocatedCellAddress	= 0x04000000,
 	};
 
 

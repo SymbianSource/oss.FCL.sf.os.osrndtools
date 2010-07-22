@@ -1,114 +1,184 @@
 EXPORTS
 	?CpuUse@CMemSpyApiThread@@QBEHXZ @ 1 NONAME ; int CMemSpyApiThread::CpuUse(void) const
 	?Name@CMemSpyApiKernelObjectItem@@QBEABVTDesC8@@XZ @ 2 NONAME ; class TDesC8 const & CMemSpyApiKernelObjectItem::Name(void) const
-	?AccessCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 3 NONAME ; int CMemSpyApiKernelObjectItem::AccessCount(void) const
-	?TotalOverhead@CMemSpyApiHeap@@QAEHXZ @ 4 NONAME ; int CMemSpyApiHeap::TotalOverhead(void)
-	?UniqueID@CMemSpyApiKernelObjectItem@@QBEHXZ @ 5 NONAME ; int CMemSpyApiKernelObjectItem::UniqueID(void) const
-	?SessionType@CMemSpyApiKernelObjectItem@@QBE?AW4TIpcSessionType@@XZ @ 6 NONAME ; enum TIpcSessionType CMemSpyApiKernelObjectItem::SessionType(void) const
-	?VID@CMemSpyApiThread@@QBEHXZ @ 7 NONAME ; int CMemSpyApiThread::VID(void) const
-	?MaxLength@CMemSpyApiHeap@@QAEHXZ @ 8 NONAME ; int CMemSpyApiHeap::MaxLength(void)
-	?ProcessNumberUsing@CMemSpyApiThread@@QBEHXZ @ 9 NONAME ; int CMemSpyApiThread::ProcessNumberUsing(void) const
-	?AddressOfKernelOwner@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 10 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfKernelOwner(void)
-	?FreeCount@CMemSpyApiHeap@@QAEHXZ @ 11 NONAME ; int CMemSpyApiHeap::FreeCount(void)
-	?ExitType@CMemSpyApiProcess@@QBE?AW4TExitType@@XZ @ 12 NONAME ; enum TExitType CMemSpyApiProcess::ExitType(void) const
-	?TotalFree@CMemSpyApiHeap@@QAEHXZ @ 13 NONAME ; int CMemSpyApiHeap::TotalFree(void)
-	?SwitchToThread@RMemSpySession@@QAEHVTThreadId@@H@Z @ 14 NONAME ; int RMemSpySession::SwitchToThread(class TThreadId, int)
-	?FreeOverhead@CMemSpyApiHeap@@QAEHXZ @ 15 NONAME ; int CMemSpyApiHeap::FreeOverhead(void)
-	?SlackFreeSpace@CMemSpyApiHeap@@QAEHXZ @ 16 NONAME ; int CMemSpyApiHeap::SlackFreeSpace(void)
-	?Priority@CMemSpyApiKernelObjectItem@@QBEHXZ @ 17 NONAME ; int CMemSpyApiKernelObjectItem::Priority(void) const
-	?EndThread@RMemSpySession@@QAEHVTThreadId@@W4TEndType@@@Z @ 18 NONAME ; int RMemSpySession::EndThread(class TThreadId, enum TEndType)
-	?ThreadCount@CMemSpyApiProcess@@QBEHXZ @ 19 NONAME ; int CMemSpyApiProcess::ThreadCount(void) const
-	?RequestCount@CMemSpyApiThread@@QBEHXZ @ 20 NONAME ; int CMemSpyApiThread::RequestCount(void) const
-	??1CMemSpyApiProcess@@QAE@XZ @ 21 NONAME ; CMemSpyApiProcess::~CMemSpyApiProcess(void)
-	?SetThreadPriorityL@RMemSpySession@@QAEXVTThreadId@@H@Z @ 22 NONAME ; void RMemSpySession::SetThreadPriorityL(class TThreadId, int)
-	?MinLength@CMemSpyApiHeap@@QAEHXZ @ 23 NONAME ; int CMemSpyApiHeap::MinLength(void)
-	?Restrictions@CMemSpyApiKernelObjectItem@@QBEIXZ @ 24 NONAME ; unsigned int CMemSpyApiKernelObjectItem::Restrictions(void) const
-	?Id@CMemSpyApiKernelObjectItem@@QBEHXZ @ 25 NONAME ; int CMemSpyApiKernelObjectItem::Id(void) const
-	?Count@CMemSpyApiKernelObjectItem@@QBEHXZ @ 26 NONAME ; int CMemSpyApiKernelObjectItem::Count(void) const
-	?ExitCategory@CMemSpyApiProcess@@QBE?AV?$TBuf@$0BA@@@XZ @ 27 NONAME ; class TBuf<16> CMemSpyApiProcess::ExitCategory(void) const
-	?ControllingOwner@CMemSpyApiKernelObjectItem@@QBEIXZ @ 28 NONAME ; unsigned int CMemSpyApiKernelObjectItem::ControllingOwner(void) const
-	?Count@CMemSpyApiKernelObject@@QBEHXZ @ 29 NONAME ; int CMemSpyApiKernelObject::Count(void) const
-	?StartPos@CMemSpyApiKernelObjectItem@@QBEHXZ @ 30 NONAME ; int CMemSpyApiKernelObjectItem::StartPos(void) const
-	?TimerState@CMemSpyApiKernelObjectItem@@QBE?AW4TMemSpyDriverTimerState@@XZ @ 31 NONAME ; enum TMemSpyDriverTimerState CMemSpyApiKernelObjectItem::TimerState(void) const
-	?ExitType@CMemSpyApiThread@@QBE?AW4TExitType@@XZ @ 32 NONAME ; enum TExitType CMemSpyApiThread::ExitType(void) const
-	?BaseAddress@CMemSpyApiHeap@@QAEHXZ @ 33 NONAME ; int CMemSpyApiHeap::BaseAddress(void)
-	?Version@CMemSpyApiKernelObjectItem@@QBE?AVTVersion@@XZ @ 34 NONAME ; class TVersion CMemSpyApiKernelObjectItem::Version(void) const
-	?SwitchToProcess@RMemSpySession@@QAEHVTProcessId@@H@Z @ 35 NONAME ; int RMemSpySession::SwitchToProcess(class TProcessId, int)
-	?MaxSize@CMemSpyApiKernelObjectItem@@QBEHXZ @ 36 NONAME ; int CMemSpyApiKernelObjectItem::MaxSize(void) const
-	?Type@CMemSpyApiHeap@@QAEAAVTDesC16@@XZ @ 37 NONAME ; class TDesC16 & CMemSpyApiHeap::Type(void)
-	?AddressOfOwningProcess@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 38 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfOwningProcess(void)
-	?Id@CMemSpyApiProcess@@QBE?AVTProcessId@@XZ @ 39 NONAME ; class TProcessId CMemSpyApiProcess::Id(void) const
-	??1CMemSpyApiKernelObjectItem@@QAE@XZ @ 40 NONAME ; CMemSpyApiKernelObjectItem::~CMemSpyApiKernelObjectItem(void)
-	?BiggestAllocation@CMemSpyApiHeap@@QAEHXZ @ 41 NONAME ; int CMemSpyApiHeap::BiggestAllocation(void)
-	?ExitReason@CMemSpyApiProcess@@QBEHXZ @ 42 NONAME ; int CMemSpyApiProcess::ExitReason(void) const
-	?MsgCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 43 NONAME ; int CMemSpyApiKernelObjectItem::MsgCount(void) const
-	?AllocationsCount@CMemSpyApiHeap@@QAEHXZ @ 44 NONAME ; int CMemSpyApiHeap::AllocationsCount(void)
-	?AllocationOverhead@CMemSpyApiHeap@@QAEHXZ @ 45 NONAME ; int CMemSpyApiHeap::AllocationOverhead(void)
-	?NameOfOwner@CMemSpyApiKernelObjectItem@@QBEABVTDesC8@@XZ @ 46 NONAME ; class TDesC8 const & CMemSpyApiKernelObjectItem::NameOfOwner(void) const
-	?WaitCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 47 NONAME ; int CMemSpyApiKernelObjectItem::WaitCount(void) const
-	?ThreadSystemPermanentOrCritical@RMemSpySession@@QAEHVTThreadId@@H@Z @ 48 NONAME ; int RMemSpySession::ThreadSystemPermanentOrCritical(class TThreadId, int)
-	?Protection@CMemSpyApiKernelObjectItem@@QBEIXZ @ 49 NONAME ; unsigned int CMemSpyApiKernelObjectItem::Protection(void) const
-	?Attributes@CMemSpyApiThread@@QBEHXZ @ 50 NONAME ; int CMemSpyApiThread::Attributes(void) const
-	?BiggestFree@CMemSpyApiHeap@@QAEHXZ @ 51 NONAME ; int CMemSpyApiHeap::BiggestFree(void)
-	?Bottom@CMemSpyApiKernelObjectItem@@QBEHXZ @ 52 NONAME ; int CMemSpyApiKernelObjectItem::Bottom(void) const
-	?Size@CMemSpyApiKernelObject@@QBE_JXZ @ 53 NONAME ; long long CMemSpyApiKernelObject::Size(void) const
-	?ThreadHandles@CMemSpyApiThread@@QBEHXZ @ 54 NONAME ; int CMemSpyApiThread::ThreadHandles(void) const
-	?SvrSessionType@CMemSpyApiKernelObjectItem@@QBEEXZ @ 55 NONAME ; unsigned char CMemSpyApiKernelObjectItem::SvrSessionType(void) const
-	?TotalAllocations@CMemSpyApiHeap@@QAEHXZ @ 56 NONAME ; int CMemSpyApiHeap::TotalAllocations(void)
-	?Name@CMemSpyApiProcess@@QBEABVTDesC16@@XZ @ 57 NONAME ; class TDesC16 const & CMemSpyApiProcess::Name(void) const
-	?ChunkType@CMemSpyApiKernelObjectItem@@QBEIXZ @ 58 NONAME ; unsigned int CMemSpyApiKernelObjectItem::ChunkType(void) const
-	?GetKernelObjects@RMemSpySession@@QAEHAAV?$RArray@PAVCMemSpyApiKernelObject@@@@@Z @ 59 NONAME ; int RMemSpySession::GetKernelObjects(class RArray<class CMemSpyApiKernelObject *> &)
-	?HeaderSizeF@CMemSpyApiHeap@@QAEHXZ @ 60 NONAME ; int CMemSpyApiHeap::HeaderSizeF(void)
-	?Id@CMemSpyApiThread@@QBE?AVTThreadId@@XZ @ 61 NONAME ; class TThreadId CMemSpyApiThread::Id(void) const
-	?MsgLimit@CMemSpyApiKernelObjectItem@@QBEHXZ @ 62 NONAME ; int CMemSpyApiKernelObjectItem::MsgLimit(void) const
-	?AddressOfDataBssStackChunk@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 63 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfDataBssStackChunk(void)
-	?MapAttr@CMemSpyApiKernelObjectItem@@QBEIXZ @ 64 NONAME ; unsigned int CMemSpyApiKernelObjectItem::MapAttr(void) const
-	?Top@CMemSpyApiKernelObjectItem@@QBEHXZ @ 65 NONAME ; int CMemSpyApiKernelObjectItem::Top(void) const
-	?Resetting@CMemSpyApiKernelObjectItem@@QBEEXZ @ 66 NONAME ; unsigned char CMemSpyApiKernelObjectItem::Resetting(void) const
-	?HeaderSizeA@CMemSpyApiHeap@@QAEHXZ @ 67 NONAME ; int CMemSpyApiHeap::HeaderSizeA(void)
-	?EndProcess@RMemSpySession@@QAEHVTProcessId@@W4TEndType@@@Z @ 68 NONAME ; int RMemSpySession::EndProcess(class TProcessId, enum TEndType)
-	?AddressOfCodeSeg@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 69 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfCodeSeg(void)
-	?TotalAccessCount@CMemSpyApiKernelObjectItem@@QBEGXZ @ 70 NONAME ; unsigned short CMemSpyApiKernelObjectItem::TotalAccessCount(void) const
-	?GetThreadsL@RMemSpySession@@QAEXVTProcessId@@AAV?$RArray@PAVCMemSpyApiThread@@@@W4TSortType@@@Z @ 71 NONAME ; void RMemSpySession::GetThreadsL(class TProcessId, class RArray<class CMemSpyApiThread *> &, enum TSortType)
-	?Changes@CMemSpyApiKernelObjectItem@@QBEIXZ @ 72 NONAME ; unsigned int CMemSpyApiKernelObjectItem::Changes(void) const
-	?ProcessId@CMemSpyApiThread@@QBE?AVTProcessId@@XZ @ 73 NONAME ; class TProcessId CMemSpyApiThread::ProcessId(void) const
-	??0RMemSpySession@@QAE@XZ @ 74 NONAME ; RMemSpySession::RMemSpySession(void)
-	?Type@CMemSpyApiKernelObjectItem@@QBE?AW4TMemSpyDriverContainerType@@XZ @ 75 NONAME ; enum TMemSpyDriverContainerType CMemSpyApiKernelObjectItem::Type(void) const
-	?AddressOfServer@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 76 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfServer(void)
-	?Size@CMemSpyApiHeap@@QAEHXZ @ 77 NONAME ; int CMemSpyApiHeap::Size(void)
-	??1CMemSpyApiKernelObject@@QAE@XZ @ 78 NONAME ; CMemSpyApiKernelObject::~CMemSpyApiKernelObject(void)
-	??1CMemSpyApiHeap@@QAE@XZ @ 79 NONAME ; CMemSpyApiHeap::~CMemSpyApiHeap(void)
-	?ChunkSize@CMemSpyApiHeap@@QAEHXZ @ 80 NONAME ; int CMemSpyApiHeap::ChunkSize(void)
-	?UnitsMask@CMemSpyApiKernelObjectItem@@QBEIXZ @ 81 NONAME ; unsigned int CMemSpyApiKernelObjectItem::UnitsMask(void) const
-	?Size@CMemSpyApiKernelObjectItem@@QBEKXZ @ 82 NONAME ; unsigned long CMemSpyApiKernelObjectItem::Size(void) const
-	?State@CMemSpyApiKernelObjectItem@@QBEEXZ @ 83 NONAME ; unsigned char CMemSpyApiKernelObjectItem::State(void) const
-	?Shared@CMemSpyApiHeap@@QAEHXZ @ 84 NONAME ; int CMemSpyApiHeap::Shared(void)
-	?Type@CMemSpyApiKernelObject@@QBE?AW4TMemSpyDriverContainerType@@XZ @ 85 NONAME ; enum TMemSpyDriverContainerType CMemSpyApiKernelObject::Type(void) const
-	?Fragmentation@CMemSpyApiHeap@@QAEHXZ @ 86 NONAME ; int CMemSpyApiHeap::Fragmentation(void)
-	?Name@CMemSpyApiKernelObject@@QBEABVTDesC16@@XZ @ 87 NONAME ; class TDesC16 const & CMemSpyApiKernelObject::Name(void) const
-	?TimerType@CMemSpyApiKernelObjectItem@@QBE?AW4TMemSpyDriverTimerType@@XZ @ 88 NONAME ; enum TMemSpyDriverTimerType CMemSpyApiKernelObjectItem::TimerType(void) const
-	?ProcessSystemPermanentOrCritical@RMemSpySession@@QAEHVTProcessId@@H@Z @ 89 NONAME ; int RMemSpySession::ProcessSystemPermanentOrCritical(class TProcessId, int)
-	?SecurityZone@CMemSpyApiKernelObjectItem@@QBEIXZ @ 90 NONAME ; unsigned int CMemSpyApiKernelObjectItem::SecurityZone(void) const
-	?CreatorId@CMemSpyApiKernelObjectItem@@QBEIXZ @ 91 NONAME ; unsigned int CMemSpyApiKernelObjectItem::CreatorId(void) const
-	?MapCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 92 NONAME ; int CMemSpyApiKernelObjectItem::MapCount(void) const
-	?NameDetail@CMemSpyApiKernelObjectItem@@QBEABVTDesC8@@XZ @ 93 NONAME ; class TDesC8 const & CMemSpyApiKernelObjectItem::NameDetail(void) const
-	?OpenChannels@CMemSpyApiKernelObjectItem@@QAEHXZ @ 94 NONAME ; int CMemSpyApiKernelObjectItem::OpenChannels(void)
-	?Order@CMemSpyApiKernelObjectItem@@QBEEXZ @ 95 NONAME ; unsigned char CMemSpyApiKernelObjectItem::Order(void) const
-	?ProcessPriority@CMemSpyApiThread@@QBE?AW4TProcessPriority@@XZ @ 96 NONAME ; enum TProcessPriority CMemSpyApiThread::ProcessPriority(void) const
-	?GetProcessesL@RMemSpySession@@QAEXAAV?$RArray@PAVCMemSpyApiProcess@@@@W4TSortType@@@Z @ 97 NONAME ; void RMemSpySession::GetProcessesL(class RArray<class CMemSpyApiProcess *> &, enum TSortType)
-	?Handle@CMemSpyApiKernelObjectItem@@QBEPAXXZ @ 98 NONAME ; void * CMemSpyApiKernelObjectItem::Handle(void) const
-	?ParseMask@CMemSpyApiKernelObjectItem@@QBEIXZ @ 99 NONAME ; unsigned int CMemSpyApiKernelObjectItem::ParseMask(void) const
-	?Attributes@CMemSpyApiKernelObjectItem@@QBEHXZ @ 100 NONAME ; int CMemSpyApiKernelObjectItem::Attributes(void) const
-	?DebugAllocatorLibrary@CMemSpyApiHeap@@QAEHXZ @ 101 NONAME ; int CMemSpyApiHeap::DebugAllocatorLibrary(void)
-	?ThreadNumberUsing@CMemSpyApiThread@@QBEHXZ @ 102 NONAME ; int CMemSpyApiThread::ThreadNumberUsing(void) const
-	?Overhead@CMemSpyApiHeap@@QAEHXZ @ 103 NONAME ; int CMemSpyApiHeap::Overhead(void)
-	?Connect@RMemSpySession@@QAEHXZ @ 104 NONAME ; int RMemSpySession::Connect(void)
-	??1CMemSpyApiThread@@QAE@XZ @ 105 NONAME ; CMemSpyApiThread::~CMemSpyApiThread(void)
-	?SID@CMemSpyApiThread@@QBEHXZ @ 106 NONAME ; int CMemSpyApiThread::SID(void) const
-	?AddressOfOwningThread@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 107 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfOwningThread(void)
-	?GetKernelObjectItems@RMemSpySession@@QAEHAAV?$RArray@PAVCMemSpyApiKernelObjectItem@@@@W4TMemSpyDriverContainerType@@@Z @ 108 NONAME ; int RMemSpySession::GetKernelObjectItems(class RArray<class CMemSpyApiKernelObjectItem *> &, enum TMemSpyDriverContainerType)
-	?ProcessHandles@CMemSpyApiThread@@QBEHXZ @ 109 NONAME ; int CMemSpyApiThread::ProcessHandles(void) const
-	?ThreadPriority@CMemSpyApiThread@@QBE?AW4TThreadPriority@@XZ @ 110 NONAME ; enum TThreadPriority CMemSpyApiThread::ThreadPriority(void) const
-	?GetHeap@RMemSpySession@@QAEPAVCMemSpyApiHeap@@XZ @ 111 NONAME ; class CMemSpyApiHeap * RMemSpySession::GetHeap(void)
-	?Name@CMemSpyApiThread@@QBEABVTDesC16@@XZ @ 112 NONAME ; class TDesC16 const & CMemSpyApiThread::Name(void) const
+	?GetThreadInfoItemsL@RMemSpySession@@QAEXAAV?$RArray@PAVCMemSpyApiThreadInfoItem@@@@VTThreadId@@W4TMemSpyThreadInfoItemType@@@Z @ 3 NONAME ; void RMemSpySession::GetThreadInfoItemsL(class RArray<class CMemSpyApiThreadInfoItem *> &, class TThreadId, enum TMemSpyThreadInfoItemType)
+	?Description@TMemSpyDeviceWideOperationProgress@@QBEABVTDesC16@@XZ @ 4 NONAME ; class TDesC16 const & TMemSpyDeviceWideOperationProgress::Description(void) const
+	?TotalOverhead@CMemSpyApiHeap@@QAEHXZ @ 5 NONAME ; int CMemSpyApiHeap::TotalOverhead(void)
+	?OutputDetailedPhoneInfo@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 6 NONAME ; void RMemSpySession::OutputDetailedPhoneInfo(class TRequestStatus &)
+	?UniqueID@CMemSpyApiKernelObjectItem@@QBEHXZ @ 7 NONAME ; int CMemSpyApiKernelObjectItem::UniqueID(void) const
+	?OutputHeapData@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 8 NONAME ; void RMemSpySession::OutputHeapData(class TRequestStatus &)
+	?SessionType@CMemSpyApiKernelObjectItem@@QBE?AW4TIpcSessionType@@XZ @ 9 NONAME ; enum TIpcSessionType CMemSpyApiKernelObjectItem::SessionType(void) const
+	?VID@CMemSpyApiThread@@QBEHXZ @ 10 NONAME ; int CMemSpyApiThread::VID(void) const
+	?OutputStackInfoL@RMemSpySession@@QAEXVTThreadId@@@Z @ 11 NONAME ; void RMemSpySession::OutputStackInfoL(class TThreadId)
+	?GetOutputSink@RMemSpySession@@QAEXW4TMemSpySinkType@@@Z @ 12 NONAME ; void RMemSpySession::GetOutputSink(enum TMemSpySinkType)
+	?FreeMemory@CMemSpyApiMemoryTrackingCycle@@QBEAB_JXZ @ 13 NONAME ; long long const & CMemSpyApiMemoryTrackingCycle::FreeMemory(void) const
+	?ProcessNumberUsing@CMemSpyApiThread@@QBEHXZ @ 14 NONAME ; int CMemSpyApiThread::ProcessNumberUsing(void) const
+	?PreviousCycleDiff@CMemSpyApiMemoryTrackingCycle@@QBE_JXZ @ 15 NONAME ; long long CMemSpyApiMemoryTrackingCycle::PreviousCycleDiff(void) const
+	?OutputStackDataL@RMemSpySession@@QAEXVTThreadId@@W4TMemSpyDriverDomainType@@@Z @ 16 NONAME ; void RMemSpySession::OutputStackDataL(class TThreadId, enum TMemSpyDriverDomainType)
+	?OutputThreadHeapDataL@RMemSpySession@@QAEXVTThreadId@@@Z @ 17 NONAME ; void RMemSpySession::OutputThreadHeapDataL(class TThreadId)
+	?ExitType@CMemSpyApiProcess@@QBE?AW4TExitType@@XZ @ 18 NONAME ; enum TExitType CMemSpyApiProcess::ExitType(void) const
+	?SwitchOutputToFileL@RMemSpySession@@QAEXABVTDesC16@@@Z @ 19 NONAME ; void RMemSpySession::SwitchOutputToFileL(class TDesC16 const &)
+	?OutputHeapCellListing@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 20 NONAME ; void RMemSpySession::OutputHeapCellListing(class TRequestStatus &)
+	?SetThreadPriorityL@RMemSpySession@@QAEXVTThreadId@@H@Z @ 21 NONAME ; void RMemSpySession::SetThreadPriorityL(class TThreadId, int)
+	?Restrictions@CMemSpyApiKernelObjectItem@@QBEIXZ @ 22 NONAME ; unsigned int CMemSpyApiKernelObjectItem::Restrictions(void) const
+	?Id@CMemSpyApiKernelObjectItem@@QBEHXZ @ 23 NONAME ; int CMemSpyApiKernelObjectItem::Id(void) const
+	?Count@CMemSpyApiKernelObjectItem@@QBEHXZ @ 24 NONAME ; int CMemSpyApiKernelObjectItem::Count(void) const
+	?ControllingOwner@CMemSpyApiKernelObjectItem@@QBEIXZ @ 25 NONAME ; unsigned int CMemSpyApiKernelObjectItem::ControllingOwner(void) const
+	?SwmtResetTracking@RMemSpySession@@QAEXXZ @ 26 NONAME ; void RMemSpySession::SwmtResetTracking(void)
+	?Version@CMemSpyApiKernelObjectItem@@QBE?AVTVersion@@XZ @ 27 NONAME ; class TVersion CMemSpyApiKernelObjectItem::Version(void) const
+	?SwitchToProcess@RMemSpySession@@QAEHVTProcessId@@H@Z @ 28 NONAME ; int RMemSpySession::SwitchToProcess(class TProcessId, int)
+	?MaxSize@CMemSpyApiKernelObjectItem@@QBEHXZ @ 29 NONAME ; int CMemSpyApiKernelObjectItem::MaxSize(void) const
+	?IsSwmtRunningL@RMemSpySession@@QAEHXZ @ 30 NONAME ; int RMemSpySession::IsSwmtRunningL(void)
+	?EndThread@RMemSpySession@@QAEHVTThreadId@@W4TMemSpyEndType@@@Z @ 31 NONAME ; int RMemSpySession::EndThread(class TThreadId, enum TMemSpyEndType)
+	?AddressOfOwningProcess@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 32 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfOwningProcess(void)
+	?ExitReason@CMemSpyApiProcess@@QBEHXZ @ 33 NONAME ; int CMemSpyApiProcess::ExitReason(void) const
+	?MsgCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 34 NONAME ; int CMemSpyApiKernelObjectItem::MsgCount(void) const
+	?AllocationsCount@CMemSpyApiHeap@@QAEHXZ @ 35 NONAME ; int CMemSpyApiHeap::AllocationsCount(void)
+	?WaitCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 36 NONAME ; int CMemSpyApiKernelObjectItem::WaitCount(void) const
+	?SID@CMemSpyApiProcess@@QBEKXZ @ 37 NONAME ; unsigned long CMemSpyApiProcess::SID(void) const
+	?GetKernelObjectsL@RMemSpySession@@QAEXAAV?$RArray@PAVCMemSpyApiKernelObject@@@@@Z @ 38 NONAME ; void RMemSpySession::GetKernelObjectsL(class RArray<class CMemSpyApiKernelObject *> &)
+	?CycleNumber@CMemSpyApiMemoryTrackingCycle@@QBEHXZ @ 39 NONAME ; int CMemSpyApiMemoryTrackingCycle::CycleNumber(void) const
+	?Size@CMemSpyApiKernelObject@@QBE_JXZ @ 40 NONAME ; long long CMemSpyApiKernelObject::Size(void) const
+	?SetSwmtCategoriesL@RMemSpySession@@QAEXH@Z @ 41 NONAME ; void RMemSpySession::SetSwmtCategoriesL(int)
+	?CancelDeviceWideOperationL@RMemSpySession@@QAEXXZ @ 42 NONAME ; void RMemSpySession::CancelDeviceWideOperationL(void)
+	?TotalAllocations@CMemSpyApiHeap@@QAEHXZ @ 43 NONAME ; int CMemSpyApiHeap::TotalAllocations(void)
+	?Name@CMemSpyApiProcess@@QBEABVTDesC16@@XZ @ 44 NONAME ; class TDesC16 const & CMemSpyApiProcess::Name(void) const
+	?DumpKernelHeap@RMemSpySession@@QAEXXZ @ 45 NONAME ; void RMemSpySession::DumpKernelHeap(void)
+	?GetKernelObjects@RMemSpySession@@QAEHAAV?$RArray@PAVCMemSpyApiKernelObject@@@@@Z @ 46 NONAME ; int RMemSpySession::GetKernelObjects(class RArray<class CMemSpyApiKernelObject *> &)
+	?Priority@CMemSpyApiProcess@@QBE?AW4TProcessPriority@@XZ @ 47 NONAME ; enum TProcessPriority CMemSpyApiProcess::Priority(void) const
+	?HeaderSizeF@CMemSpyApiHeap@@QAEHXZ @ 48 NONAME ; int CMemSpyApiHeap::HeaderSizeF(void)
+	?OutputCompactStackInfoL@RMemSpySession@@QAEXXZ @ 49 NONAME ; void RMemSpySession::OutputCompactStackInfoL(void)
+	?MsgLimit@CMemSpyApiKernelObjectItem@@QBEHXZ @ 50 NONAME ; int CMemSpyApiKernelObjectItem::MsgLimit(void) const
+	?AddressOfDataBssStackChunk@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 51 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfDataBssStackChunk(void)
+	?Top@CMemSpyApiKernelObjectItem@@QBEHXZ @ 52 NONAME ; int CMemSpyApiKernelObjectItem::Top(void) const
+	?Resetting@CMemSpyApiKernelObjectItem@@QBEEXZ @ 53 NONAME ; unsigned char CMemSpyApiKernelObjectItem::Resetting(void) const
+	?HeaderSizeA@CMemSpyApiHeap@@QAEHXZ @ 54 NONAME ; int CMemSpyApiHeap::HeaderSizeA(void)
+	?OutputHeapData@RMemSpySession@@QAEXXZ @ 55 NONAME ; void RMemSpySession::OutputHeapData(void)
+	?TotalAccessCount@CMemSpyApiKernelObjectItem@@QBEGXZ @ 56 NONAME ; unsigned short CMemSpyApiKernelObjectItem::TotalAccessCount(void) const
+	?Changes@CMemSpyApiKernelObjectItem@@QBEIXZ @ 57 NONAME ; unsigned int CMemSpyApiKernelObjectItem::Changes(void) const
+	??0RMemSpySession@@QAE@XZ @ 58 NONAME ; RMemSpySession::RMemSpySession(void)
+	?OutputUserStackData@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 59 NONAME ; void RMemSpySession::OutputUserStackData(class TRequestStatus &)
+	?AddressOfServer@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 60 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfServer(void)
+	?SetSwmtConfig@RMemSpySession@@QAEXVTMemSpyEngineHelperSysMemTrackerConfig@@@Z @ 61 NONAME ; void RMemSpySession::SetSwmtConfig(class TMemSpyEngineHelperSysMemTrackerConfig)
+	?Size@CMemSpyApiHeap@@QAEHXZ @ 62 NONAME ; int CMemSpyApiHeap::Size(void)
+	??1CMemSpyApiKernelObject@@QAE@XZ @ 63 NONAME ; CMemSpyApiKernelObject::~CMemSpyApiKernelObject(void)
+	?GetInfoItemType@RMemSpySession@@QAEHHVTThreadId@@AAW4TMemSpyThreadInfoItemType@@@Z @ 64 NONAME ; int RMemSpySession::GetInfoItemType(int, class TThreadId, enum TMemSpyThreadInfoItemType &)
+	??1CMemSpyApiHeap@@QAE@XZ @ 65 NONAME ; CMemSpyApiHeap::~CMemSpyApiHeap(void)
+	?SetSwmtHeapDumpsEnabledL@RMemSpySession@@QAEXH@Z @ 66 NONAME ; void RMemSpySession::SetSwmtHeapDumpsEnabledL(int)
+	?SetSwmtFilter@RMemSpySession@@QAEXABVTDesC16@@@Z @ 67 NONAME ; void RMemSpySession::SetSwmtFilter(class TDesC16 const &)
+	?Size@CMemSpyApiKernelObjectItem@@QBEKXZ @ 68 NONAME ; unsigned long CMemSpyApiKernelObjectItem::Size(void) const
+	?OutputThreadInfoHandlesL@RMemSpySession@@QAEXVTThreadId@@@Z @ 69 NONAME ; void RMemSpySession::OutputThreadInfoHandlesL(class TThreadId)
+	?OutputThreadHeapDataL@RMemSpySession@@QAEXABVTDesC16@@@Z @ 70 NONAME ; void RMemSpySession::OutputThreadHeapDataL(class TDesC16 const &)
+	?Type@CMemSpyApiKernelObject@@QBE?AW4TMemSpyDriverContainerType@@XZ @ 71 NONAME ; enum TMemSpyDriverContainerType CMemSpyApiKernelObject::Type(void) const
+	?Name@CMemSpyApiKernelObject@@QBEABVTDesC16@@XZ @ 72 NONAME ; class TDesC16 const & CMemSpyApiKernelObject::Name(void) const
+	?Fragmentation@CMemSpyApiHeap@@QAEHXZ @ 73 NONAME ; int CMemSpyApiHeap::Fragmentation(void)
+	?TimerType@CMemSpyApiKernelObjectItem@@QBE?AW4TMemSpyDriverTimerType@@XZ @ 74 NONAME ; enum TMemSpyDriverTimerType CMemSpyApiKernelObjectItem::TimerType(void) const
+	?Value@CMemSpyApiThreadInfoItem@@QBEABVTDesC16@@XZ @ 75 NONAME ; class TDesC16 const & CMemSpyApiThreadInfoItem::Value(void) const
+	?SecurityZone@CMemSpyApiKernelObjectItem@@QBEIXZ @ 76 NONAME ; unsigned int CMemSpyApiKernelObjectItem::SecurityZone(void) const
+	?CreatorId@CMemSpyApiKernelObjectItem@@QBEIXZ @ 77 NONAME ; unsigned int CMemSpyApiKernelObjectItem::CreatorId(void) const
+	?Order@CMemSpyApiKernelObjectItem@@QBEEXZ @ 78 NONAME ; unsigned char CMemSpyApiKernelObjectItem::Order(void) const
+	?NameDetail@CMemSpyApiKernelObjectItem@@QBEABVTDesC8@@XZ @ 79 NONAME ; class TDesC8 const & CMemSpyApiKernelObjectItem::NameDetail(void) const
+	?OutputStackInfo@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 80 NONAME ; void RMemSpySession::OutputStackInfo(class TRequestStatus &)
+	?Handle@CMemSpyApiKernelObjectItem@@QBEPAXXZ @ 81 NONAME ; void * CMemSpyApiKernelObjectItem::Handle(void) const
+	?GetProcessesL@RMemSpySession@@QAEXAAV?$RArray@PAVCMemSpyApiProcess@@@@W4TSortType@@@Z @ 82 NONAME ; void RMemSpySession::GetProcessesL(class RArray<class CMemSpyApiProcess *> &, enum TSortType)
+	?ParseMask@CMemSpyApiKernelObjectItem@@QBEIXZ @ 83 NONAME ; unsigned int CMemSpyApiKernelObjectItem::ParseMask(void) const
+	?Attributes@CMemSpyApiKernelObjectItem@@QBEHXZ @ 84 NONAME ; int CMemSpyApiKernelObjectItem::Attributes(void) const
+	?MemoryDelta@CMemSpyApiMemoryTrackingCycle@@QBE_JXZ @ 85 NONAME ; long long CMemSpyApiMemoryTrackingCycle::MemoryDelta(void) const
+	?Caption@CMemSpyApiThreadInfoItem@@QBEABVTDesC16@@XZ @ 86 NONAME ; class TDesC16 const & CMemSpyApiThreadInfoItem::Caption(void) const
+	?DebugAllocatorLibrary@CMemSpyApiHeap@@QAEHXZ @ 87 NONAME ; int CMemSpyApiHeap::DebugAllocatorLibrary(void)
+	?Overhead@CMemSpyApiHeap@@QAEHXZ @ 88 NONAME ; int CMemSpyApiHeap::Overhead(void)
+	?ForceSwmtUpdate@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 89 NONAME ; void RMemSpySession::ForceSwmtUpdate(class TRequestStatus &)
+	?GetHeapL@RMemSpySession@@QAEPAVCMemSpyApiHeap@@XZ @ 90 NONAME ; class CMemSpyApiHeap * RMemSpySession::GetHeapL(void)
+	?OutputKernelStackData@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 91 NONAME ; void RMemSpySession::OutputKernelStackData(class TRequestStatus &)
+	?AddressOfOwningThread@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 92 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfOwningThread(void)
+	?ThreadPriority@CMemSpyApiThread@@QBE?AW4TThreadPriority@@XZ @ 93 NONAME ; enum TThreadPriority CMemSpyApiThread::ThreadPriority(void) const
+	?GetHeap@RMemSpySession@@QAEPAVCMemSpyApiHeap@@XZ @ 94 NONAME ; class CMemSpyApiHeap * RMemSpySession::GetHeap(void)
+	??1CMemSpyApiMemoryTrackingCycle@@QAE@XZ @ 95 NONAME ; CMemSpyApiMemoryTrackingCycle::~CMemSpyApiMemoryTrackingCycle(void)
+	?AccessCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 96 NONAME ; int CMemSpyApiKernelObjectItem::AccessCount(void) const
+	?OutputHeapInfo@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 97 NONAME ; void RMemSpySession::OutputHeapInfo(class TRequestStatus &)
+	?Time@CMemSpyApiMemoryTrackingCycle@@QBEABVTTime@@XZ @ 98 NONAME ; class TTime const & CMemSpyApiMemoryTrackingCycle::Time(void) const
+	?SetSwmtTimerIntervalL@RMemSpySession@@QAEXH@Z @ 99 NONAME ; void RMemSpySession::SetSwmtTimerIntervalL(int)
+	?MaxLength@CMemSpyApiHeap@@QAEHXZ @ 100 NONAME ; int CMemSpyApiHeap::MaxLength(void)
+	?OutputKernelHeapData@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 101 NONAME ; void RMemSpySession::OutputKernelHeapData(class TRequestStatus &)
+	?AddressOfKernelOwner@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 102 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfKernelOwner(void)
+	??1CMemSpyApiThreadInfoItem@@QAE@XZ @ 103 NONAME ; CMemSpyApiThreadInfoItem::~CMemSpyApiThreadInfoItem(void)
+	?FreeCount@CMemSpyApiHeap@@QAEHXZ @ 104 NONAME ; int CMemSpyApiHeap::FreeCount(void)
+	?TotalFree@CMemSpyApiHeap@@QAEHXZ @ 105 NONAME ; int CMemSpyApiHeap::TotalFree(void)
+	?SwitchToThread@RMemSpySession@@QAEHVTThreadId@@H@Z @ 106 NONAME ; int RMemSpySession::SwitchToThread(class TThreadId, int)
+	?FreeOverhead@CMemSpyApiHeap@@QAEHXZ @ 107 NONAME ; int CMemSpyApiHeap::FreeOverhead(void)
+	?SwitchOutputToTraceL@RMemSpySession@@QAEXXZ @ 108 NONAME ; void RMemSpySession::SwitchOutputToTraceL(void)
+	?SlackFreeSpace@CMemSpyApiHeap@@QAEHXZ @ 109 NONAME ; int CMemSpyApiHeap::SlackFreeSpace(void)
+	?ForceSwmtUpdateL@RMemSpySession@@QAEXXZ @ 110 NONAME ; void RMemSpySession::ForceSwmtUpdateL(void)
+	?Priority@CMemSpyApiKernelObjectItem@@QBEHXZ @ 111 NONAME ; int CMemSpyApiKernelObjectItem::Priority(void) const
+	?ThreadCount@CMemSpyApiProcess@@QBEHXZ @ 112 NONAME ; int CMemSpyApiProcess::ThreadCount(void) const
+	?Caption@CMemSpyApiMemoryTrackingCycle@@QBEABVTDesC16@@XZ @ 113 NONAME ; class TDesC16 const & CMemSpyApiMemoryTrackingCycle::Caption(void) const
+	?RequestCount@CMemSpyApiThread@@QBEHXZ @ 114 NONAME ; int CMemSpyApiThread::RequestCount(void) const
+	?StopSwmtTimerL@RMemSpySession@@QAEXXZ @ 115 NONAME ; void RMemSpySession::StopSwmtTimerL(void)
+	??1CMemSpyApiProcess@@QAE@XZ @ 116 NONAME ; CMemSpyApiProcess::~CMemSpyApiProcess(void)
+	?MinLength@CMemSpyApiHeap@@QAEHXZ @ 117 NONAME ; int CMemSpyApiHeap::MinLength(void)
+	?ExitCategory@CMemSpyApiProcess@@QBE?AV?$TBuf@$0BA@@@XZ @ 118 NONAME ; class TBuf<16> CMemSpyApiProcess::ExitCategory(void) const
+	?Progress@TMemSpyDeviceWideOperationProgress@@QBEHXZ @ 119 NONAME ; int TMemSpyDeviceWideOperationProgress::Progress(void) const
+	?Count@CMemSpyApiKernelObject@@QBEHXZ @ 120 NONAME ; int CMemSpyApiKernelObject::Count(void) const
+	?StartPos@CMemSpyApiKernelObjectItem@@QBEHXZ @ 121 NONAME ; int CMemSpyApiKernelObjectItem::StartPos(void) const
+	?TimerState@CMemSpyApiKernelObjectItem@@QBE?AW4TMemSpyDriverTimerState@@XZ @ 122 NONAME ; enum TMemSpyDriverTimerState CMemSpyApiKernelObjectItem::TimerState(void) const
+	?BaseAddress@CMemSpyApiHeap@@QAEHXZ @ 123 NONAME ; int CMemSpyApiHeap::BaseAddress(void)
+	?ExitType@CMemSpyApiThread@@QBE?AW4TExitType@@XZ @ 124 NONAME ; enum TExitType CMemSpyApiThread::ExitType(void) const
+	?StartSwmtTimerL@RMemSpySession@@QAEXH@Z @ 125 NONAME ; void RMemSpySession::StartSwmtTimerL(int)
+	?Type@CMemSpyApiHeap@@QAEAAVTDesC16@@XZ @ 126 NONAME ; class TDesC16 & CMemSpyApiHeap::Type(void)
+	?Id@CMemSpyApiProcess@@QBE?AVTProcessId@@XZ @ 127 NONAME ; class TProcessId CMemSpyApiProcess::Id(void) const
+	?BiggestAllocation@CMemSpyApiHeap@@QAEHXZ @ 128 NONAME ; int CMemSpyApiHeap::BiggestAllocation(void)
+	??1CMemSpyApiKernelObjectItem@@QAE@XZ @ 129 NONAME ; CMemSpyApiKernelObjectItem::~CMemSpyApiKernelObjectItem(void)
+	?AllocationOverhead@CMemSpyApiHeap@@QAEHXZ @ 130 NONAME ; int CMemSpyApiHeap::AllocationOverhead(void)
+	?NameOfOwner@CMemSpyApiKernelObjectItem@@QBEABVTDesC8@@XZ @ 131 NONAME ; class TDesC8 const & CMemSpyApiKernelObjectItem::NameOfOwner(void) const
+	?OutputAllContainerContents@RMemSpySession@@QAEXXZ @ 132 NONAME ; void RMemSpySession::OutputAllContainerContents(void)
+	?OutputKernelObjectsL@RMemSpySession@@QAEXXZ @ 133 NONAME ; void RMemSpySession::OutputKernelObjectsL(void)
+	?ThreadSystemPermanentOrCritical@RMemSpySession@@QAEHVTThreadId@@H@Z @ 134 NONAME ; int RMemSpySession::ThreadSystemPermanentOrCritical(class TThreadId, int)
+	?Protection@CMemSpyApiKernelObjectItem@@QBEIXZ @ 135 NONAME ; unsigned int CMemSpyApiKernelObjectItem::Protection(void) const
+	?BiggestFree@CMemSpyApiHeap@@QAEHXZ @ 136 NONAME ; int CMemSpyApiHeap::BiggestFree(void)
+	?Attributes@CMemSpyApiThread@@QBEHXZ @ 137 NONAME ; int CMemSpyApiThread::Attributes(void) const
+	?Bottom@CMemSpyApiKernelObjectItem@@QBEHXZ @ 138 NONAME ; int CMemSpyApiKernelObjectItem::Bottom(void) const
+	?StartSwmtTimerL@RMemSpySession@@QAEXXZ @ 139 NONAME ; void RMemSpySession::StartSwmtTimerL(void)
+	?GetKernelObjectItemsL@RMemSpySession@@QAEXAAV?$RArray@PAVCMemSpyApiKernelObjectItem@@@@W4TMemSpyDriverContainerType@@@Z @ 140 NONAME ; void RMemSpySession::GetKernelObjectItemsL(class RArray<class CMemSpyApiKernelObjectItem *> &, enum TMemSpyDriverContainerType)
+	?NotifyDeviceWideOperationProgress@RMemSpySession@@QAEXAAVTMemSpyDeviceWideOperationProgress@@AAVTRequestStatus@@@Z @ 141 NONAME ; void RMemSpySession::NotifyDeviceWideOperationProgress(class TMemSpyDeviceWideOperationProgress &, class TRequestStatus &)
+	?OutputCompactHeapInfo@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 142 NONAME ; void RMemSpySession::OutputCompactHeapInfo(class TRequestStatus &)
+	?OutputPhoneInfo@RMemSpySession@@QAEXXZ @ 143 NONAME ; void RMemSpySession::OutputPhoneInfo(void)
+	?ThreadHandles@CMemSpyApiThread@@QBEHXZ @ 144 NONAME ; int CMemSpyApiThread::ThreadHandles(void) const
+	?SvrSessionType@CMemSpyApiKernelObjectItem@@QBEEXZ @ 145 NONAME ; unsigned char CMemSpyApiKernelObjectItem::SvrSessionType(void) const
+	?SwitchOutputSinkL@RMemSpySession@@QAEXW4TMemSpySinkType@@@Z @ 146 NONAME ; void RMemSpySession::SwitchOutputSinkL(enum TMemSpySinkType)
+	?ChunkType@CMemSpyApiKernelObjectItem@@QBEIXZ @ 147 NONAME ; unsigned int CMemSpyApiKernelObjectItem::ChunkType(void) const
+	?Id@CMemSpyApiThread@@QBE?AVTThreadId@@XZ @ 148 NONAME ; class TThreadId CMemSpyApiThread::Id(void) const
+	?OutputPhoneInfo@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 149 NONAME ; void RMemSpySession::OutputPhoneInfo(class TRequestStatus &)
+	?GetProcessIdByNameL@RMemSpySession@@QAE?AVTProcessId@@ABVTDesC16@@@Z @ 150 NONAME ; class TProcessId RMemSpySession::GetProcessIdByNameL(class TDesC16 const &)
+	?GetMemoryTrackingCyclesL@RMemSpySession@@QAEXAAV?$RArray@PAVCMemSpyApiMemoryTrackingCycle@@@@@Z @ 151 NONAME ; void RMemSpySession::GetMemoryTrackingCyclesL(class RArray<class CMemSpyApiMemoryTrackingCycle *> &)
+	?MapAttr@CMemSpyApiKernelObjectItem@@QBEIXZ @ 152 NONAME ; unsigned int CMemSpyApiKernelObjectItem::MapAttr(void) const
+	?OutputCompactStackInfo@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 153 NONAME ; void RMemSpySession::OutputCompactStackInfo(class TRequestStatus &)
+	?VID@CMemSpyApiProcess@@QBEKXZ @ 154 NONAME ; unsigned long CMemSpyApiProcess::VID(void) const
+	?AddressOfCodeSeg@CMemSpyApiKernelObjectItem@@QAEPAEXZ @ 155 NONAME ; unsigned char * CMemSpyApiKernelObjectItem::AddressOfCodeSeg(void)
+	?GetThreadsL@RMemSpySession@@QAEXVTProcessId@@AAV?$RArray@PAVCMemSpyApiThread@@@@W4TSortType@@@Z @ 156 NONAME ; void RMemSpySession::GetThreadsL(class TProcessId, class RArray<class CMemSpyApiThread *> &, enum TSortType)
+	?ProcessId@CMemSpyApiThread@@QBE?AVTProcessId@@XZ @ 157 NONAME ; class TProcessId CMemSpyApiThread::ProcessId(void) const
+	?Type@CMemSpyApiKernelObjectItem@@QBE?AW4TMemSpyDriverContainerType@@XZ @ 158 NONAME ; enum TMemSpyDriverContainerType CMemSpyApiKernelObjectItem::Type(void) const
+	?ChunkSize@CMemSpyApiHeap@@QAEHXZ @ 159 NONAME ; int CMemSpyApiHeap::ChunkSize(void)
+	?UnitsMask@CMemSpyApiKernelObjectItem@@QBEIXZ @ 160 NONAME ; unsigned int CMemSpyApiKernelObjectItem::UnitsMask(void) const
+	?State@CMemSpyApiKernelObjectItem@@QBEEXZ @ 161 NONAME ; unsigned char CMemSpyApiKernelObjectItem::State(void) const
+	?Shared@CMemSpyApiHeap@@QAEHXZ @ 162 NONAME ; int CMemSpyApiHeap::Shared(void)
+	?SetSwmtAutoStartProcessList@RMemSpySession@@QAEXPAV?$CArrayFixFlat@VTUid@@@@@Z @ 163 NONAME ; void RMemSpySession::SetSwmtAutoStartProcessList(class CArrayFixFlat<class TUid> *)
+	?OutputCompactHeapInfoL@RMemSpySession@@QAEXXZ @ 164 NONAME ; void RMemSpySession::OutputCompactHeapInfoL(void)
+	?ProcessSystemPermanentOrCritical@RMemSpySession@@QAEHVTProcessId@@H@Z @ 165 NONAME ; int RMemSpySession::ProcessSystemPermanentOrCritical(class TProcessId, int)
+	?OutputKernelHeapDataL@RMemSpySession@@QAEXXZ @ 166 NONAME ; void RMemSpySession::OutputKernelHeapDataL(void)
+	?MapCount@CMemSpyApiKernelObjectItem@@QBEHXZ @ 167 NONAME ; int CMemSpyApiKernelObjectItem::MapCount(void) const
+	?OpenChannels@CMemSpyApiKernelObjectItem@@QAEHXZ @ 168 NONAME ; int CMemSpyApiKernelObjectItem::OpenChannels(void)
+	?EndProcess@RMemSpySession@@QAEHVTProcessId@@W4TMemSpyEndType@@@Z @ 169 NONAME ; int RMemSpySession::EndProcess(class TProcessId, enum TMemSpyEndType)
+	?ProcessPriority@CMemSpyApiThread@@QBE?AW4TProcessPriority@@XZ @ 170 NONAME ; enum TProcessPriority CMemSpyApiThread::ProcessPriority(void) const
+	?OutputAOListL@RMemSpySession@@QAEXVTThreadId@@W4TMemSpyThreadInfoItemType@@@Z @ 171 NONAME ; void RMemSpySession::OutputAOListL(class TThreadId, enum TMemSpyThreadInfoItemType)
+	?ThreadNumberUsing@CMemSpyApiThread@@QBEHXZ @ 172 NONAME ; int CMemSpyApiThread::ThreadNumberUsing(void) const
+	?OutputHeapInfoUserL@RMemSpySession@@QAEXVTThreadId@@@Z @ 173 NONAME ; void RMemSpySession::OutputHeapInfoUserL(class TThreadId)
+	?OutputThreadCellListL@RMemSpySession@@QAEXVTThreadId@@@Z @ 174 NONAME ; void RMemSpySession::OutputThreadCellListL(class TThreadId)
+	?GetThreadInfoItems@RMemSpySession@@QAEHAAV?$RArray@PAVCMemSpyApiThreadInfoItem@@@@VTThreadId@@W4TMemSpyThreadInfoItemType@@@Z @ 175 NONAME ; int RMemSpySession::GetThreadInfoItems(class RArray<class CMemSpyApiThreadInfoItem *> &, class TThreadId, enum TMemSpyThreadInfoItemType)
+	??1CMemSpyApiThread@@QAE@XZ @ 176 NONAME ; CMemSpyApiThread::~CMemSpyApiThread(void)
+	?Connect@RMemSpySession@@QAEHXZ @ 177 NONAME ; int RMemSpySession::Connect(void)
+	?SID@CMemSpyApiThread@@QBEHXZ @ 178 NONAME ; int CMemSpyApiThread::SID(void) const
+	?GetKernelObjectItems@RMemSpySession@@QAEHAAV?$RArray@PAVCMemSpyApiKernelObjectItem@@@@W4TMemSpyDriverContainerType@@@Z @ 179 NONAME ; int RMemSpySession::GetKernelObjectItems(class RArray<class CMemSpyApiKernelObjectItem *> &, enum TMemSpyDriverContainerType)
+	?ProcessHandles@CMemSpyApiThread@@QBEHXZ @ 180 NONAME ; int CMemSpyApiThread::ProcessHandles(void) const
+	?Name@CMemSpyApiThread@@QBEABVTDesC16@@XZ @ 181 NONAME ; class TDesC16 const & CMemSpyApiThread::Name(void) const
+	?IsDead@CMemSpyApiProcess@@QBEHXZ @ 182 NONAME ; int CMemSpyApiProcess::IsDead(void) const
 

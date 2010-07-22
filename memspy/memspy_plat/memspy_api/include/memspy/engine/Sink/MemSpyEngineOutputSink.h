@@ -48,13 +48,16 @@ public:
     IMPORT_C static CMemSpyEngineSinkMetaData* NewL();
     IMPORT_C static CMemSpyEngineSinkMetaData* NewL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp );
     IMPORT_C static CMemSpyEngineSinkMetaData* NewL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp, const TTime& aFolderTimeStamp );
+    IMPORT_C static CMemSpyEngineSinkMetaData* NewL( const TDesC& aRoot, const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp );
+    IMPORT_C static CMemSpyEngineSinkMetaData* NewL( const TDesC& aRoot, const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseFileTimeStamp, const TTime& aFolderTimeStamp );
     IMPORT_C ~CMemSpyEngineSinkMetaData();
 
 private:
     CMemSpyEngineSinkMetaData( TBool aOverwrite, TBool aUseTimeStamp );
-    void ConstructL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, const TTime& aFolderTime );
+    void ConstructL( const TDesC& aRoot, const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, const TTime& aFolderTime );
 
 public: // Access
+    inline const TDesC& Root() const { return *iRoot; }
     inline const TDesC& Context() const { return *iContext; }
     inline const TDesC& Folder() const { return *iFolder; }
     inline const TDesC& Extension() const { return *iExtension; }
@@ -63,6 +66,7 @@ public: // Access
     inline const TBool UseFileTimeStamp() const { return iUseFileTimeStamp; }
 
 private: // Data members
+    HBufC* iRoot;
     HBufC* iContext;
     HBufC* iFolder;
     HBufC* iExtension;

@@ -143,10 +143,8 @@ TInt DMemSpyDriverLogChanBase::OpenTempObject( TUint aId, TObjectType aType, TBo
     //
 	if ( iTempObj )
         {
-		NKern::LockSystem();
 		r = iTempObj->Open();
 	    TRACE( Kern::Printf("DMemSpyDriverLogChanBase::OpenTempObject() - open returned: %d", r ));
-		NKern::UnlockSystem();
 		//
         if  ( r == KErrNone )
             {

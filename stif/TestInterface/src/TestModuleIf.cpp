@@ -1403,6 +1403,30 @@ EXPORT_C void CTestModuleIf::GetTestCaseTitleL(TDes& aTestCaseTitle)
 
     Class: CTestModuleIf
 
+    Method: GetTestCaseArguments
+
+    Description: Returns test case arguments.
+
+    Parameters: none
+
+    Return Values: test case arguments.
+
+    Errors/Exceptions: None
+
+    Status: proposal
+
+-------------------------------------------------------------------------------
+*/
+EXPORT_C const TDesC& CTestModuleIf::GetTestCaseArguments() const
+    {
+    return iTestExecution->GetTestCaseArguments();
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+    Class: CTestModuleIf
+
     Method: UITesting
 
     Description: Gets information if it is UI test or not
@@ -1719,4 +1743,4 @@ EXPORT_C TInt CSTIFTestMeasurement::Stop()
 
     }
 
-//  End of File
+// End of File

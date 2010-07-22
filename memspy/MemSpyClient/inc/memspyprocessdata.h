@@ -37,8 +37,10 @@ public:
     TExitCategoryName iExitCategory;
     TInt iExitReason;
     TExitType iExitType;
-    TInt iThreadCount; 
-    TMemSpyDriverProcessInfo iInfo;
+    TInt iThreadCount;
+    TUint32 iSID;
+    TUint32 iVID;
+    TBool iIsDead;
 	};
 
 #endif // MEMSPYPROCESSDATA_H

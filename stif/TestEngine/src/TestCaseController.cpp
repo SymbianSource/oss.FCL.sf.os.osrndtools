@@ -219,7 +219,7 @@ CTestCaseController::~CTestCaseController()
 
     delete iRDebugLogger;
     delete iTimeout;
-
+    delete iTestCaseArguments;
     }
 
 /*
@@ -253,9 +253,22 @@ void CTestCaseController::StartL( const RMessage2& aMessage )
 
     iState = ETestCaseRunning;
     
+    delete iTestCaseArguments;
+    iTestCaseArguments = NULL;
+    
+    TInt testCaseArgumentsLength = iMessage.GetDesLength( 1 );
+    if ( ( testCaseArgumentsLength != KErrArgument ) && ( testCaseArgumentsLength != KErrBadDescriptor ) )
+        {
+        iTestCaseArguments = HBufC::NewL( testCaseArgumentsLength );
+        TPtr testCaseArgumentsPtr( iTestCaseArguments->Des() );
+        User::LeaveIfError( iMessage.Read( 1, testCaseArgumentsPtr ) );
+        iTestExecution.RunTestCase( iResultPckg, *iTestCaseArguments, iStatus );        
+        }
+    else
+        {    
+        iTestExecution.RunTestCase( iResultPckg, iStatus );
+        }
     SetActive();
-
-    iTestExecution.RunTestCase( iResultPckg, iStatus );    
 
     // If testcase has timeout (handler), then start it
     if ( iTimeout )
@@ -2771,7 +2784,7 @@ void CTestCommandNotifier::Start()
     {
     __TRACE(KVerbose, (_L("CTestEventNotifier::StartL")));
 
-    TInt res = iTestExecution.NotifyCommand2(iCommandPckg, iParamsPckg, iStatus, KErrNone);
+    iTestExecution.NotifyCommand2(iCommandPckg, iParamsPckg, iStatus, KErrNone);
     SetActive();
     }
 

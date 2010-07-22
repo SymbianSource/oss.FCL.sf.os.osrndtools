@@ -123,6 +123,17 @@ EXPORT_C TPtrC CMemSpyThreadInfoItemBase::MdcaPoint( TInt aIndex ) const
     return TPtrC( item->Combined() );
     }
 
+EXPORT_C TPtrC CMemSpyThreadInfoItemBase::Caption(TInt aIndex ) const
+	{
+	CItem* item = iItems[ aIndex ];
+	return TPtrC( item->Caption() );
+	}
+
+EXPORT_C TPtrC CMemSpyThreadInfoItemBase::Value(TInt aIndex ) const
+	{
+	CItem* item = iItems[ aIndex ];
+	return TPtrC( item->Value() );
+	}
 
 EXPORT_C CMemSpyEngine& CMemSpyThreadInfoItemBase::Engine() const
     {

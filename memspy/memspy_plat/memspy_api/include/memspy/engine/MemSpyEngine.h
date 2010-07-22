@@ -60,6 +60,7 @@ NONSHARABLE_CLASS( CMemSpyEngine ) : public CBase
     {
 public:
     IMPORT_C static CMemSpyEngine* NewL( RFs& aFsSession );
+    IMPORT_C static CMemSpyEngine* NewL( RFs& aFsSession, TBool aStartServer );
     IMPORT_C ~CMemSpyEngine();
 
 private:
@@ -80,6 +81,8 @@ public: // Sink related
     IMPORT_C CMemSpyEngineOutputSink& Sink();
     IMPORT_C TMemSpySinkType SinkType();
     IMPORT_C void InstallSinkL( TMemSpySinkType aType );
+    IMPORT_C void InstallDebugSinkL();
+    IMPORT_C void InstallFileSinkL( const TDesC& aRootFolder );
 
 public: // Misc
     IMPORT_C void ListOpenFilesL();

@@ -515,6 +515,25 @@ EXPORT_C TUint32 CMemSpyProcess::VID() const
     return iInfo->VID();
     }
 
+EXPORT_C TProcessPriority CMemSpyProcess::Priority() const
+	{
+	return iPriority;
+	}
+
+EXPORT_C TExitCategoryName CMemSpyProcess::ExitCategory() const
+	{
+	return iExitCategory;
+	}
+
+EXPORT_C TInt CMemSpyProcess::ExitReason() const
+	{
+	return iExitReason;
+	}
+
+EXPORT_C TExitType CMemSpyProcess::ExitType() const
+	{
+	return iExitType;
+	}
 
 EXPORT_C TUidType CMemSpyProcess::UIDs() const
     {

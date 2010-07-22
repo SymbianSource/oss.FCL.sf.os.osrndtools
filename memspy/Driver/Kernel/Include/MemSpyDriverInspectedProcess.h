@@ -138,6 +138,8 @@ private: // Internal methods
     void ResetPendingChanges();
     void PrintChunkInfo( DChunk& aChunk ) const;
     TBool IsChunkRelevantToOurProcess( DChunk& aChunk ) const;
+	void Lock() const;
+	void Unlock() const;
 
 public: // Queue link for process manager
 	SDblQueLink iPMLink;

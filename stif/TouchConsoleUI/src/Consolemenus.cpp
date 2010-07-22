@@ -3884,6 +3884,10 @@ TInt CTestSetMenu::ItemTexts( RRefArray<TDesC>& aArray )
             {
             return KErrNoMemory;
             }
+        if( aArray.Append( KSetUnload ) != KErrNone )
+            {
+            return KErrNoMemory;
+            }                        			
         if( aArray.Append( KSetRemove ) != KErrNone )
             {
             return KErrNoMemory;
@@ -3992,7 +3996,7 @@ void CTestSetMenu::PrintMenuL( TUpdateType aType )
 */
 CMenu* CTestSetMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
     {
-    TBuf<32> currSetName;
+    
     MapKeyCode(aSelection);    
     
     if( ( aSelection != EKeyRightArrow ) &&
@@ -4034,11 +4038,19 @@ CMenu* CTestSetMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
                                         this, 
                                         _L("Started test sets menu"));
                 return iSubMenu;
+            case ESetUnload:
+                ret = iMain->UIStore().UnloadTestSet( iTestSetName );
+                if( ret != KErrNone )
+                    {
+                    User::InfoPrint( _L("Test set unload failed") );
+                    }
+                iTestSetCreated = EFalse;                  
+                break;
             case ESetRemove: 
                 ret = iMain->UIStore().RemoveTestSet( iTestSetName );
                 if( ret != KErrNone )
                     {
-                    User::InfoPrint( _L("Test set creation failed") );
+                    User::InfoPrint( _L("Test set remove failed") );
                     }
                 iTestSetCreated = EFalse;  
                 break;
@@ -4064,28 +4076,11 @@ CMenu* CTestSetMenu::SelectL( TKeyCode aSelection, TBool& aContinue )
                                 
                 return iSubMenu;  
             case ESetSave: 
-                // during the save operation default set name (ConsoleUI.set) is replaced with
-                // new name created base on current date.
-                // Set is the reloaded to make sure that 
-                // old test set with default name will not affect test execution
-                currSetName.Copy( iTestSetName );
                 ret = iMain->UIStore().SaveTestSet2( iTestSetName );
                 if( ret != KErrNone )
                     {
-                    User::InfoPrint( _L("Test set saving failed at saving test set") );
-                    } 
-                
-                ret = iMain->UIStore().RemoveTestSet( currSetName );
-                if( ret != KErrNone )
-                    {
-                    User::InfoPrint( _L("Test set saving failed at removing old test set") );
-                    }             
-                
-                ret = iMain->UIStore().LoadTestSet( iTestSetName );
-                if( ret != KErrNone )
-                    {
-                    User::InfoPrint( _L("Test set saving failed at reloding test set") );
-                    }    
+                    User::InfoPrint( _L("Test set saving failed") );
+                    }   
                 break;
   
   			default:          
@@ -5697,4 +5692,5 @@ void CFilterMenu::SetTestCaseMenu(CMenu* aTestCaseMenu)
         }
     iTestCaseMenu = aTestCaseMenu;
     }
-// End of file
+
+// End of File

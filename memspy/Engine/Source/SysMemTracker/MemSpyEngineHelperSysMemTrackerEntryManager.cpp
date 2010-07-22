@@ -443,12 +443,13 @@ void CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsL()
     }
 #endif
 
-    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryBitmapHandles )
-        {
-        RDebug::Print( KMemSpyKeepaliveMessage );
-        // Bitmap
-        CreateSeedItemsBitmapL( *chunks );        
-        }
+// TODO: Uncomment when  bitmap handels are fixed
+//    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryBitmapHandles )
+//        {
+//        RDebug::Print( KMemSpyKeepaliveMessage );
+//        // Bitmap
+//        CreateSeedItemsBitmapL( *chunks );        
+//        }
 
 #ifdef SYSMEMTRACKERLOGGING
     {
@@ -479,12 +480,13 @@ void CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsL()
     }
 #endif
 
-    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryKernelHeap )
-        {
-        RDebug::Print( KMemSpyKeepaliveMessage );
-        // Look for kernel heaps
-        CreateSeedItemsHeapKernelL( *chunks );
-        }
+//  TODO: Uncomment after fix
+//    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryKernelHeap )
+//        {
+//        RDebug::Print( KMemSpyKeepaliveMessage );
+//        // Look for kernel heaps
+//        CreateSeedItemsHeapKernelL( *chunks );
+//        }
 
 #ifdef SYSMEMTRACKERLOGGING
     {
@@ -551,12 +553,13 @@ void CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsL()
     }
 #endif
 
-    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryUserStacks )
-        {
-        RDebug::Print( KMemSpyKeepaliveMessage );
-        // Stacks ($DAT)
-        CreateSeedItemsStacksL( *chunks );        
-        }
+//    TODO: Uncomment after fix
+//    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryUserStacks )
+//        {
+//        RDebug::Print( KMemSpyKeepaliveMessage );
+//        // Stacks ($DAT)
+//        CreateSeedItemsStacksL( *chunks );        
+//        }
 
 #ifdef SYSMEMTRACKERLOGGING
      {
@@ -569,12 +572,13 @@ void CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsL()
     }
 #endif
 
-    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryGlobalData )
-        {
-        RDebug::Print( KMemSpyKeepaliveMessage );
-        // Global data (DLL$DATA)
-        CreateSeedItemsGlobalDataL( *chunks );        
-        }
+//  TODO: Uncomment after fix
+//    if ( config.iEnabledCategories & TMemSpyEngineHelperSysMemTrackerConfig::EMemSpyEngineSysMemTrackerCategoryGlobalData )
+//        {
+//        RDebug::Print( KMemSpyKeepaliveMessage );
+//        // Global data (DLL$DATA)
+//        CreateSeedItemsGlobalDataL( *chunks );        
+//        }
 
  #ifdef SYSMEMTRACKERLOGGING
     {

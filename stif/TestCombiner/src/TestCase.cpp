@@ -365,12 +365,13 @@ CTCTestCase::CTCTestCase( CTestCombiner* testCombiner,
 */
 
 void CTCTestCase::ConstructL( TDesC& aModuleName,
-                              TDesC& aTestId )
+                              TDesC& aTestId,
+                              const TDesC& aTestCaseArguments )
     {
     __ASSERT_ALWAYS( aModuleName.Length() < KMaxFileName, User::Leave( KErrArgument ) );
     CTestCase::ConstructL( aTestId );
     iModuleName = aModuleName.AllocL();
-    
+    iTestCaseArguments = aTestCaseArguments.AllocL();
     }
 
 /*
@@ -397,8 +398,8 @@ CTCTestCase* CTCTestCase::NewL( CTestCombiner* testCombiner,
                                 TDesC& aModuleName,
                                 TDesC& aTestId,
                                 TInt aExpectedResult,
-                                TFullTestResult::TCaseExecutionResult
-                                    aCategory,
+                                TFullTestResult::TCaseExecutionResult aCategory,
+                                const TDesC& aTestCaseArguments,
                                 CTCTestModule* aModule ) //--PYTHON
     {
     CTCTestCase* self = new (ELeave) CTCTestCase( testCombiner,
@@ -407,7 +408,7 @@ CTCTestCase* CTCTestCase::NewL( CTestCombiner* testCombiner,
                                                    aModule ); //--PYTHON
      
     CleanupStack::PushL( self );
-    self->ConstructL( aModuleName, aTestId );
+    self->ConstructL( aModuleName, aTestId, aTestCaseArguments );
     CleanupStack::Pop();
     return self;
      
@@ -475,8 +476,37 @@ CTCTestCase::~CTCTestCase()
     
     delete iProgress;
     delete iModuleName;
+    delete iTestCaseArguments;
     
     delete iCommand;
+    }
+
+/*
+-------------------------------------------------------------------------------
+
+     Class: CTCTestCase
+
+     Method: TestCaseArguments
+
+     Description: Get test case arguments
+
+     Parameters: None.
+
+     Return Values: Test case arguments.
+
+     Errors/Exceptions: None.
+
+     Status: Proposal
+    
+-------------------------------------------------------------------------------
+*/
+const TDesC& CTCTestCase::TestCaseArguments() const 
+    {
+    if ( iTestCaseArguments !=NULL ) 
+        {
+        return *iTestCaseArguments; 
+        }
+    return KNullDesC;
     }
 
 /*
@@ -1174,4 +1204,4 @@ CRemoteSendReceive::~CRemoteSendReceive()
 
     }
 
-//  End of File
+// End of File

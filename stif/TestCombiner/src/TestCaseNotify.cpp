@@ -1492,7 +1492,7 @@ void CTestCommandNotifier::Start()
     {
     __TRACE(KMessage, (_L("CTestEventNotifier::StartL (combiner)")));
 
-    TInt res = iTestCase->TestExecution().NotifyCommand2(iCommandPckg, iParamsPckg, iStatus, KErrNone);
+    iTestCase->TestExecution().NotifyCommand2(iCommandPckg, iParamsPckg, iStatus, KErrNone);
     SetActive();
     }
 

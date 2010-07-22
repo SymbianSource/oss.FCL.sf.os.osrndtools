@@ -106,7 +106,7 @@ public:
     TUint GetId( DProcess& aObject ) const;
     MemSpyObjectIx* GetHandles( DProcess& aObject ) const;
     TExitType GetExitType( DProcess& aObject ) const;
-    DThread* GetFirstThread( DProcess& aObject ) const;
+    DThread* OpenFirstThread( DProcess& aObject ) const;
     TUint32 GetSID( DProcess& aObject ) const;
     TUint GetSecurityZone( DProcess& aObject ) const;
     SSecurityInfo& GetSecurityInfo( DProcess& aObject ) const;
@@ -122,6 +122,7 @@ public:
     TUint8* GetAddressOfOwningProcess( DProcess& aObject ) const;
     TUint8* GetAddressOfDataBssStackChunk( DProcess& aObject ) const;
     TBool IsHandleIndexValid( DProcess& aObject ) const;
+	TBool IsKernProcess(DProcess& aProcess) const;
 
 private: // Data members
     };

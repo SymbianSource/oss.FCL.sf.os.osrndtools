@@ -174,5 +174,5 @@ class CUIEngineEvent
 
 
 #endif // STIF_TFW_IF_EVENT_H
-    
+
 // End of File

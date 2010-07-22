@@ -309,4 +309,5 @@ TInt CSUEvent::SetEventIndicationHard(TTestResult& aResult, const TFileName& /*a
 
     }
 */
-//  End of File
+
+// End of File
