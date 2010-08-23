@@ -7,7 +7,12 @@
   <systemModel>
     <layer name="os_layer">
       <module name="osrndtools">
-        <unit unitID="tools.osrndtools" mrp="" bldFile="&layer_real_source_path;/group" name="osrndtools" />
+      	<component name="osrndtools">
+        	<unit unitID="tools.osrndtools" mrp="" bldFile="&layer_real_source_path;/group" name="osrndtools" />
+        </component>
+        <component name="tracecompiler">
+          <unit unitID="tools.tracecompiler" mrp="" bldFile="&layer_real_source_path;/tracefw/tracecompiler/group" name="tracecompiler" />
+        </component>
       </module>
     </layer>
   </systemModel>
