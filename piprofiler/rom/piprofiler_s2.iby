@@ -26,7 +26,6 @@ file=ABI_DIR\BUILD_DIR\PIProfiler.exe							sys\bin\PIProfiler.exe
 // sampler plugins
 // NOTE: Mandatory kernel driver included in piprofiler_ldd.iby
 ECOM_PLUGIN(PIProfilerGenerals.dll, PIProfilerGenerals.rsc)
-ECOM_PLUGIN(PIProfilerPWR.dll, PIProfilerPWR.rsc)
 
 ECOM_PLUGIN(PIProfilerBUP.dll, PIProfilerBUP.rsc)
 file=ABI_DIR\BUILD_DIR\PIProfilerTouchEventAnim.dll				sys\bin\PIProfilerTouchEventAnim.dll

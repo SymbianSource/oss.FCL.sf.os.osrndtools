@@ -76,7 +76,7 @@ void DGppSamplerImpl::Reset()
 	{
 	LOGTEXT("GppSamplerImpl::Reset");
 	iLastPc = 0;
-	iLastThread = 0;
+	iLastThread = 0xfffffffe;
 	iRepeat = 0;
 	iIsaStatus = 0;
 	iIsaStart = 0;

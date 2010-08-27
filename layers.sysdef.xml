@@ -13,6 +13,9 @@
         <component name="tracecompiler">
           <unit unitID="tools.tracecompiler" mrp="" bldFile="&layer_real_source_path;/tracefw/tracecompiler/group" name="tracecompiler" />
         </component>
+        <component name="runmodedebug">
+          <unit unitID="tools.runmodedebug" mrp="" bldFile="&layer_real_source_path;/debugsrv/runmodedebug/group" name="runmodedebug" />
+        </component>        
       </module>
     </layer>
   </systemModel>
