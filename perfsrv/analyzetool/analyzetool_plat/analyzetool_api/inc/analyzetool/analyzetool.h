@@ -24,7 +24,7 @@
 
 //Version information for command line engine.
 //Tells the version of AT core componenets.
-//ANALYZETOOL_CORE_VERSION_FOR_CLE 1.10.0
+//ANALYZETOOL_CORE_VERSION_FOR_CLE 1.10.1
 
 // CONSTANTS
 inline TVersion KAnalyzeToolLddVersion() { return TVersion(1, 0, 1); }

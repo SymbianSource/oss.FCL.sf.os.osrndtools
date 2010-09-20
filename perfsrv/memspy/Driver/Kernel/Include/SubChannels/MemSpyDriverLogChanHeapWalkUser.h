@@ -15,8 +15,8 @@
 *
 */
 
-#ifndef MEMSPYDRIVERLOGICALCHANHEAPWALK_H
-#define MEMSPYDRIVERLOGICALCHANHEAPWALK_H
+#ifndef MEMSPYDRIVERLOGICALCHANHEAPWALKUSER_H
+#define MEMSPYDRIVERLOGICALCHANHEAPWALKUSER_H
 
 // System includes
 #include <e32cmn.h>
@@ -39,11 +39,11 @@ class DMemSpyDriverDevice;
 class TMemSpyDriverLogChanHeapWalkObserver;
 
 
-class DMemSpyDriverLogChanHeapWalk : public DMemSpyDriverLogChanHeapBase
+class DMemSpyDriverLogChanHeapWalkUser : public DMemSpyDriverLogChanHeapBase
 	{
 public:
-	DMemSpyDriverLogChanHeapWalk( DMemSpyDriverDevice& aDevice, DThread& aThread );
-	~DMemSpyDriverLogChanHeapWalk();
+	DMemSpyDriverLogChanHeapWalkUser( DMemSpyDriverDevice& aDevice, DThread& aThread );
+	~DMemSpyDriverLogChanHeapWalkUser();
 
 private: // from DMemSpyDriverLogChanBase
 	TInt Request( TInt aFunction, TAny* a1, TAny* a2 );
@@ -78,7 +78,7 @@ private:
 class TMemSpyDriverLogChanHeapWalkObserver : public MMemSpyHeapWalkerObserver
     {
 public:
-    inline TMemSpyDriverLogChanHeapWalkObserver( DMemSpyDriverLogChanHeapWalk& aChannel )
+    inline TMemSpyDriverLogChanHeapWalkObserver( DMemSpyDriverLogChanHeapWalkUser& aChannel )
         : iChannel( aChannel )
         {
         }
@@ -91,7 +91,7 @@ public: // From MHeapWalkerObserver
         }
 
 private:
-    DMemSpyDriverLogChanHeapWalk& iChannel;
+    DMemSpyDriverLogChanHeapWalkUser& iChannel;
     };
 
 

@@ -33,7 +33,13 @@ class TMemSpyDriverInternalHeapRequestParameters
     {
 public:
     inline TMemSpyDriverInternalHeapRequestParameters()
-        : iTid(0), iRHeapVTable(0), iBuildFreeCellList(EFalse), iBuildAllocCellList(EFalse), iDebugAllocator(EFalse), iMasterInfo(NULL)
+        : iTid(0),
+          iRHeapVTable(0),
+          iBuildFreeCellList(EFalse),
+          iBuildAllocCellList(EFalse),
+          iUseKernelHeapCopy(EFalse),
+          iDebugAllocator(EFalse),
+          iMasterInfo(NULL)
         {
         }
 
@@ -42,6 +48,7 @@ public: // Params IN
     TUint32 iRHeapVTable;
     TBool iBuildFreeCellList;
 	TBool iBuildAllocCellList;
+	TBool iUseKernelHeapCopy;
 
 public: // Params IN or OUT (IN in User heap requests, OUT in Kernel heap requests)
     TBool iDebugAllocator;
@@ -65,8 +72,8 @@ struct TMemSpyDriverInternalHeapDataParams
     {
     TUint iTid;
     TUint iRHeapVTable;
-    TDes8* iDes; // Not used during kernel heap fetch
-    TInt iRemaining; // Not used during kernel heap fetch
+    TDes8* iDes;
+    TInt iRemaining;
     TUint iReadAddress;
     TUint32 iChecksum;
     TBool iDebugAllocator;

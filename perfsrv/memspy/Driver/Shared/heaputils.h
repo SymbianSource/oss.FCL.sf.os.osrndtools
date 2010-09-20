@@ -41,6 +41,7 @@ HUCLASS(RAllocatorHelper) // class RAllocatorHelper
 public:
 	HUIMPORT_C RAllocatorHelper();
 #ifdef __KERNEL_MODE__
+	TLinAddr GetKernelAllocator(DChunk* aKernelChunk);
 	TInt OpenKernelHeap();
 #else
 	HUIMPORT_C TInt Open(RAllocator* aAllocator);
@@ -123,6 +124,12 @@ protected:
 #endif
 	virtual TInt ReadData(TLinAddr aLocation, TAny* aResult, TInt aSize) const;
 	virtual TInt WriteData(TLinAddr aLocation, const TAny* aData, TInt aSize);
+
+#ifndef __KERNEL_MODE__
+protected:
+#else
+public:
+#endif	
 	virtual TInt TryLock();
 	virtual void TryUnlock();
 
@@ -171,22 +178,40 @@ private:
 
 #ifdef __KERNEL_MODE__
 
-class RKernelSideAllocatorHelper : public RAllocatorHelper
-	{
+class RUserAllocatorHelper : public RAllocatorHelper
+    {
 public:
-	RKernelSideAllocatorHelper();
-	TInt OpenUserHeap(TUint aThreadId, TLinAddr aAllocatorAddress, TBool aEuserIsUdeb);
-	virtual DChunk* OpenUnderlyingChunk(); // Must be in CS
-	virtual void Close();
+    RUserAllocatorHelper();
+    TInt OpenUserHeap(TUint aThreadId, TLinAddr aAllocatorAddress, TBool aEuserIsUdeb);
+    virtual DChunk* OpenUnderlyingChunk(); // Must be in CS
+    virtual void Close();
 
 protected:
-	virtual TInt ReadData(TLinAddr aLocation, TAny* aResult, TInt aSize) const;
-	virtual TInt WriteData(TLinAddr aLocation, const TAny* aData, TInt aSize);
-	virtual TInt TryLock();
-	virtual void TryUnlock();
+    virtual TInt ReadData(TLinAddr aLocation, TAny* aResult, TInt aSize) const;
+    virtual TInt WriteData(TLinAddr aLocation, const TAny* aData, TInt aSize);
+    virtual TInt TryLock();
+    virtual void TryUnlock();
 private:
-	DThread* iThread;
-	};
+    DThread* iThread;
+    };
+
+class RKernelCopyAllocatorHelper : public RAllocatorHelper
+    {
+public:
+    RKernelCopyAllocatorHelper();
+    TInt OpenCopiedHeap(DChunk* aOriginalChunk, DChunk* aCopiedChunk, TInt aOffset);
+    virtual DChunk* OpenUnderlyingChunk(); // Must be in CS
+    virtual void Close();
+
+protected:
+    virtual TInt ReadData(TLinAddr aLocation, TAny* aResult, TInt aSize) const;
+    virtual TInt WriteData(TLinAddr aLocation, const TAny* aData, TInt aSize);
+    virtual TInt TryLock();
+    virtual void TryUnlock();
+private:
+    DChunk* iCopiedChunk;
+    TInt iOffset; // from the original kernel heap to the copied heap
+    };
 
 #else
 

@@ -33,7 +33,9 @@ public:
 	static CMemSpyApiServer* NewLC(const TMemSpyServerData& aData);
 	
 public:
-	IMPORT_C TProcessId Id() const;
+	IMPORT_C TProcessId ProcessId() const;
+	
+	IMPORT_C TThreadId ThreadId() const;
 	
 	IMPORT_C const TDesC& Name() const;	
 	

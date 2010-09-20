@@ -424,4 +424,5 @@ EXPORTS
 	?InstallFileSinkL@CMemSpyEngine@@QAEXABVTDesC16@@@Z @ 423 NONAME ; void CMemSpyEngine::InstallFileSinkL(class TDesC16 const &)
 	?CheckForChangesNowL@CMemSpyEngineHelperSysMemTracker@@QAEXXZ @ 424 NONAME ; void CMemSpyEngineHelperSysMemTracker::CheckForChangesNowL(void)
 	?GetHeapInfoUserL@CMemSpyEngineHelperHeap@@QAEXABVTProcessId@@ABVTThreadId@@AAVTMemSpyHeapInfo@@PAV?$RArray@VTMemSpyDriverFreeCell@@@@H@Z @ 425 NONAME ; void CMemSpyEngineHelperHeap::GetHeapInfoUserL(class TProcessId const &, class TThreadId const &, class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> *, int)
+	?GetHeapInfoKernelL@CMemSpyEngineHelperHeap@@QAEXAAVTMemSpyHeapInfo@@PAV?$RArray@VTMemSpyDriverFreeCell@@@@H@Z @ 426 NONAME ; void CMemSpyEngineHelperHeap::GetHeapInfoKernelL(class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> *, int)
 

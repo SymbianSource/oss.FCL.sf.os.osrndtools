@@ -15,7 +15,7 @@
 *
 */
 
-#include "MemSpyDriverLogChanHeapWalk.h"
+#include "MemSpyDriverLogChanHeapWalkUser.h"
 
 // System includes
 #include <u32hal.h>
@@ -36,14 +36,14 @@
 
 
 
-DMemSpyDriverLogChanHeapWalk::DMemSpyDriverLogChanHeapWalk( DMemSpyDriverDevice& aDevice, DThread& aThread )
+DMemSpyDriverLogChanHeapWalkUser::DMemSpyDriverLogChanHeapWalkUser( DMemSpyDriverDevice& aDevice, DThread& aThread )
 :	DMemSpyDriverLogChanHeapBase( aDevice, aThread ), iWalkHeap( aDevice.OSAdaption() )
     {
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::DMemSpyDriverLogChanHeapWalk() - this: 0x%08x", this ));
     }
 
 
-DMemSpyDriverLogChanHeapWalk::~DMemSpyDriverLogChanHeapWalk()
+DMemSpyDriverLogChanHeapWalkUser::~DMemSpyDriverLogChanHeapWalkUser()
 	{
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::~DMemSpyDriverLogChanHeapWalk() - START - this: 0x%08x", this ));
 
@@ -62,26 +62,26 @@ DMemSpyDriverLogChanHeapWalk::~DMemSpyDriverLogChanHeapWalk()
 
 
 
-TInt DMemSpyDriverLogChanHeapWalk::Request( TInt aFunction, TAny* a1, TAny* a2 )
+TInt DMemSpyDriverLogChanHeapWalkUser::Request( TInt aFunction, TAny* a1, TAny* a2 )
 	{
 	TInt r = DMemSpyDriverLogChanBase::Request( aFunction, a1, a2 );
     if  ( r == KErrNone )
         {
 	    switch( aFunction )
 		    {
-	    case EMemSpyDriverOpCodeWalkHeapInit:
+	    case EMemSpyDriverOpCodeHeapUserWalkInit:
             r = WalkHeapInit( (TMemSpyDriverInternalWalkHeapParamsInit*) a1 );
             break;
-        case EMemSpyDriverOpCodeWalkHeapGetCellInfo:
+        case EMemSpyDriverOpCodeHeapUserWalkGetCellInfo:
             r = WalkHeapGetCellInfo( (TAny*) a1, (TMemSpyDriverInternalWalkHeapParamsCell*) a2 );
             break;
-	    case EMemSpyDriverOpCodeWalkHeapReadCellData:
+	    case EMemSpyDriverOpCodeHeapUserWalkReadCellData:
             r = WalkHeapReadCellData( (TMemSpyDriverInternalWalkHeapCellDataReadParams*) a1 );
             break;
-	    case EMemSpyDriverOpCodeWalkHeapNextCell:
+	    case EMemSpyDriverOpCodeHeapUserWalkNextCell:
             r = WalkHeapNextCell( (TUint) a1, (TMemSpyDriverInternalWalkHeapParamsCell*) a2 );
             break;
-	    case EMemSpyDriverOpCodeWalkHeapClose:
+	    case EMemSpyDriverOpCodeHeapUserWalkClose:
             r = WalkHeapClose();
             break;
 
@@ -95,9 +95,9 @@ TInt DMemSpyDriverLogChanHeapWalk::Request( TInt aFunction, TAny* a1, TAny* a2 )
 	}
 
 
-TBool DMemSpyDriverLogChanHeapWalk::IsHandler( TInt aFunction ) const
+TBool DMemSpyDriverLogChanHeapWalkUser::IsHandler( TInt aFunction ) const
     {
-    return ( aFunction > EMemSpyDriverOpCodeWalkHeapBase && aFunction < EMemSpyDriverOpCodeWalkHeapEnd );
+    return ( aFunction > EMemSpyDriverOpCodeHeapUserWalkBase && aFunction < EMemSpyDriverOpCodeHeapUserWalkEnd );
     }
 
 
@@ -121,7 +121,7 @@ TBool DMemSpyDriverLogChanHeapWalk::IsHandler( TInt aFunction ) const
 
 
 
-TInt DMemSpyDriverLogChanHeapWalk::WalkHeapInit( TMemSpyDriverInternalWalkHeapParamsInit* aParams )
+TInt DMemSpyDriverLogChanHeapWalkUser::WalkHeapInit( TMemSpyDriverInternalWalkHeapParamsInit* aParams )
     {
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapInit() - START"));
     __ASSERT_ALWAYS( !iHeapWalkInitialised && iWalkHeap.Helper() == NULL, MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkPending ) );
@@ -195,7 +195,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapInit( TMemSpyDriverInternalWalkHeapPa
     }
 
 
-TInt DMemSpyDriverLogChanHeapWalk::WalkHeapNextCell( TUint aTid, TMemSpyDriverInternalWalkHeapParamsCell* aParams )
+TInt DMemSpyDriverLogChanHeapWalkUser::WalkHeapNextCell( TUint aTid, TMemSpyDriverInternalWalkHeapParamsCell* aParams )
     {
     const TInt walkedHeapCellCount = iWalkHeapCells.Count();
 	TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapNextCell() - START - current cell count: %d", walkedHeapCellCount));
@@ -248,7 +248,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapNextCell( TUint aTid, TMemSpyDriverIn
     }
 
 
-TInt DMemSpyDriverLogChanHeapWalk::WalkHeapClose()
+TInt DMemSpyDriverLogChanHeapWalkUser::WalkHeapClose()
     {
     TRACE( Kern::Printf("DMemSpyDriverLogChanHeapWalk::WalkHeapClose() - START"));
     //
@@ -272,7 +272,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapClose()
     }
 
 
-TInt DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData(TMemSpyDriverInternalWalkHeapCellDataReadParams* aParams)
+TInt DMemSpyDriverLogChanHeapWalkUser::WalkHeapReadCellData(TMemSpyDriverInternalWalkHeapCellDataReadParams* aParams)
     {
     __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.Helper(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
     //
@@ -378,7 +378,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapReadCellData(TMemSpyDriverInternalWal
     }
 
 
-TInt DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo( TAny* aCellAddress, TMemSpyDriverInternalWalkHeapParamsCell* aParams )
+TInt DMemSpyDriverLogChanHeapWalkUser::WalkHeapGetCellInfo( TAny* aCellAddress, TMemSpyDriverInternalWalkHeapParamsCell* aParams )
     {
     __ASSERT_ALWAYS( iHeapWalkInitialised && iWalkHeap.Helper(), MemSpyDriverUtils::PanicThread( ClientThread(), EPanicHeapWalkNotInitialised ) );
     //
@@ -464,7 +464,7 @@ TInt DMemSpyDriverLogChanHeapWalk::WalkHeapGetCellInfo( TAny* aCellAddress, TMem
 
 
 
-const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalk::CellInfoForAddressWithinCellRange( TAny* aAddress ) const
+const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalkUser::CellInfoForAddressWithinCellRange( TAny* aAddress ) const
     {
     const TMemSpyDriverInternalWalkHeapParamsCell* ret = NULL;
     //
@@ -484,7 +484,7 @@ const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalk::Cel
     }
 
 
-const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalk::CellInfoForSpecificAddress( TAny* aAddress ) const
+const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalkUser::CellInfoForSpecificAddress( TAny* aAddress ) const
     {
     const TMemSpyDriverInternalWalkHeapParamsCell* ret = NULL;
     //
@@ -516,7 +516,7 @@ const TMemSpyDriverInternalWalkHeapParamsCell* DMemSpyDriverLogChanHeapWalk::Cel
 
 
 
-TBool DMemSpyDriverLogChanHeapWalk::WalkerHandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
+TBool DMemSpyDriverLogChanHeapWalkUser::WalkerHandleHeapCell(TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber )
     {
     TInt error = KErrNone;
     //

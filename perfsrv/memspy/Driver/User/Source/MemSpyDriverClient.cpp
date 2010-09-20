@@ -499,7 +499,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
     params.iDebugAllocator = DebugEUser();
     params.iMasterInfo = &aInfo;
     //
-	TInt r = DoControl( EMemSpyDriverOpCodeHeapInfoGetUser, &params, NULL );
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapUserDataGetInfo, &params, NULL );
 	//
 	if  ( r == KErrNone )
     	{
@@ -523,13 +523,18 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUin
 	return r;
     }
 
-EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser( TMemSpyHeapInfo& aInfo, TUint aTid, RArray< TMemSpyDriverFreeCell >& aFreeCells )
+EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, 
+                                                   TUint aTid, 
+                                                   RArray< TMemSpyDriverFreeCell >& aFreeCells)
 	{
 	return GetHeapInfoUser(aInfo, aTid, aFreeCells, EFalse);
 	}
 
 // For the record I don't think this function should be exported, but since the one above was I'm going with the flow. -TomS
-EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, TUint aTid, RArray<TMemSpyDriverCell>& aCells, TBool aCollectAllocatedCellsAsWellAsFree)
+EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, 
+                                                   TUint aTid, 
+                                                   RArray<TMemSpyDriverCell>& aCells, 
+                                                   TBool aCollectAllocatedCellsAsWellAsFree)
 	{
     TMemSpyDriverInternalHeapRequestParameters params;
     //
@@ -539,11 +544,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, TUint
     params.iMasterInfo = &aInfo;
     params.iBuildFreeCellList = ETrue;
 	params.iBuildAllocCellList = aCollectAllocatedCellsAsWellAsFree;
-
     //
     aCells.Reset();
     ResetStreamBuffer();
-	TInt r = DoControl( EMemSpyDriverOpCodeHeapInfoGetUser, &params );
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapUserDataGetInfo, &params );
 	//
 	if  ( r >= KErrNone )
     	{
@@ -568,7 +572,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, TUint
         // Now fetch the heap data
         if  ( r == KErrNone )
             {
-            r = DoControl( EMemSpyDriverOpCodeHeapInfoFetchCellList, &iBuffer );
+            r = DoControl( EMemSpyDriverOpCodeHeapUserDataFetchCellList, &iBuffer );
             if  ( r == KErrNone )
                 {
                 TRAP( r, ReadHeapInfoFreeCellsFromXferBufferL( aCells ) );
@@ -588,40 +592,16 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoUser(TMemSpyHeapInfo& aInfo, TUint
 EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoKernel( TMemSpyHeapInfo& aInfo )
     {
     TMemSpyDriverInternalHeapRequestParameters params;
-    params.iTid = KMemSpyDriverGetKernelHeapDataPseudoThreadId;
-    params.iRHeapVTable = NULL;
-    params.iMasterInfo = &aInfo;
-	TInt r = DoControl( EMemSpyDriverOpCodeHeapInfoGetKernel, &params, NULL );
-	//
-	if  ( r == KErrNone )
-    	{
-        PrintHeapInfo( aInfo );
-        }
-    else if ( r == KErrNotSupported )
-        {
-        aInfo.SetType( TMemSpyHeapInfo::ETypeUnknown );
-        r = KErrNone;
-        }
-	//
-	return r;
-    }
-
-
-EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoKernel( TMemSpyHeapInfo& aInfo, RArray< TMemSpyDriverFreeCell >& aFreeCells )
-    {
-    TMemSpyDriverInternalHeapRequestParameters params;
+    //
     params.iTid = KMemSpyDriverGetKernelHeapDataPseudoThreadId;
     params.iRHeapVTable = NULL;
     params.iMasterInfo = &aInfo;
     //
-    aFreeCells.Reset();
-    ResetStreamBuffer();
-	TInt r = DoControl( EMemSpyDriverOpCodeHeapInfoGetKernel, &params, (TAny*) &iBuffer );
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapKernelDataGetInfo, &params, NULL );
 	//
 	if  ( r == KErrNone )
     	{
         PrintHeapInfo( aInfo );
-        TRAP( r, ReadHeapInfoFreeCellsFromXferBufferL( aFreeCells ) );
         }
     else if ( r == KErrNotSupported )
         {
@@ -632,11 +612,72 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoKernel( TMemSpyHeapInfo& aInfo, RA
 	return r;
     }
 
+EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoKernel(TMemSpyHeapInfo& aInfo, 
+                                                     RArray< TMemSpyDriverFreeCell >& aFreeCells)
+    {
+    return GetHeapInfoKernel(aInfo, aFreeCells, EFalse, EFalse);
+    }
+
+EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoKernel(TMemSpyHeapInfo& aInfo, 
+                                                     RArray<TMemSpyDriverCell>& aCells, 
+                                                     TBool aCollectAllocatedCellsAsWellAsFree)
+    {
+    return GetHeapInfoKernel(aInfo, aCells, aCollectAllocatedCellsAsWellAsFree, EFalse);    
+    }
+
+EXPORT_C TInt RMemSpyDriverClient::GetHeapInfoKernel(TMemSpyHeapInfo& aInfo, 
+                                                     RArray<TMemSpyDriverCell>& aCells, 
+                                                     TBool aCollectAllocatedCellsAsWellAsFree, 
+                                                     TBool aUseKernelCopy)
+    {
+    TMemSpyDriverInternalHeapRequestParameters params;
+    //
+	params.iTid = KMemSpyDriverGetKernelHeapDataPseudoThreadId;
+    params.iRHeapVTable = NULL;
+    params.iMasterInfo = &aInfo;
+    params.iBuildFreeCellList = ETrue;
+	params.iBuildAllocCellList = aCollectAllocatedCellsAsWellAsFree;
+    params.iUseKernelHeapCopy = aUseKernelCopy;
+    //
+    aCells.Reset();
+    ResetStreamBuffer();
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapKernelDataGetInfo, &params );
+	//
+	if  ( r >= KErrNone )
+    	{
+        PrintHeapInfo( aInfo );
+        
+        // Resize transfer buffer to make room for free cells. We only make the buffer
+        // bigger, not smaller.
+        if  ( iBuffer.Size() < r )
+            {
+            r = iBuffer.ReAlloc( r );
+            }
+    
+        // Now fetch the heap data
+        if  ( r == KErrNone )
+            {
+            r = DoControl( EMemSpyDriverOpCodeHeapKernelDataFetchCellList, &iBuffer );
+            if  ( r == KErrNone )
+                {
+                TRAP( r, ReadHeapInfoFreeCellsFromXferBufferL( aCells ) );
+                }
+            }
+        }
+    else if ( r == KErrNotSupported )
+        {
+        aInfo.SetType( TMemSpyHeapInfo::ETypeUnknown );
+        r = KErrNone;
+        }
+	//
+	return r;
+    }
+       
 
 EXPORT_C TBool RMemSpyDriverClient::IsDebugKernel()
     {
     TBool isDebugKernel = EFalse;
-    DoControl( EMemSpyDriverOpCodeHeapInfoGetIsDebugKernel, (TAny*) &isDebugKernel );
+    DoControl( EMemSpyDriverOpCodeHeapKernelDataGetIsDebugKernel, (TAny*) &isDebugKernel );
     return isDebugKernel;
     }
 
@@ -661,7 +702,11 @@ EXPORT_C TBool RMemSpyDriverClient::IsDebugKernel()
 
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetHeapData( TUint aTid, TUint32 aFreeCellChecksum, TDes8& aDest, TUint& aReadAddress, TUint& aAmountRemaining )
+EXPORT_C TInt RMemSpyDriverClient::GetHeapData(TUint aTid, 
+                                               TUint32 aFreeCellChecksum, 
+                                               TDes8& aDest, 
+                                               TUint& aReadAddress, 
+                                               TUint& aAmountRemaining )
     {
     TMemSpyDriverInternalHeapDataParams params;
     params.iTid = aTid;
@@ -673,7 +718,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapData( TUint aTid, TUint32 aFreeCellChe
 	params.iReadAddress = 0;
     aDest.Zero();
     //
-	TInt r = DoControl( EMemSpyDriverOpCodeHeapDataGetUser, &params, NULL );
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapUserDataGetFull, &params, NULL );
 	//
 	if  ( r >= KErrNone )
     	{
@@ -687,7 +732,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapData( TUint aTid, TUint32 aFreeCellChe
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetHeapDataNext( TUint aTid, TDes8& aDest, TUint& aReadAddress, TUint& aAmountRemaining )
+EXPORT_C TInt RMemSpyDriverClient::GetHeapDataNext(TUint aTid, 
+                                                   TDes8& aDest, 
+                                                   TUint& aReadAddress, 
+                                                   TUint& aAmountRemaining)
     {
     TMemSpyDriverInternalHeapDataParams params;
     params.iTid = aTid;
@@ -699,7 +747,7 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapDataNext( TUint aTid, TDes8& aDest, TU
 	params.iReadAddress = aReadAddress;
     aDest.Zero();
     //
-	TInt r = DoControl( EMemSpyDriverOpCodeHeapDataGetUser, &params, NULL );
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapUserDataGetFull, &params, NULL );
 	//
 	if  ( r >= KErrNone )
     	{
@@ -713,44 +761,71 @@ EXPORT_C TInt RMemSpyDriverClient::GetHeapDataNext( TUint aTid, TDes8& aDest, TU
     }
 
 
-
-EXPORT_C HBufC8* RMemSpyDriverClient::GetHeapDataKernelLC( TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverFreeCell>& aFreeCells )
+EXPORT_C TInt RMemSpyDriverClient::CopyHeapDataKernel()
     {
-    HBufC8* data = NULL;
+    return DoControl( EMemSpyDriverOpCodeHeapKernelDataCopyHeap, NULL, NULL );    
+    }
 
-    // Going to fetch free cells via stream buffer...
-    ResetStreamBuffer();
+EXPORT_C TInt RMemSpyDriverClient::FreeHeapDataKernel()
+    {
+    return DoControl( EMemSpyDriverOpCodeHeapKernelDataFreeHeapCopy, NULL, NULL );    
+    }
 
-    // First pass is to preallocate buffer for kernel heap, and fetch metadata and free cells
-    TInt sizeOrError = DoControl( EMemSpyDriverOpCodeHeapDataGetKernelInit, (TAny*) &aInfo, (TAny*) &iBuffer );
-	if  ( sizeOrError >= KErrNone )
-    	{
-        const TInt kernelHeapSize = sizeOrError;
-        if  ( aInfo.Type() != TMemSpyHeapInfo::ETypeRHeap )
-            {
-            User::Leave( KErrNotSupported );
-            }
-        else
-            {
-            // Extract free cells
-            ReadHeapInfoFreeCellsFromXferBufferL( aFreeCells );
-
-            // It's okay to treat the heap info as an RHeap
-            PrintHeapInfo( aInfo );
-
-            // Allocate data sink and do fetch
-            data = HBufC8::NewLC( kernelHeapSize );
-            TPtr8 pBuffer( data->Des() );
-
-	        sizeOrError = DoControl( EMemSpyDriverOpCodeHeapDataGetKernelFetch, &pBuffer, NULL );
-            }
+EXPORT_C TInt RMemSpyDriverClient::GetHeapDataKernel(TUint aTid, 
+                                                     TDes8& aDest, 
+                                                     TUint& aReadAddress, 
+                                                     TUint& aAmountRemaining)
+    {
+    TMemSpyDriverInternalHeapDataParams params;
+    params.iTid = aTid;
+    params.iRHeapVTable = RHeapVTable();
+    params.iDebugAllocator = DebugEUser();
+    params.iDes = &aDest;
+    params.iChecksum = 0;
+    params.iRemaining = -1;
+    params.iReadAddress = 0;
+    aDest.Zero();
+    //
+    TInt r = DoControl( EMemSpyDriverOpCodeHeapKernelDataGetFull, &params, NULL );
+    //
+    if  ( r >= KErrNone )
+        {
+        aDest.SetLength( r );
+        aReadAddress = params.iReadAddress;
+        aAmountRemaining = params.iRemaining;
+        r = KErrNone;
         }
-
-    User::LeaveIfError( sizeOrError );
-    return data;
+    return r;
     }
 
 
+EXPORT_C TInt RMemSpyDriverClient::GetHeapDataKernelNext(TUint aTid, 
+                                                         TDes8& aDest, 
+                                                         TUint& aReadAddress, 
+                                                         TUint& aAmountRemaining)
+    {
+    TMemSpyDriverInternalHeapDataParams params;
+    params.iTid = aTid;
+    params.iRHeapVTable = RHeapVTable();
+    params.iDebugAllocator = DebugEUser();
+    params.iDes = &aDest;
+    params.iChecksum = 0;
+    params.iRemaining = aAmountRemaining;
+    params.iReadAddress = aReadAddress;
+    aDest.Zero();
+    //
+    TInt r = DoControl( EMemSpyDriverOpCodeHeapKernelDataGetFull, &params, NULL );
+    //
+    if  ( r >= KErrNone )
+        {
+        aDest.SetLength( r );
+        aReadAddress = params.iReadAddress;
+        aAmountRemaining = params.iRemaining;
+        r = KErrNone;
+        }
+    //
+    return r;
+    }
 
 
 
@@ -792,12 +867,19 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapInit( TUint aTid )
     params.iRHeapVTable = RHeapVTable();
     params.iDebugAllocator = DebugEUser();
     //
-	const TInt r = DoControl( EMemSpyDriverOpCodeWalkHeapInit, &params, NULL );
+	const TInt r = DoControl( EMemSpyDriverOpCodeHeapUserWalkInit, &params, NULL );
 	return r;
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::WalkHeapNextCell( TUint aTid, TMemSpyDriverCellType& aCellType, TAny*& aCellAddress, TInt& aLength, TInt& aNestingLevel, TInt& aAllocNumber, TInt& aCellHeaderSize, TAny*& aCellPayloadAddress )
+EXPORT_C TInt RMemSpyDriverClient::WalkHeapNextCell(TUint aTid, 
+                                                    TMemSpyDriverCellType& aCellType, 
+                                                    TAny*& aCellAddress, 
+                                                    TInt& aLength, 
+                                                    TInt& aNestingLevel, 
+                                                    TInt& aAllocNumber, 
+                                                    TInt& aCellHeaderSize, 
+                                                    TAny*& aCellPayloadAddress)
     {
     aCellType = EMemSpyDriverBadCellMask;
     aCellAddress = NULL;
@@ -808,7 +890,7 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapNextCell( TUint aTid, TMemSpyDriverCe
     aCellPayloadAddress = NULL;
     //
     TMemSpyDriverInternalWalkHeapParamsCell params;
-	const TInt r = DoControl( EMemSpyDriverOpCodeWalkHeapNextCell, (TAny*) aTid, &params );
+	const TInt r = DoControl( EMemSpyDriverOpCodeHeapUserWalkNextCell, (TAny*) aTid, &params );
     //
 	if  ( r == KErrNone )
 	    {
@@ -832,7 +914,7 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapReadCellData( TAny* aCellAddress, TDe
     params.iDes = &aDest;
     aDest.Zero();
     //
-	TInt r = DoControl( EMemSpyDriverOpCodeWalkHeapReadCellData, &params, NULL );
+	TInt r = DoControl( EMemSpyDriverOpCodeHeapUserWalkReadCellData, &params, NULL );
     if  ( r >= KErrNone )
         {
         aDest.SetLength( r );
@@ -843,7 +925,13 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapReadCellData( TAny* aCellAddress, TDe
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::WalkHeapGetCellInfo( TAny*& aCellAddress, TMemSpyDriverCellType& aCellType, TInt& aLength, TInt& aNestingLevel, TInt& aAllocNumber, TInt& aCellHeaderSize, TAny*& aCellPayloadAddress )
+EXPORT_C TInt RMemSpyDriverClient::WalkHeapGetCellInfo(TAny*& aCellAddress, 
+                                                       TMemSpyDriverCellType& aCellType, 
+                                                       TInt& aLength, 
+                                                       TInt& aNestingLevel, 
+                                                       TInt& aAllocNumber, 
+                                                       TInt& aCellHeaderSize, 
+                                                       TAny*& aCellPayloadAddress)
     {
     aCellType = EMemSpyDriverBadCellMask;
     aLength = 0;
@@ -853,7 +941,7 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapGetCellInfo( TAny*& aCellAddress, TMe
     aCellPayloadAddress = NULL;
     //
     TMemSpyDriverInternalWalkHeapParamsCell params;
-	const TInt r = DoControl( EMemSpyDriverOpCodeWalkHeapGetCellInfo, aCellAddress, &params );
+	const TInt r = DoControl( EMemSpyDriverOpCodeHeapUserWalkGetCellInfo, aCellAddress, &params );
     //
 	if  ( r == KErrNone )
 	    {
@@ -871,7 +959,7 @@ EXPORT_C TInt RMemSpyDriverClient::WalkHeapGetCellInfo( TAny*& aCellAddress, TMe
 
 EXPORT_C void RMemSpyDriverClient::WalkHeapClose()
     {
-	DoControl( EMemSpyDriverOpCodeWalkHeapClose, NULL, NULL );
+	DoControl( EMemSpyDriverOpCodeHeapUserWalkClose, NULL, NULL );
     }
 
 
@@ -920,7 +1008,11 @@ EXPORT_C TInt RMemSpyDriverClient::GetStackInfo( TUint aTid, TMemSpyDriverStackI
     }    
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetStackData( TUint aTid, TDes8& aDest, TUint& aAmountRemaining, TMemSpyDriverDomainType aDomain, TBool aEntireStack )
+EXPORT_C TInt RMemSpyDriverClient::GetStackData(TUint aTid, 
+                                                TDes8& aDest, 
+                                                TUint& aAmountRemaining, 
+                                                TMemSpyDriverDomainType aDomain, 
+                                                TBool aEntireStack)
     {
     TMemSpyDriverInternalStackDataParams params;
     params.iTid = aTid;
@@ -943,7 +1035,11 @@ EXPORT_C TInt RMemSpyDriverClient::GetStackData( TUint aTid, TDes8& aDest, TUint
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetStackDataNext( TUint aTid, TDes8& aDest, TUint& aAmountRemaining, TMemSpyDriverDomainType aDomain, TBool aEntireStack )
+EXPORT_C TInt RMemSpyDriverClient::GetStackDataNext(TUint aTid, 
+                                                    TDes8& aDest, 
+                                                    TUint& aAmountRemaining, 
+                                                    TMemSpyDriverDomainType aDomain, 
+                                                    TBool aEntireStack )
     {
     TMemSpyDriverInternalStackDataParams params;
     params.iTid = aTid;
@@ -1096,7 +1192,9 @@ EXPORT_C TInt RMemSpyDriverClient::ProcessInspectionClose( TUint aPid )
     }
 
 
-EXPORT_C void RMemSpyDriverClient::ProcessInspectionRequestChanges( TUint aPid, TRequestStatus& aStatus, TMemSpyDriverProcessInspectionInfo& aInfo )
+EXPORT_C void RMemSpyDriverClient::ProcessInspectionRequestChanges(TUint aPid, 
+                                                                   TRequestStatus& aStatus, 
+                                                                   TMemSpyDriverProcessInspectionInfo& aInfo )
     {
     aInfo.iProcessId = aPid;
     aStatus = KRequestPending;
@@ -1150,7 +1248,9 @@ EXPORT_C TInt RMemSpyDriverClient::ProcessInspectionAutoStartItemsAdd( TUint aSI
 
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetContainerHandles( TMemSpyDriverContainerType aContainer, TAny** aHandleArray, TInt& aHandleCount )
+EXPORT_C TInt RMemSpyDriverClient::GetContainerHandles(TMemSpyDriverContainerType aContainer, 
+                                                       TAny** aHandleArray, 
+                                                       TInt& aHandleCount)
     {
 	TMemSpyDriverInternalContainerHandleParams params;
 	params.iTidOrPid = KMemSpyDriverEnumerateContainerHandles;
@@ -1166,7 +1266,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetContainerHandles( TMemSpyDriverContainerTy
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetThreadHandlesByType( TInt aTid, TMemSpyDriverContainerType aType, TAny** aHandleArray, TInt& aHandleCount )
+EXPORT_C TInt RMemSpyDriverClient::GetThreadHandlesByType(TInt aTid, 
+                                                          TMemSpyDriverContainerType aType, 
+                                                          TAny** aHandleArray, 
+                                                          TInt& aHandleCount)
     {
 	TMemSpyDriverInternalContainerHandleParams params;
 	params.iTidOrPid = aTid;
@@ -1182,7 +1285,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetThreadHandlesByType( TInt aTid, TMemSpyDri
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetProcessHandlesByType( TInt aPid, TMemSpyDriverContainerType aType, TAny** aHandleArray, TInt& aHandleCount )
+EXPORT_C TInt RMemSpyDriverClient::GetProcessHandlesByType(TInt aPid, 
+                                                           TMemSpyDriverContainerType aType, 
+                                                           TAny** aHandleArray, 
+                                                           TInt& aHandleCount)
     {
 	TMemSpyDriverInternalContainerHandleParams params;
 	params.iTidOrPid = aPid;
@@ -1198,7 +1304,10 @@ EXPORT_C TInt RMemSpyDriverClient::GetProcessHandlesByType( TInt aPid, TMemSpyDr
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetGenericHandleInfo( TInt aTid, TMemSpyDriverContainerType aType, TAny* aHandle, TMemSpyDriverHandleInfoGeneric& aParams )
+EXPORT_C TInt RMemSpyDriverClient::GetGenericHandleInfo(TInt aTid, 
+                                                        TMemSpyDriverContainerType aType, 
+                                                        TAny* aHandle, 
+                                                        TMemSpyDriverHandleInfoGeneric& aParams)
     {
     aParams.iType = aType;
     aParams.iHandle = aHandle;
@@ -1239,7 +1348,9 @@ EXPORT_C TInt RMemSpyDriverClient::GetPAndSInfo( TAny* aHandle, TMemSpyDriverPAn
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetCondVarSuspendedThreads( TAny* aCondVarHandle, TAny** aThreadHandleArray, TInt& aThreadCount )
+EXPORT_C TInt RMemSpyDriverClient::GetCondVarSuspendedThreads(TAny* aCondVarHandle, 
+                                                              TAny** aThreadHandleArray, 
+                                                              TInt& aThreadCount)
     {
     TMemSpyDriverInternalCondVarSuspendedThreadParams params;
     params.iCondVarHandle = aCondVarHandle;
@@ -1253,7 +1364,8 @@ EXPORT_C TInt RMemSpyDriverClient::GetCondVarSuspendedThreads( TAny* aCondVarHan
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetCondVarSuspendedThreadInfo( TAny* aHandle, TMemSpyDriverCondVarSuspendedThreadInfo& aParams )
+EXPORT_C TInt RMemSpyDriverClient::GetCondVarSuspendedThreadInfo(TAny* aHandle, 
+                                                                 TMemSpyDriverCondVarSuspendedThreadInfo& aParams)
     {
     return DoControl( EMemSpyDriverOpCodeContainersGetCondVarSuspendedThreadInfo, aHandle, &aParams );
     }
@@ -1274,7 +1386,9 @@ EXPORT_C TInt RMemSpyDriverClient::GetCondVarSuspendedThreadInfo( TAny* aHandle,
 
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetServerSessionHandles( TAny* aServerHandle, TAny** aSessionHandleArray, TInt& aSessionHandleCount )
+EXPORT_C TInt RMemSpyDriverClient::GetServerSessionHandles(TAny* aServerHandle, 
+                                                           TAny** aSessionHandleArray, 
+                                                           TInt& aSessionHandleCount)
     {
 	TMemSpyDriverInternalServerSessionHandleParams params;
 	params.iServerHandle = aServerHandle;
@@ -1288,7 +1402,8 @@ EXPORT_C TInt RMemSpyDriverClient::GetServerSessionHandles( TAny* aServerHandle,
     }
 
 
-EXPORT_C TInt RMemSpyDriverClient::GetServerSessionInfo( TAny* aSessionHandle, TMemSpyDriverServerSessionInfo& aParams )
+EXPORT_C TInt RMemSpyDriverClient::GetServerSessionInfo(TAny* aSessionHandle, 
+                                                        TMemSpyDriverServerSessionInfo& aParams)
     {
     return DoControl( EMemSpyDriverOpCodeClientServerGetServerSessionInfo, aSessionHandle, &aParams );
     }
@@ -1451,6 +1566,10 @@ void RMemSpyDriverClient::ReadHeapInfoFreeCellsFromXferBufferL( RArray<TMemSpyDr
 
         CleanupStack::PopAndDestroy( &stream );
         }
+
+#ifdef _DEBUG
+        RDebug::Printf( "[MemSpy] RMemSpyDriverClient::ReadHeapInfoFreeCellsFromXferBufferL() - END" );
+#endif
 
     ResetStreamBuffer();
     }

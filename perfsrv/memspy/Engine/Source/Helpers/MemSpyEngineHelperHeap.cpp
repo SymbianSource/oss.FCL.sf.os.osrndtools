@@ -267,12 +267,21 @@ void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const CMemSpyThread& aThread,
     }
 
 
-EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapDataUserL(const TProcessId& aPid, const TThreadId& aTid, const TDesC& aThreadName, const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverCell>* aCells)
+EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapDataUserL(const TProcessId& aPid, 
+                                                           const TThreadId& aTid, 
+                                                           const TDesC& aThreadName, 
+                                                           const TMemSpyHeapInfo& aInfo, 
+                                                           const RArray<TMemSpyDriverCell>* aCells)
     {
     OutputHeapDataUserL(aPid, aTid, aThreadName, aInfo, ETrue, aCells);
     }
 
-void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const TThreadId& aTid, const TDesC& aThreadName, const TMemSpyHeapInfo& aInfo, TBool aCreateDataStream, const RArray<TMemSpyDriverCell>* aCells )
+void CMemSpyEngineHelperHeap::OutputHeapDataUserL(const TProcessId& aPid, 
+                                                  const TThreadId& aTid, 
+                                                  const TDesC& aThreadName, 
+                                                  const TMemSpyHeapInfo& aInfo, 
+                                                  TBool aCreateDataStream, 
+                                                  const RArray<TMemSpyDriverCell>* aCells )
     {
     TBuf<KMaxFullName + 100> printFormat;
 
@@ -383,7 +392,9 @@ void CMemSpyEngineHelperHeap::OutputHeapDataUserL( const TProcessId& aPid, const
 
 
 
-EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoL( const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const RArray<TMemSpyDriverCell>* aCells )
+EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoL(const TMemSpyHeapInfo& aInfo, 
+                                                       const TDesC& aThreadName, 
+                                                       const RArray<TMemSpyDriverCell>* aCells )
 	{
     CMemSpyEngineOutputList* list = NewHeapSummaryExtendedLC(aInfo, aCells);
 
@@ -428,7 +439,10 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoL( const TMemSpyHeapInfo& a
 
 
 
-void CMemSpyEngineHelperHeap::OutputCSVEntryL( TInt aIndex, const TMemSpyHeapInfo& aInfo, const TDesC& aThreadName, const TDesC& aProcessName )
+void CMemSpyEngineHelperHeap::OutputCSVEntryL(TInt aIndex, 
+                                              const TMemSpyHeapInfo& aInfo, 
+                                              const TDesC& aThreadName, 
+                                              const TDesC& aProcessName )
     {
     const TMemSpyHeapInfoRHeap& rHeapInfo = aInfo.AsRHeap();
     const TMemSpyHeapMetaDataRHeap& rHeapMetaData = rHeapInfo.MetaData();
@@ -592,12 +606,19 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoForDeviceL( TBool aIncludeK
 
 
 
-EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverFreeCell>* aFreeCells)
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProcess, 
+                                                        const TThreadId& aThread, 
+                                                        TMemSpyHeapInfo& aInfo, 
+                                                        RArray<TMemSpyDriverFreeCell>* aFreeCells)
     {
 	GetHeapInfoUserL(aProcess, aThread, aInfo, aFreeCells, EFalse);
 	}
 
-EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverCell>* aCells, TBool aCollectAllocatedCellsAsWellAsFree)
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProcess, 
+                                                        const TThreadId& aThread, 
+                                                        TMemSpyHeapInfo& aInfo, 
+                                                        RArray<TMemSpyDriverCell>* aCells, 
+                                                        TBool aCollectAllocatedCellsAsWellAsFree)
     {
     iEngine.ProcessSuspendLC( aProcess );
     TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::GetHeapInfoUserL() - checksum1: 0x%08x", aInfo.AsRHeap().Statistics().StatsFree().Checksum() ) );
@@ -624,7 +645,8 @@ EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const TProcessId& aProce
     }
 
 
-EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL( const CMemSpyProcess& aProcess, RArray<TMemSpyHeapInfo >& aInfos )
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoUserL(const CMemSpyProcess& aProcess, 
+                                                        RArray<TMemSpyHeapInfo >& aInfos)
     {
     aInfos.Reset();
     iEngine.ProcessSuspendLC( aProcess.Id() );
@@ -673,14 +695,32 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapInfoUserL( const CMemSpyThread&
 
 
 
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoKernelL( TMemSpyHeapInfo& aInfo, 
+                                                           RArray<TMemSpyDriverFreeCell>* aFreeCells )
+    {
+    GetHeapInfoKernelL(aInfo, aFreeCells, EFalse, EFalse);
+    }
 
-EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoKernelL( TMemSpyHeapInfo& aInfo, RArray<TMemSpyDriverFreeCell>* aFreeCells )
+EXPORT_C void CMemSpyEngineHelperHeap::GetHeapInfoKernelL( TMemSpyHeapInfo& aInfo, 
+                                                           RArray<TMemSpyDriverFreeCell>* aFreeCells, 
+                                                           TBool aCollectAllocatedCellsAsWellAsFree )
+    {
+    GetHeapInfoKernelL(aInfo, aFreeCells, aCollectAllocatedCellsAsWellAsFree, EFalse);
+    }
+
+void CMemSpyEngineHelperHeap::GetHeapInfoKernelL( TMemSpyHeapInfo& aInfo, 
+                                                  RArray<TMemSpyDriverFreeCell>* aFreeCells, 
+                                                  TBool aCollectAllocatedCellsAsWellAsFree, 
+                                                  TBool aUseKernelCopy )
     {
     TInt error = KErrNone;
     //
     if  ( aFreeCells )
         {
-        error = iEngine.Driver().GetHeapInfoKernel( aInfo, *aFreeCells );
+        error = iEngine.Driver().GetHeapInfoKernel( aInfo, 
+                                                    *aFreeCells, 
+                                                    aCollectAllocatedCellsAsWellAsFree, 
+                                                    aUseKernelCopy );
         }
     else
         {
@@ -718,9 +758,43 @@ EXPORT_C void CMemSpyEngineHelperHeap::OutputHeapDataKernelL()
     }
 
 
+void CMemSpyEngineHelperHeap::CleanupHeapDataKernel( TAny* aPtr )
+    {
+    if ( aPtr )
+        {
+        CMemSpyEngineHelperHeap* ptr = static_cast<CMemSpyEngineHelperHeap*>( aPtr );
+        (void) ptr->iEngine.Driver().FreeHeapDataKernel();
+        }
+    }
+
 void CMemSpyEngineHelperHeap::OutputHeapDataKernelL( TBool aCreateDataStream )
     {
-    // Get thread name
+    User::LeaveIfError(iEngine.Driver().CopyHeapDataKernel());
+    TCleanupItem item = TCleanupItem(CleanupHeapDataKernel, this);
+    CleanupStack::PushL(item);
+    
+    // Get the heap info, including cell information
+    RArray<TMemSpyDriverCell> cells;
+    CleanupClosePushL( cells );
+    
+    TMemSpyHeapInfo heapInfo;
+    TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::OutputHeapDataKernelL() - checksum before: 0x%08x", 
+                           heapInfo.AsRHeap().Statistics().StatsFree().Checksum() ) );
+    GetHeapInfoKernelL(heapInfo, &cells, ETrue, ETrue);
+    TRACE( RDebug::Printf( "CMemSpyEngineHelperHeap::OutputHeapDataKernelL() - checksum after: 0x%08x", 
+                           heapInfo.AsRHeap().Statistics().StatsFree().Checksum() ) );
+
+    // Output the heap data
+    OutputHeapDataKernelL( heapInfo, aCreateDataStream, &cells );
+    
+    CleanupStack::PopAndDestroy( &cells );
+    CleanupStack::PopAndDestroy( this );
+    }    
+
+void CMemSpyEngineHelperHeap::OutputHeapDataKernelL(const TMemSpyHeapInfo& aHeapInfo, 
+                                                    TBool aCreateDataStream, 
+                                                    const RArray<TMemSpyDriverCell>* aCells)
+    {
     TFullName threadName;
     MemSpyEngineUtils::GetKernelHeapThreadName( threadName, EFalse );
 
@@ -736,38 +810,66 @@ void CMemSpyEngineHelperHeap::OutputHeapDataKernelL( TBool aCreateDataStream )
         CleanupStack::PopAndDestroy( context );
         }
 
-    RArray<TMemSpyDriverFreeCell> freeCells;
-    CleanupClosePushL( freeCells );
-
-    // Get kernel data and heap info before outputting anything...
-    TMemSpyHeapInfo info;
-    HBufC8* data = iEngine.Driver().GetHeapDataKernelLC( info, freeCells );
+    TBuf<KMaxFullName + 100> printFormat;
 
     // Start marker
-    iEngine.Sink().OutputLineFormattedL( KMemSpyMarkerHeapData, &KNullDesC, info.Tid() );
+    iEngine.Sink().OutputLineFormattedL( KMemSpyMarkerHeapData, &KNullDesC, aHeapInfo.Tid() );
 
     // Set overall prefix
     iEngine.Sink().OutputPrefixSetFormattedLC( KMemSpyPrefixHeapData, &threadName );
 
     // Info section
-    OutputHeapInfoL( info, threadName, &freeCells );
+    OutputHeapInfoL( aHeapInfo, threadName, aCells );
+
+    // Code segments (needed for map file reading...)
+    _LIT(KCellListCodeSegInfoFormat, "CodeSegs - ");
+    iEngine.HelperCodeSegment().OutputCodeSegmentsL( aHeapInfo.Pid(), printFormat, KCellListCodeSegInfoFormat, '-', ETrue );
 
     // Dump section
     _LIT(KHeaderDump, "Heap Data");
     iEngine.Sink().OutputSectionHeadingL( KHeaderDump, '-' );
 
-    /*TOMSCI TODO this stuff needs fixing
-	_LIT(KHeapDumpDataFormat, "%S");
-    const TUint8* heapBaseAddress = info.AsRHeap().ObjectData().Base();
-    iEngine.Sink().OutputBinaryDataL( KHeapDumpDataFormat, data->Ptr(), heapBaseAddress, data->Length() );
-	*/
+    HBufC8* data = HBufC8::NewLC( 4096 * 12 );
+    TPtr8 pData(data->Des());
+    TUint remaining = 0;
+    TUint readAddress = 0;
+
+    TInt r = iEngine.Driver().GetHeapDataKernel(aHeapInfo.Tid(), pData, readAddress, remaining);
+    TUint prevEndAddress = readAddress + pData.Length();
+    if (r == KErrNone)
+        {
+        while (r == KErrNone)
+            {
+            if (readAddress > prevEndAddress)
+                {
+                // We've hit a discontinuity, ie one or more unmapped pages
+                _LIT(KBreak, "........");
+                iEngine.Sink().OutputLineL(KBreak);
+                }
+            _LIT(KHeapDumpDataFormat, "%S");
+            iEngine.Sink().OutputBinaryDataL(KHeapDumpDataFormat, pData.Ptr(), (const TUint8*) readAddress, pData.Length());
+            readAddress += pData.Length();
+            if (remaining > 0)
+                {
+                prevEndAddress = readAddress;
+                r = iEngine.Driver().GetHeapDataKernelNext(aHeapInfo.Tid(), pData, readAddress, remaining);
+                }
+            else
+                break;
+            }
+        }
+    else
+        {
+        _LIT( KHeapFetchError, "Heap error: %d");
+        iEngine.Sink().OutputLineFormattedL( KHeapFetchError, r );
+        }
+
+    CleanupStack::PopAndDestroy( data );
 
     CleanupStack::PopAndDestroy(); // clear prefix
-    CleanupStack::PopAndDestroy( data );
-    CleanupStack::PopAndDestroy( &freeCells );
 
     // End marker
-    iEngine.Sink().OutputLineFormattedL( KMemSpyMarkerHeapData, &KMemSpySinkTagClose, info.Tid() );
+    iEngine.Sink().OutputLineFormattedL( KMemSpyMarkerHeapData, &KMemSpySinkTagClose, aHeapInfo.Tid() );
 
     if  ( aCreateDataStream )
         {
@@ -898,7 +1000,8 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryShortLC
     }
 
 
-EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, const RArray<TMemSpyDriverCell>* aCells )
+EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryExtendedLC( const TMemSpyHeapInfo& aInfo, 
+                                                                                     const RArray<TMemSpyDriverCell>* aCells )
 	{
     CMemSpyEngineOutputList* list = CMemSpyEngineOutputList::NewLC( iEngine.Sink() );
     //
@@ -1180,7 +1283,9 @@ void CMemSpyEngineHelperHeap::AppendCellsL(const RArray<TMemSpyDriverCell>& aCel
 		}
     }
 
-void CMemSpyEngineHelperHeap::UpdateSharedHeapInfoL( const TProcessId& aProcess, const TThreadId& aThread, TMemSpyHeapInfo& aInfo )
+void CMemSpyEngineHelperHeap::UpdateSharedHeapInfoL( const TProcessId& aProcess, 
+                                                     const TThreadId& aThread, 
+                                                     TMemSpyHeapInfo& aInfo )
     {
     RArray<TThreadId> threads;
     CleanupClosePushL( threads );

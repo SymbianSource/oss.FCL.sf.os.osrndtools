@@ -63,10 +63,12 @@ TInt RATFileLog::ATFileLogVersion()
 {
     LOGSTR1( "ATFL CATFileLog::ATFileLogVersion()" );
     
+    TInt err( KErrNone );
+    
     iFile << KDataFileVersion;
 
-    iFile.CommitL();   
-    return KErrNone;
+    TRAP( err, iFile.CommitL() );
+    return err;
 }
 
 TInt RATFileLog::ATFileLogProcessStarted( const TDesC8& aProcessName,
@@ -77,6 +79,8 @@ TInt RATFileLog::ATFileLogProcessStarted( const TDesC8& aProcessName,
 {
     LOGSTR1( "ATFL CATFileLog::ATFileLogProcessStarted()" );
  
+    TInt err( KErrNone );
+    
     // log the current time
     iFile << this->CurrentTime();
     
@@ -89,9 +93,9 @@ TInt RATFileLog::ATFileLogProcessStarted( const TDesC8& aProcessName,
     iFile << aApiVersion;
     
     // ensure that any buffered data is written to the stream
-    iFile.CommitL();
+    TRAP( err, iFile.CommitL() );
     
-    return KErrNone;
+    return err;
 }
 
 // -----------------------------------------------------------------------------
@@ -102,7 +106,9 @@ TInt RATFileLog::ATFileLogProcessStarted( const TDesC8& aProcessName,
 TInt RATFileLog::ATFileLogProcessEnded( TUint aHandleLeakCount )
 {
 	LOGSTR1( "ATFL CATFileLog::ATFileLogProcessEnded()" );
-	   
+	
+	TInt err( KErrNone );
+	
 	if ( aHandleLeakCount > 0 )
 	{
 		// HDL <Handle count>
@@ -118,9 +124,9 @@ TInt RATFileLog::ATFileLogProcessEnded( TUint aHandleLeakCount )
 	iFile << (TUint8)EProcessEnd;
 	
     // ensure that any buffered data is written to the stream
-    iFile.CommitL();
+	TRAP( err, iFile.CommitL() );
 	
-	return KErrNone;	
+	return err;	
 }
 
 
@@ -133,7 +139,9 @@ TInt RATFileLog::ATFileLogDllLoaded( const TDesC8& aDllName, TUint32 aStartAddre
                                 TUint32 aEndAddress )
 {
 	LOGSTR1( "ATFL CATFileLog::ATFileLogDllLoaded()" );
-	    
+	   
+	TInt err( KErrNone );
+	
 	// log the current time
 	iFile << this->CurrentTime();
 	
@@ -149,9 +157,9 @@ TInt RATFileLog::ATFileLogDllLoaded( const TDesC8& aDllName, TUint32 aStartAddre
 	iFile << aEndAddress;
 	
 	// ensure that any buffered data is written to the stream
-	iFile.CommitL();
+	TRAP( err, iFile.CommitL() );
 	
-	return KErrNone;
+	return err;
 }
 
 
@@ -166,6 +174,8 @@ TInt RATFileLog::ATFileLogDllUnloaded( const TDesC8& aDllName, TUint32 aStartAdd
 {
     LOGSTR1( "ATFL CATFileLog::ATFileLogDllUnloaded()" );
 
+    TInt err( KErrNone );
+    
     // log the current time
     iFile << this->CurrentTime();
     
@@ -181,9 +191,9 @@ TInt RATFileLog::ATFileLogDllUnloaded( const TDesC8& aDllName, TUint32 aStartAdd
     iFile << aEndAddress;
     
     // ensure that any buffered data is written to the stream
-    iFile.CommitL();
+    TRAP( err, iFile.CommitL() );
 	
-	return KErrNone;
+	return err;
 		
 }
 
@@ -198,6 +208,8 @@ TInt RATFileLog::ATFileLogMemoryAllocated( TUint32 aMemAddress,
                                   TInt aSize,  TUint aThreadId  )
 {
 	LOGSTR1( "ATFL CATFileLog::ATFileLogMemoryAllocated()" );
+	
+	TInt err( KErrNone );
 	
 	// ALH <Memory address> <Allocation size> <Thread ID> 
 	// <Call stack address count> <Call stack address> <Call stack address> ...
@@ -234,9 +246,9 @@ TInt RATFileLog::ATFileLogMemoryAllocated( TUint32 aMemAddress,
 		}
 
 	// ensure that any buffered data is written to the stream
-	iFile.CommitL();
+	TRAP( err, iFile.CommitL() );
 
-	return KErrNone;	
+	return err;	
 }
 
 
@@ -251,6 +263,8 @@ TInt RATFileLog::ATFileLogMemoryFreed( TUint32 aMemAddress,
 {
     LOGSTR1( "ATFL CATFileLog::ATFileLogMemoryFreed()" );
 	
+    TInt err( KErrNone );
+    
 	// FRH <Memory address> <Thread ID> <Call stack address count> 
 	// <Call stack address> <Call stack address> ...
 
@@ -287,9 +301,9 @@ TInt RATFileLog::ATFileLogMemoryFreed( TUint32 aMemAddress,
 		}
 
 	// ensure that any buffered data is written to the stream
-	iFile.CommitL();
+	TRAP( err, iFile.CommitL() );
 
-	return KErrNone;		
+	return err;		
 }
 
 
@@ -303,7 +317,9 @@ TInt RATFileLog::ATFileLogMemoryReallocated( TUint32 aMemAddressFree,  TUint32 a
                                   TInt aSize,  TUint aThreadId  )
 {
 	LOGSTR1( "ATFL CATFileLog::ATFileLogMemoryReallocated()" );    
-	    
+	   
+	TInt err( KErrNone );
+	
 	// RAH <Freed memory address> <Allocated memory address> <Allocation size> <Thread ID>
 	// <Call stack address count> <Call stack address> <Call stack address> ...
 	        
@@ -342,9 +358,9 @@ TInt RATFileLog::ATFileLogMemoryReallocated( TUint32 aMemAddressFree,  TUint32 a
 		}
 
 	// ensure that any buffered data is written to the stream
-	iFile.CommitL();
+	TRAP( err, iFile.CommitL() );
 
-	return KErrNone;	
+	return err;	
 }
 
 
@@ -357,6 +373,8 @@ TInt RATFileLog::ATFileLogThreadStarted( TUint aThreadId )
 {
 	LOGSTR1( "ATFL CATFileLog::ATFileLogThreadStarted()" );
 
+	TInt err( KErrNone );
+	
 	// log the current time
 	iFile << this->CurrentTime();
 	
@@ -368,9 +386,9 @@ TInt RATFileLog::ATFileLogThreadStarted( TUint aThreadId )
 	iFile << (TUint32)aThreadId;
     
     // ensure that any buffered data is written to the stream
-    iFile.CommitL();
+	TRAP( err, iFile.CommitL() );
 
-	return KErrNone;
+	return err;
 }
 
 
@@ -381,22 +399,24 @@ TInt RATFileLog::ATFileLogThreadStarted( TUint aThreadId )
 // 
 TInt RATFileLog::ATFileLogThreadEnded( TUint64 aThreadId )
 {
-	  LOGSTR1( "ATFL CATFileLog::ATFileLogThreadEnded()" );
-
-		// log the current time
-		iFile << this->CurrentTime();
-		
-		// TDE <Thread ID>
-
-		// TDE
-		iFile << (TUint8)EThreadEnd;
-		// thread ID
-		iFile << (TUint32)aThreadId;
-	    
-	    // ensure that any buffered data is written to the stream
-	    iFile.CommitL();
-
-		return KErrNone;
+    LOGSTR1( "ATFL CATFileLog::ATFileLogThreadEnded()" );
+    
+    TInt err( KErrNone );
+    
+    // log the current time
+    iFile << this->CurrentTime();
+    
+    // TDE <Thread ID>
+    
+    // TDE
+    iFile << (TUint8)EThreadEnd;
+    // thread ID
+    iFile << (TUint32)aThreadId;
+    
+    // ensure that any buffered data is written to the stream
+    TRAP( err, iFile.CommitL() );
+    
+    return err;
 }
 
 
@@ -410,6 +430,8 @@ TInt RATFileLog::ATFileLogDeviceInfo( const TDesC8& aS60Version, const TDesC8& a
 {
     LOGSTR1( "ATFL CATFileLog::ATFileLogVersionsInfo()" );
 
+    TInt err( KErrNone );
+    
     // log the current time
     iFile << this->CurrentTime();
 
@@ -421,9 +443,9 @@ TInt RATFileLog::ATFileLogDeviceInfo( const TDesC8& aS60Version, const TDesC8& a
     iFile << aChecksum;
 
     // ensure that any buffered data is written to the stream
-    iFile.CommitL();
+    TRAP( err, iFile.CommitL() );
 
-	return KErrNone;	
+	return err;	
 }
 
 

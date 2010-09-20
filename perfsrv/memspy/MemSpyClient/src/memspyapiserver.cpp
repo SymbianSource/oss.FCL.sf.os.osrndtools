@@ -24,10 +24,15 @@ EXPORT_C CMemSpyApiServer::~CMemSpyApiServer()
 	delete iData;
 	}
 
-EXPORT_C TProcessId CMemSpyApiServer::Id() const
+EXPORT_C TProcessId CMemSpyApiServer::ProcessId() const
 	{
-	return iData->iId;
+	return iData->iProcessId;
 	}
+
+EXPORT_C TThreadId CMemSpyApiServer::ThreadId() const
+    {
+    return iData->iThreadId;
+    }
 
 EXPORT_C const TDesC& CMemSpyApiServer::Name() const
 	{

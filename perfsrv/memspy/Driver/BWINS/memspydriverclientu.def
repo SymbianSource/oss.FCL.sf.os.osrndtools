@@ -17,7 +17,7 @@ EXPORTS
 	?GetContainerHandles@RMemSpyDriverClient@@QAEHW4TMemSpyDriverContainerType@@PAPAXAAH@Z @ 16 NONAME ; int RMemSpyDriverClient::GetContainerHandles(enum TMemSpyDriverContainerType, void * *, int &)
 	?GetGenericHandleInfo@RMemSpyDriverClient@@QAEHHW4TMemSpyDriverContainerType@@PAXAAVTMemSpyDriverHandleInfoGeneric@@@Z @ 17 NONAME ; int RMemSpyDriverClient::GetGenericHandleInfo(int, enum TMemSpyDriverContainerType, void *, class TMemSpyDriverHandleInfoGeneric &)
 	?GetHeapData@RMemSpyDriverClient@@QAEHIKAAVTDes8@@AAI1@Z @ 18 NONAME ; int RMemSpyDriverClient::GetHeapData(unsigned int, unsigned long, class TDes8 &, unsigned int &, unsigned int &)
-	?GetHeapDataKernelLC@RMemSpyDriverClient@@QAEPAVHBufC8@@AAVTMemSpyHeapInfo@@AAV?$RArray@VTMemSpyDriverFreeCell@@@@@Z @ 19 NONAME ; class HBufC8 * RMemSpyDriverClient::GetHeapDataKernelLC(class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> &)
+	?GetHeapDataKernelLC@RMemSpyDriverClient@@QAEPAVHBufC8@@AAVTMemSpyHeapInfo@@AAV?$RArray@VTMemSpyDriverFreeCell@@@@@Z @ 19 NONAME ABSENT
 	?GetHeapDataNext@RMemSpyDriverClient@@QAEHIAAVTDes8@@AAI1@Z @ 20 NONAME ; int RMemSpyDriverClient::GetHeapDataNext(unsigned int, class TDes8 &, unsigned int &, unsigned int &)
 	?GetHeapInfoKernel@RMemSpyDriverClient@@QAEHAAVTMemSpyHeapInfo@@@Z @ 21 NONAME ; int RMemSpyDriverClient::GetHeapInfoKernel(class TMemSpyHeapInfo &)
 	?GetHeapInfoKernel@RMemSpyDriverClient@@QAEHAAVTMemSpyHeapInfo@@AAV?$RArray@VTMemSpyDriverFreeCell@@@@@Z @ 22 NONAME ; int RMemSpyDriverClient::GetHeapInfoKernel(class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> &)
@@ -68,4 +68,10 @@ EXPORTS
 	?GetCondVarSuspendedThreads@RMemSpyDriverClient@@QAEHPAXPAPAXAAH@Z @ 67 NONAME ; int RMemSpyDriverClient::GetCondVarSuspendedThreads(void *, void * *, int &)
 	?GetCondVarSuspendedThreadInfo@RMemSpyDriverClient@@QAEHPAXAAVTMemSpyDriverCondVarSuspendedThreadInfo@@@Z @ 68 NONAME ; int RMemSpyDriverClient::GetCondVarSuspendedThreadInfo(void *, class TMemSpyDriverCondVarSuspendedThreadInfo &)
 	?GetHeapInfoUser@RMemSpyDriverClient@@QAEHAAVTMemSpyHeapInfo@@IAAV?$RArray@VTMemSpyDriverFreeCell@@@@H@Z @ 69 NONAME ; int RMemSpyDriverClient::GetHeapInfoUser(class TMemSpyHeapInfo &, unsigned int, class RArray<class TMemSpyDriverFreeCell> &, int)
+	?GetHeapDataKernelNext@RMemSpyDriverClient@@QAEHIAAVTDes8@@AAI1@Z @ 70 NONAME ; int RMemSpyDriverClient::GetHeapDataKernelNext(unsigned int, class TDes8 &, unsigned int &, unsigned int &)
+	?CopyHeapDataKernel@RMemSpyDriverClient@@QAEHXZ @ 71 NONAME ; int RMemSpyDriverClient::CopyHeapDataKernel(void)
+	?FreeHeapDataKernel@RMemSpyDriverClient@@QAEHXZ @ 72 NONAME ; int RMemSpyDriverClient::FreeHeapDataKernel(void)
+	?GetHeapInfoKernel@RMemSpyDriverClient@@QAEHAAVTMemSpyHeapInfo@@AAV?$RArray@VTMemSpyDriverFreeCell@@@@HH@Z @ 73 NONAME ; int RMemSpyDriverClient::GetHeapInfoKernel(class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> &, int, int)
+	?GetHeapInfoKernel@RMemSpyDriverClient@@QAEHAAVTMemSpyHeapInfo@@AAV?$RArray@VTMemSpyDriverFreeCell@@@@H@Z @ 74 NONAME ; int RMemSpyDriverClient::GetHeapInfoKernel(class TMemSpyHeapInfo &, class RArray<class TMemSpyDriverFreeCell> &, int)
+	?GetHeapDataKernel@RMemSpyDriverClient@@QAEHIAAVTDes8@@AAI1@Z @ 75 NONAME ; int RMemSpyDriverClient::GetHeapDataKernel(unsigned int, class TDes8 &, unsigned int &, unsigned int &)
 

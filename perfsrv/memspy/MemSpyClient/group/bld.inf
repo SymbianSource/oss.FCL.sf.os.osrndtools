@@ -38,6 +38,7 @@ PRJ_EXPORTS
 ../inc/memspyapimemorytrackingcycle.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapimemorytrackingcycle.h)
 ../inc/memspyapiserver.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiserver.h)
 ../inc/memspyapiecom.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiecom.h)
+../inc/memspyapiwindowgroup.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiwindowgroup.h)
 
 PRJ_MMPFILES
 MemSpyClient.mmp

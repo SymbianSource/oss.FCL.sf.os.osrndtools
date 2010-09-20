@@ -333,14 +333,14 @@ void DAnalyzeToolEventHandler::HandleKillThreadEvent( DThread* aThread,
     // Aqcuire the data mutex
     Kern::MutexWait( *iDataMutex );
     
-    aInfo.iProcessId = aThread->iOwningProcess->iId;
-    TBool alone( aThread->iOwningProcess->iThreadQ.First()->Alone() );
-    LOGSTR2( "ATDD > Is alone = %d", alone );
-    
-    // Check if this our process and is the only thread item.
-    if ( aInfo.iProcessId == iProcessId && !alone )
+    if ( aThread )
         {
-        if ( aThread )
+        aInfo.iProcessId = aThread->iOwningProcess->iId;
+        TBool alone( aThread->iOwningProcess->iThreadQ.First()->Alone() );
+        LOGSTR2( "ATDD > Is alone = %d", alone );
+        
+        // Check if this our process and is the only thread item.
+        if ( aInfo.iProcessId == iProcessId && !alone )
             {
             // Set current Thread id
             LOGSTR2( "ATDD > Thread ID = %d", aThread->iId );

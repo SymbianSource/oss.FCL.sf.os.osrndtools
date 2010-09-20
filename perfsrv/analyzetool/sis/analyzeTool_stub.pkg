@@ -18,7 +18,7 @@
 &EN
 
 ;Header
-#{"AnalyzeTool"}, (0x20012432), 1,10,0
+#{"AnalyzeTool"}, (0x20012432), 1,10,1
 
 ; Non-localised vendor name
 :"Nokia Corporation"

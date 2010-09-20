@@ -24,12 +24,13 @@ class TMemSpyServerData
 public:
 	//constructor & destructor
 	inline TMemSpyServerData()
-		: iId(0), iSessionCount(0)
+		: iProcessId(0), iThreadId(0), iSessionCount(0)
 		{
 		}
 	
 public:
-    TProcessId iId;        
+    TProcessId iProcessId;
+    TThreadId iThreadId;
     TFullName iName;
     TInt iSessionCount;
 	};

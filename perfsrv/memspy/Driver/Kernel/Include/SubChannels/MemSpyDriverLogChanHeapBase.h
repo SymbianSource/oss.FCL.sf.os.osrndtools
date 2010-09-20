@@ -19,7 +19,6 @@
 #define MEMSPYDRIVERLOGICALCHANHEAPBASE_H
 
 // System includes
-#include <kern_priv.h>
 #include <memspy/driver/memspydriverobjectsshared.h>
 #include <memspy/driver/memspydriverenumerationsshared.h>
 
@@ -66,9 +65,6 @@ protected: // From MHeapWalkerObserver
     TBool HandleHeapCell( TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
 
 protected: // Heap utility functions
-    TInt OpenKernelHeap( RHeapK*& aHeap, DChunk*& aChunk, TDes8* aClientHeapChunkName = NULL );
-    TInt OpenKernelHeap( RMemSpyDriverRHeapKernelFromCopy& aHeap, TDes8* aClientHeapChunkName = NULL );
-    TInt GetHeapInfoKernel(RMemSpyDriverRHeapBase& aHeap, TMemSpyHeapInfo* aHeapInfo, TDes8* aTransferBuffer);
     void PrintHeapInfo( const TMemSpyHeapInfo& aInfo );
 
 private: // Data members

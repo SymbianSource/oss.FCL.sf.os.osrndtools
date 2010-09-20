@@ -31,6 +31,8 @@
 #include <memspy/engine/memspyserverdata.h>
 // ECom
 #include <memspy/engine/memspyecomdata.h>
+// Window groups
+#include <memspy/engine/memspyenginehelperwindowserver.h>
 
 // IMPLEMENTATION
 
@@ -501,6 +503,29 @@ EXPORT_C void RMemSpySession::GetEComImplementationsL(TUid aInterface, RArray<CM
         aImplementations.AppendL(CMemSpyApiEComImplementation::NewLC(data()));
         }
     CleanupStack::Pop(aImplementations.Count());
+    CleanupStack::PopAndDestroy(buffer);
+    }
+
+EXPORT_C void RMemSpySession::GetWindowGroupsL(RArray<CMemSpyApiWindowGroup*> &aGroups)
+    {
+    TPckgBuf<TInt> count;
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetWindowGroupCount, TIpcArgs(&count)));
+    
+    TInt requestedCount = count();
+    HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyEngineWindowGroupDetails));
+    TPtr8 bufferPtr(buffer->Des());
+    
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetWindowGroups, TIpcArgs(&count, &bufferPtr)));
+    aGroups.Reset();
+    
+    TInt receivedCount = Min(count(), requestedCount);
+    for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyEngineWindowGroupDetails))
+        {
+        TPckgBuf<TMemSpyEngineWindowGroupDetails> data;
+        data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyEngineWindowGroupDetails));
+        aGroups.AppendL(CMemSpyApiWindowGroup::NewLC(data()));
+        }
+    CleanupStack::Pop(aGroups.Count());
     CleanupStack::PopAndDestroy(buffer);
     }
 

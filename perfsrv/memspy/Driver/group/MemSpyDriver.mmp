@@ -25,6 +25,8 @@ UID           	0x100000af  0x2002129B
 VENDORID        VID_DEFAULT
 SMPSAFE
 
+NOEXPORTLIBRARY
+
 CAPABILITY      all
 
 SOURCEPATH      ../Kernel/Source
@@ -54,9 +56,10 @@ SOURCE          MemSpyDriverLogChanCodeSegs.cpp
 SOURCE          MemSpyDriverLogChanContainers.cpp
 SOURCE          MemSpyDriverLogChanContainerBase.cpp
 SOURCE          MemSpyDriverLogChanHeapBase.cpp
-SOURCE          MemSpyDriverLogChanHeapData.cpp
-SOURCE          MemSpyDriverLogChanHeapWalk.cpp
-SOURCE          MemSpyDriverLogChanHeapInfo.cpp
+SOURCE          MemSpyDriverLogChanHeapDataBase.cpp
+SOURCE          MemSpyDriverLogChanHeapDataUser.cpp
+SOURCE          MemSpyDriverLogChanHeapDataKernel.cpp 
+SOURCE          MemSpyDriverLogChanHeapWalkUser.cpp 
 SOURCE          MemSpyDriverLogChanMisc.cpp
 SOURCE          MemSpyDriverLogChanProcessInspection.cpp
 SOURCE          MemSpyDriverLogChanStack.cpp
@@ -83,9 +86,9 @@ END
 MACRO           MCL_FIND_HANDLES
 
 #if (SYMBIAN_VERSION_SUPPORT >= SYMBIAN_3) || defined(BSW_FLEXIBLE_MEMORY_MODEL)
-    MACRO       MCL_ROBJECTIX_DUPLICATION
+MACRO       MCL_ROBJECTIX_DUPLICATION
 #else
-    MACRO       MCL_DOBJECTIX_DUPLICATION
+MACRO       MCL_DOBJECTIX_DUPLICATION
 #endif
 
 #include <kernel/kern_ext.mmh>

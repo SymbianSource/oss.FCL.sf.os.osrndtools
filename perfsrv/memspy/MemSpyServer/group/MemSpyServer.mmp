@@ -38,7 +38,6 @@ CAPABILITY ReadUserData WriteUserData ReadDeviceData WriteDeviceData PowerMgmt
 
 OS_LAYER_SYSTEMINCLUDE
 
-APP_LAYER_SYSTEMINCLUDE
 
 LIBRARY         MemSpyDriverClient.lib
 LIBRARY         MemSpyEngine.lib

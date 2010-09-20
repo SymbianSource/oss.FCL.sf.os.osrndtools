@@ -29,9 +29,9 @@
 #include "MemSpyDriverLogChanClientServer.h"
 #include "MemSpyDriverLogChanCodeSegs.h"
 #include "MemSpyDriverLogChanContainers.h"
-#include "MemSpyDriverLogChanHeapData.h"
-#include "MemSpyDriverLogChanHeapWalk.h"
-#include "MemSpyDriverLogChanHeapInfo.h"
+#include "MemSpyDriverLogChanHeapDataUser.h"
+#include "MemSpyDriverLogChanHeapDataKernel.h"
+#include "MemSpyDriverLogChanHeapWalkUser.h"
 #include "MemSpyDriverLogChanMisc.h"
 #include "MemSpyDriverLogChanProcessInspection.h"
 #include "MemSpyDriverLogChanStack.h"
@@ -179,21 +179,21 @@ TInt DMemSpyDriverLogicalChannel::SubChannelsRegister()
         return r;
         }
     //
-    subChan = new DMemSpyDriverLogChanHeapData( device, *iClientThread );
+    subChan = new DMemSpyDriverLogChanHeapDataUser( device, *iClientThread );
     r = SubChannelConstructAndSave( subChan );
     if ( r != KErrNone )
         {
         return r;
         }
     //
-    subChan = new DMemSpyDriverLogChanHeapInfo( device, *iClientThread );
+    subChan = new DMemSpyDriverLogChanHeapDataKernel( device, *iClientThread );
     r = SubChannelConstructAndSave( subChan );
     if ( r != KErrNone )
         {
         return r;
         }
     //
-    subChan = new DMemSpyDriverLogChanHeapWalk( device, *iClientThread );
+    subChan = new DMemSpyDriverLogChanHeapWalkUser( device, *iClientThread );
     r = SubChannelConstructAndSave( subChan );
     if ( r != KErrNone )
         {

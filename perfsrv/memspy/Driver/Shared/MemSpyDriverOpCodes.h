@@ -51,29 +51,31 @@ enum TMemSpyDriverOpCode
     EMemSpyDriverOpCodeChunkGetInfo,
 	EMemSpyDriverOpCodeChunkEnd,
 
-    // HEAP INFO
-    EMemSpyDriverOpCodeHeapInfoBase = 180,
-	EMemSpyDriverOpCodeHeapInfoGetUser,
-	EMemSpyDriverOpCodeHeapInfoGetKernel,
-    EMemSpyDriverOpCodeHeapInfoGetIsDebugKernel,
-    EMemSpyDriverOpCodeHeapInfoFetchCellList,
-    EMemSpyDriverOpCodeHeapInfoEnd,
+    // HEAP USER DATA
+    EMemSpyDriverOpCodeHeapUserDataBase = 180,
+    EMemSpyDriverOpCodeHeapUserDataGetInfo,
+    EMemSpyDriverOpCodeHeapUserDataFetchCellList,
+    EMemSpyDriverOpCodeHeapUserDataGetFull,
+    EMemSpyDriverOpCodeHeapUserDataEnd,    
 
-    // HEAP DATA
-    EMemSpyDriverOpCodeHeapDataBase = 200,
-    EMemSpyDriverOpCodeHeapDataGetUser,
-    EMemSpyDriverOpCodeHeapDataGetKernelInit,
-    EMemSpyDriverOpCodeHeapDataGetKernelFetch,
-    EMemSpyDriverOpCodeHeapDataEnd,
-
-    // HEAP WALK
-    EMemSpyDriverOpCodeWalkHeapBase = 220,
-    EMemSpyDriverOpCodeWalkHeapInit,
-    EMemSpyDriverOpCodeWalkHeapGetCellInfo,
-    EMemSpyDriverOpCodeWalkHeapReadCellData,
-    EMemSpyDriverOpCodeWalkHeapNextCell,
-    EMemSpyDriverOpCodeWalkHeapClose,
-    EMemSpyDriverOpCodeWalkHeapEnd,
+    // HEAP KERNEL DATA
+    EMemSpyDriverOpCodeHeapKernelDataBase = 200,
+    EMemSpyDriverOpCodeHeapKernelDataGetInfo,
+    EMemSpyDriverOpCodeHeapKernelDataGetIsDebugKernel,
+    EMemSpyDriverOpCodeHeapKernelDataFetchCellList,
+    EMemSpyDriverOpCodeHeapKernelDataCopyHeap,
+    EMemSpyDriverOpCodeHeapKernelDataGetFull,
+    EMemSpyDriverOpCodeHeapKernelDataFreeHeapCopy,
+    EMemSpyDriverOpCodeHeapKernelDataEnd,    
+    
+    // HEAP USER WALK
+    EMemSpyDriverOpCodeHeapUserWalkBase = 220,
+    EMemSpyDriverOpCodeHeapUserWalkInit,
+    EMemSpyDriverOpCodeHeapUserWalkGetCellInfo,
+    EMemSpyDriverOpCodeHeapUserWalkReadCellData,
+    EMemSpyDriverOpCodeHeapUserWalkNextCell,
+    EMemSpyDriverOpCodeHeapUserWalkClose,
+    EMemSpyDriverOpCodeHeapUserWalkEnd,
 
     // STACK
     EMemSpyDriverOpCodeStackBase = 240,

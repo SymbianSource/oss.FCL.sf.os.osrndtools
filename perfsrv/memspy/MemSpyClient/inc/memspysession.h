@@ -50,6 +50,8 @@
 
 #include <memspy/api/memspyapiecom.h>
 
+#include <memspy/api/memspyapiwindowgroup.h>
+
 // Constants
 const TInt KMemSpyVersion           = 2;
 
@@ -271,6 +273,9 @@ public:	//API
 	IMPORT_C void GetEComInterfacesL(TUid aCategory, RArray<CMemSpyApiEComInterface*> &aInterfaces);
 	
 	IMPORT_C void GetEComImplementationsL(TUid aInterface, RArray<CMemSpyApiEComImplementation*> &aImplementations);
+	
+	// Window Groups
+	IMPORT_C void GetWindowGroupsL(RArray<CMemSpyApiWindowGroup*> &aGroups);
 	
 private:
     TInt StartServer();       

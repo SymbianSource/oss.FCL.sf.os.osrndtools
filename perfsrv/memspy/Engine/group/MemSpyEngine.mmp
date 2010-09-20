@@ -113,7 +113,6 @@ USERINCLUDE		../Include/Logger
 
 OS_LAYER_SYSTEMINCLUDE
 
-APP_LAYER_SYSTEMINCLUDE
 
 LIBRARY			euser.lib 
 LIBRARY			MemSpyDriverClient.lib hal.lib estor.lib

@@ -109,167 +109,114 @@ void RMemSpyDriverRHeapBase::PrintInfo()
 	*/
     }
 
-RMemSpyDriverRHeapReadFromCopy::RMemSpyDriverRHeapReadFromCopy( DMemSpyDriverOSAdaption& aOSAdaption )
-:   iOSAdaption( aOSAdaption ), iChunk( NULL ), iChunkAddress( 0 ), iChunkMappingAttributes( 0 ) /*, iClientToKernelDelta( 0 )*/
-    {
-    }
-
-
-void RMemSpyDriverRHeapReadFromCopy::Reset()
-    {
-    RMemSpyDriverRHeapBase::Reset();
-	//
-    iChunk = NULL;
-    iChunkAddress = 0;
-    iChunkMappingAttributes = 0;
-    //iClientToKernelDelta = 0;
-    }
-
-
-void RMemSpyDriverRHeapReadFromCopy::AssociateWithKernelChunk( DChunk* aChunk, TLinAddr aAddress, TUint32 aMappingAttributes )
-    {
-    TRACE_HEAP( Kern::Printf("RMemSpyDriverRHeapReadFromCopy::AssociateWithKernelChunk() - START - aChunk: %O, aChunk base: 0x%08x, aAddress: 0x%08x, clients heap base: 0x%08x, aChunk size: %8d", aChunk, aChunk->iBase, aAddress, Base(), aChunk->iSize ) );
-
-    iChunk = aChunk;
-    iChunkAddress = aAddress;
-    iChunkMappingAttributes = aMappingAttributes;
-
-    // Calculate start of real heap data (skipping over embedded RHeap object)
-    // Since we must operate with kernel-side addressing into our cloned heap chunk,
-    // we must use aAddress (the kernel address of the chunk) rather than aChunk->iBase
-    //TOMSCI iClientToKernelDelta = ( (TUint8*) aAddress ) - ( Base() - KRHeapObjectSize );
-
-    TRACE_HEAP( Kern::Printf("RMemSpyDriverRHeapReadFromCopy::AssociateWithKernelChunk() - END - delta between client's user-side base address (base: 0x%08x), kernel-side base address (base: 0x%08x), and kernel-side chunk (base: 0x%08x) is: 0x%08x", Base(), aChunk->iBase, aAddress, iClientToKernelDelta) );
-    }
-
-
-/*void RMemSpyDriverRHeapReadFromCopy::DisassociateWithKernelChunk()
-    {
-    TRACE_HEAP( Kern::Printf("RMemSpyDriverRHeapReadFromCopy::DisassociateWithKernelChunk() - START - iChunk: 0x%08x", iChunk ) );
-
-    NKern::ThreadEnterCS();
-    if  ( iChunk != NULL )
-        {
-        Kern::ChunkClose( iChunk );
-        iChunk = NULL;
-        }
-    NKern::ThreadLeaveCS();
-
-    TRACE_HEAP( Kern::Printf("RMemSpyDriverRHeapReadFromCopy::DisassociateWithKernelChunk() - END") );
-    }
-*/
-
-DChunk& RMemSpyDriverRHeapReadFromCopy::Chunk()
-    {
-    return *iChunk;
-    }
-
-
-const DChunk& RMemSpyDriverRHeapReadFromCopy::Chunk() const
-    {
-    return *iChunk;
-    }
-
-
-/*TLinAddr RMemSpyDriverRHeapReadFromCopy::ChunkKernelAddress() const
-    {
-    return iChunkAddress;
-    }
-
-
-TBool RMemSpyDriverRHeapReadFromCopy::ChunkIsInitialised() const
-    {
-    return iChunk != NULL;
-    }
-
-TUint RMemSpyDriverRHeapReadFromCopy::ClientToKernelDelta() const
-    {
-    return iClientToKernelDelta;
-    }
-*/
-
-
 
 
 
 RMemSpyDriverRHeapUser::RMemSpyDriverRHeapUser( DMemSpyDriverOSAdaption& aOSAdaption )
-	: RMemSpyDriverRHeapBase(), iOSAdaption(aOSAdaption)
+    : RMemSpyDriverRHeapBase(), iOSAdaption(aOSAdaption)
     {
     }
 
 
 TInt RMemSpyDriverRHeapUser::OpenUserHeap(DThread& aThread, TBool aEuserUdeb)
-	{
-	TLinAddr allocatorAddr = (TLinAddr)OSAdaption().DThread().GetAllocator(aThread);
-	NKern::ThreadEnterCS();
-	LtkUtils::RKernelSideAllocatorHelper* helper = new LtkUtils::RKernelSideAllocatorHelper;
-	if (!helper)
-		{
-		NKern::ThreadLeaveCS();
-		return KErrNoMemory;
-		}
-	TInt err = helper->OpenUserHeap(OSAdaption().DThread().GetId(aThread), allocatorAddr, aEuserUdeb);
-	if (!err)
-		{
-		iChunk = helper->OpenUnderlyingChunk();
-		if (!iChunk) err = KErrNotFound;
-		}
-	if (err)
-		{
-		delete helper;
-		}
-	else
-		{
-		iHelper = helper;
-		}
-	NKern::ThreadLeaveCS();
-	return err;
-	}
+    {
+    TLinAddr allocatorAddr = (TLinAddr)OSAdaption().DThread().GetAllocator(aThread);
+    NKern::ThreadEnterCS();
+    LtkUtils::RUserAllocatorHelper* helper = new LtkUtils::RUserAllocatorHelper;
+    if (!helper)
+        {
+        NKern::ThreadLeaveCS();
+        return KErrNoMemory;
+        }
+    TInt err = helper->OpenUserHeap(OSAdaption().DThread().GetId(aThread), allocatorAddr, aEuserUdeb);
+    if (!err)
+        {
+        iChunk = helper->OpenUnderlyingChunk();
+        if (!iChunk) err = KErrNotFound;
+        }
+    if (err)
+        {
+        delete helper;
+        }
+    else
+        {
+        iHelper = helper;
+        }
+    NKern::ThreadLeaveCS();
+    return err;
+    }
+
 
 RMemSpyDriverRHeapKernelFromCopy::RMemSpyDriverRHeapKernelFromCopy( DMemSpyDriverOSAdaption& aOSAdaption )
-:   RMemSpyDriverRHeapReadFromCopy( aOSAdaption )
+:   iOSAdaption( aOSAdaption ), iChunk( NULL )
     {
     }
 
 
-void RMemSpyDriverRHeapKernelFromCopy::SetKernelHeap( RHeapK& aKernelHeap )
+void RMemSpyDriverRHeapKernelFromCopy::Reset()
     {
-    TRACE_KH( Kern::Printf("RMemSpyDriverRHeapKernelFromCopy::SetKernelHeap() - START" ) );
-
-    // Perform a copy operation in order to populate base class with a duplicate of the kernel's heap info.
-    iKernelHeap = &aKernelHeap;
-
-    // Source address
-    TUint8* sourceAddress = (TUint8*) iKernelHeap + KRAllocatorAndRHeapMemberDataOffset;
-    TUint8* destinationAddress = (TUint8*) this + KRAllocatorAndRHeapMemberDataOffset;
-
-    // Copy 
-    memcpy( destinationAddress, sourceAddress, KRHeapMemberDataSize );
-
-    // And print info in debug builds for verification...
-    PrintInfo();
-
-    TRACE_KH( Kern::Printf("RMemSpyDriverRHeapKernelFromCopy::SetKernelHeap() - END" ) );
+    RMemSpyDriverRHeapBase::Reset();
+	//
+    iChunk = NULL;
     }
 
 
-/*
-void RMemSpyDriverRHeapKernelFromCopy::DisassociateWithKernelChunk()
+TInt RMemSpyDriverRHeapKernelFromCopy::AssociateWithKernelChunk( DChunk* aKernelChunk, DChunk* aCopiedChunk, TLinAddr aCopiedChunkBase, TInt aOffset )
     {
-    TRACE_KH( Kern::Printf("RMemSpyDriverRHeapKernelFromCopy::DisassociateWithKernelChunk() - START - iKernelHeap: 0x%08x", iKernelHeap ));
-    iKernelHeap = NULL;
-    RMemSpyDriverRHeapReadFromCopy::DisassociateWithKernelChunk();
-    TRACE_KH( Kern::Printf("RMemSpyDriverRHeapKernelFromCopy::DisassociateWithKernelChunk() - END") );
+    TRACE_KH( Kern::Printf("RMemSpyDriverRHeapKernelFromCopy::AssociateWithKernelChunk() - START - aChunk: 0x%08x, aOffset: %d", 
+                            aCopiedChunk, aOffset) );
+
+    iChunk = aCopiedChunk;
+    iChunkBase = aCopiedChunkBase;
+
+    NKern::ThreadEnterCS();
+    TInt ret = KErrNone;
+    LtkUtils::RKernelCopyAllocatorHelper* helper = new LtkUtils::RKernelCopyAllocatorHelper();
+    if (helper)
+        {
+        helper->OpenCopiedHeap(aKernelChunk, aCopiedChunk, aOffset);
+        iHelper = helper;        
+        }
+    else
+        {
+        ret = KErrNoMemory;
+        }
+    NKern::ThreadLeaveCS();
+    
+    TRACE_KH( Kern::Printf("RMemSpyDriverRHeapKernelFromCopy::AssociateWithKernelChunk() - END") );
+    return ret;
     }
-*/
+
+DChunk& RMemSpyDriverRHeapKernelFromCopy::Chunk()
+    {
+    return *iChunk;
+    }
+
+
+const DChunk& RMemSpyDriverRHeapKernelFromCopy::Chunk() const
+    {
+    return *iChunk;
+    }
 
 void RMemSpyDriverRHeapKernelFromCopy::Close()
 	{
-	//TOMSCI TODO close the chunk
+    if  ( iChunk != NULL )
+        {
+        NKern::ThreadEnterCS();
+        Kern::ChunkClose( iChunk );
+        iChunk = NULL;
+        NKern::ThreadLeaveCS();
+        }
+    RMemSpyDriverRHeapBase::Close();
 	}
 
-RMemSpyDriverRHeapKernelInPlace::RMemSpyDriverRHeapKernelInPlace()
-	: iChunk(NULL)
+TBool RMemSpyDriverRHeapKernelFromCopy::IsOpen()
+    {
+    return (iChunk != NULL);
+    }
+
+RMemSpyDriverRHeapKernelInPlace::RMemSpyDriverRHeapKernelInPlace( DMemSpyDriverOSAdaption& aOSAdaption )
+:   iOSAdaption( aOSAdaption ), iChunk( NULL )
     {
     }
 

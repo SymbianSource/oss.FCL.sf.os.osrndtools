@@ -20,8 +20,7 @@
 // System includes
 #include <e32svr.h>
 #include <w32std.h>
-#include <APGTASK.H>
-#include <APGWGNAM.H>  
+//#include <coedef.h>  
 
 // User includes
 #include <memspy/engine/memspyengine.h>
@@ -556,8 +555,9 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			RArray<RWsSession::TWindowGroupChainInfo> wgArray;
 			CleanupClosePushL( wgArray );
 			User::LeaveIfError( wsSession.WindowGroupList( &wgArray ) );
-			TApaTask task( wsSession );
-			TBool brought( EFalse );
+						
+			//TApaTask task( wsSession );
+			TBool brought = EFalse;
 			TInt wgId( KErrNotFound );
 			TThreadId threadId;
 					
@@ -571,16 +571,27 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 				User::LeaveIfError( wsSession.GetWindowGroupClientThreadId( wgId, threadId ) );
 				if ( threadId == id() )
 					{
-					CApaWindowGroupName* wgName = CApaWindowGroupName::NewLC( wsSession, wgId );
-					task.SetWgId( wgId );
-					if ( !wgName->Hidden() && task.Exists() )
+					TInt handle = wsSession.GetWindowGroupHandle( wgId );
+					if( handle == KErrNone )
 						{
-						task.BringToForeground();
-						brought = ETrue;                        
+						RWindowGroup* group = new (ELeave) RWindowGroup();
+						group->Construct( handle );        
+						group->SetOrdinalPosition( 0 ); //foreground
+						
+						brought = ETrue;
+						
+						group->Close();
+						delete group;												
 						}
-					CleanupStack::PopAndDestroy( wgName );
+					}					    					    					    										    										
+					//task.SetWgId( wgId );
+					//if ( !wgName->Hidden() && task.Exists() )
+					//	{
+					//	task.BringToForeground();
+					//	brought = ETrue;                        
+					//	}					
 					}
-				}			
+													
 			TPckgBuf<TBool> ret( brought );
 			aMessage.WriteL( 1, ret );															
 					
@@ -892,7 +903,8 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
                 TInt error = iEngine.Container().ProcessAndThreadByThreadId( server.Id(), process, thread );
                 if (error == KErrNone && thread)
                     {
-                    data.iId = thread->Process().Id();
+                    data.iProcessId = thread->Process().Id();
+                    data.iThreadId = thread->Id();
                     }
                 data.iName.Copy(server.Name().Left(KMaxFullName));
                 data.iSessionCount = server.SessionCount();
@@ -933,7 +945,14 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 				const CMemSpyEngineServerEntry& server = list->At(i);
 				TMemSpyServerData data;
         	                
-				data.iId = server.Id();
+				CMemSpyProcess* process = NULL;
+                CMemSpyThread* thread = NULL;
+                TInt error = iEngine.Container().ProcessAndThreadByThreadId( server.Id(), process, thread );
+                if (error == KErrNone && thread)
+                    {
+                    data.iProcessId = thread->Process().Id();
+                    data.iThreadId = thread->Id();
+                    }
 				data.iName.Copy(server.Name().Left(KMaxFullName));
 				data.iSessionCount = server.SessionCount();
         	                
@@ -1226,6 +1245,59 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
         
         break;
 	    }
+	    
+	case EMemSpyClientServerOpGetWindowGroupCount:
+	    {
+	    if (!iEngine.IsHelperWindowServerSupported())
+	        {
+	        User::Leave(KErrNotSupported);
+	        }
+	    
+	    RWsSession windowSession;
+	    windowSession.Connect();
+	    TInt result = windowSession.NumWindowGroups();
+	    windowSession.Close();
+	    User::LeaveIfError(result);
+	    
+	    aMessage.WriteL(0, TPckgBuf<TInt>(result));
+	    break;
+	    }
+        
+	case EMemSpyClientServerOpGetWindowGroups:
+	    {
+	    if (!iEngine.IsHelperWindowServerSupported())
+            {
+            User::Leave(KErrNotSupported);
+            }
+	    
+	    RArray<TMemSpyEngineWindowGroupBasicInfo> groups;
+	    CleanupClosePushL( groups );
+	    
+	    iEngine.HelperWindowServer().GetWindowGroupListL( groups );
+        
+        TPckgBuf<TInt> a0;
+        aMessage.ReadL(0, a0);
+        TInt realCount = Min(a0(), groups.Count());
+                        
+        for (TInt i=0, offset = 0; i<realCount; i++, offset += sizeof(TMemSpyEngineWindowGroupDetails))
+            {
+            TMemSpyEngineWindowGroupDetails data;
+            
+            
+            iEngine.HelperWindowServer().GetWindowGroupDetailsL(groups[i].iId, data);
+            
+            TPckgBuf<TMemSpyEngineWindowGroupDetails> buffer(data);
+            aMessage.WriteL(1, buffer, offset);
+            }
+        
+        a0 = realCount;
+        aMessage.WriteL(0, a0);
+        
+        CleanupStack::PopAndDestroy( &groups ); 
+        
+	    break;
+	    }
+	    
 	    
 		}
     }

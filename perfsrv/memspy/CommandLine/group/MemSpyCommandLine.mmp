@@ -37,8 +37,6 @@ USERINCLUDE     ../Include
 
 OS_LAYER_SYSTEMINCLUDE
 
-APP_LAYER_SYSTEMINCLUDE
-
 LIBRARY         MemSpyClient.lib
 
 LIBRARY					euser.lib 

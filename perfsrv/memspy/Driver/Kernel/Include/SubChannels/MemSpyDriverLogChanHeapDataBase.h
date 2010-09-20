@@ -15,8 +15,8 @@
 *
 */
 
-#ifndef MEMSPYDRIVERLOGICALCHANHEAPINFO_H
-#define MEMSPYDRIVERLOGICALCHANHEAPINFO_H
+#ifndef MEMSPYDRIVERLOGICALCHANHEAPDATABASE_H
+#define MEMSPYDRIVERLOGICALCHANHEAPDATABASE_H
 
 // System includes
 #include <e32cmn.h>
@@ -28,6 +28,7 @@
 #include <memspy/driver/memspydriverenumerationsshared.h>
 
 // User includes
+#include "MemSpyDriverHeap.h"
 #include "MemSpyDriverOpCodes.h"
 #include "MemSpyDriverLogChanHeapBase.h"
 #include "MemSpyDriverObjectsInternal.h"
@@ -36,36 +37,32 @@
 
 // Classes referenced
 class DMemSpyDriverDevice;
-class RMemSpyDriverRHeapKernel;
 class RMemSpyMemStreamWriter;
 
+const static TInt KPageSize = 4096;
 
-class DMemSpyDriverLogChanHeapInfo : public DMemSpyDriverLogChanHeapBase
+class DMemSpyDriverLogChanHeapDataBase : public DMemSpyDriverLogChanHeapBase
 	{
 public:
-	DMemSpyDriverLogChanHeapInfo( DMemSpyDriverDevice& aDevice, DThread& aThread );
-	~DMemSpyDriverLogChanHeapInfo();
-
-private: // from DMemSpyDriverLogChanBase
-	TInt Request( TInt aFunction, TAny* a1, TAny* a2 );
-    TBool IsHandler( TInt aFunction ) const;
-
-private: // Channel operation handlers
-    TInt GetHeapInfoUser( TMemSpyDriverInternalHeapRequestParameters* aParams );
-    TInt GetHeapInfoKernel( TMemSpyDriverInternalHeapRequestParameters* aParams, TDes8* aTransferBuffer );
-    TInt GetIsDebugKernel(TAny* aIsDebugKernel);
+	DMemSpyDriverLogChanHeapDataBase( DMemSpyDriverDevice& aDevice, DThread& aThread );
+	~DMemSpyDriverLogChanHeapDataBase();
 
 private: // From MHeapWalkerObserver
     void HandleHeapWalkInit();
-    TBool HandleHeapCell( TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );
-
-private: // Internal methods
-	void ReleaseCellList();
+    TBool HandleHeapCell( TMemSpyDriverCellType aCellType, TAny* aCellAddress, TInt aLength, TInt aNestingLevel, TInt aAllocNumber );   
+    
+protected: // For use by the base classes
     TInt PrepareCellListTransferBuffer();
-	TInt FetchCellList(TDes8* aBufferSink);
+    TInt FetchCellList(TDes8* aBufferSink);
+    void ReleaseCellList();
     TInt CalculateCellListBufferSize() const;
+    TInt GetFullData( TMemSpyDriverInternalHeapDataParams* aParams );
+    TInt DoGetFullData(TMemSpyDriverInternalHeapDataParams& aParams, DThread* aThread, RMemSpyDriverRHeapBase& aHeap);
 
-private: // Data members
+protected: // To be implemetned by the base classes
+    virtual TInt GetFullData( TMemSpyDriverInternalHeapDataParams& aParams ) = 0;
+
+protected: // Data members
     TMemSpyDriverInternalHeapRequestParameters iHeapInfoParams;
 	RArray<TMemSpyDriverCell> iCellList;
     RMemSpyMemStreamWriter* iHeapStream;

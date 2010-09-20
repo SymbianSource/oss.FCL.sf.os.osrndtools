@@ -82,7 +82,7 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 	}
 
 	// Open data file
-	ifstream in( pFileName );
+	ifstream in( pFileName, ios::binary );
 
 	// Check file opened ok
 	if ( !in.good() )
@@ -284,39 +284,15 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 			// get time string from timestamp
 			sTime = GetTimeFromTimeStamp( iTimeStamp, vProcessList[iProcessIDinList].iTimeSpan );
 
-			// TODO version with reallocation
-			//cleanedTraces << sTime << " "; //add time
-			//cleanedTraces << sLineToCleanedFile << "\n"; //add the rest of the line
-
-			// "Old style" allocation (< v.1.6)
-			if( ! _stricmp( pCommand, ALLOC_ID ) )
+			if( bCreateCleanedTraces )
 			{
-				// Add alloc
-				vProcessList[iProcessIDinList].Alloc( sRestOfLine );
-
-				// Subtests running?
-				vector<CSubTestData>::iterator viSubTestIter = vProcessList[iProcessIDinList].vSubTests.begin();
-				while( viSubTestIter != vProcessList[iProcessIDinList].vSubTests.end() )
-				{
-					if( viSubTestIter->bRunning )
-					{
-						// Save alloc also to sub test
-						viSubTestIter->Alloc( sRestOfLine );
-					}
-					viSubTestIter++;
-				}
+					cleanedTraces << sTime << " "; //add time
+					cleanedTraces << sLineToCleanedFile << "\n"; //add the rest of the line
 			}
-			else if ( ! _stricmp( pCommand, ALLOCH_ID ) )
-			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
 
+			// Allocation header
+			if ( ! _stricmp( pCommand, ALLOCH_ID ) )
+			{
 				// Add alloc
 				vProcessList[iProcessIDinList].AllocH( sRestOfLine, sTime );
 
@@ -335,15 +311,6 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 			// Allocation fragment (call stack).
 			else if ( ! _stricmp( pCommand, ALLOCF_ID ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				// Add alloc fragment
 				vProcessList[iProcessIDinList].AllocF( sRestOfLine, sTime );
 				
@@ -359,13 +326,19 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 					viSubTestIter++;
 				}
 			}
+			//Reallocation header
 			else if ( ! _stricmp( pCommand, REALLOCH_ID ) )
 			{
+				// todo add reallocation flag?
+
+				string sFreeLine = "";
+				string sAllocLine = "";
+
 				// Add free
 
 				// get 'free' line from realloc line
 				string sFreeRestOfLine = sRestOfLine;
-				string sFreeLine = "";
+
 				sFreeLine.append( GetStringUntilNextSpace( sFreeRestOfLine, true ) ); //append freed memory address
 				sFreeLine.append( " " );
 				// next two strings are for 'alloc' (address and size) - lets remove them
@@ -376,35 +349,14 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 				//add 'free' line
 				vProcessList[iProcessIDinList].FreeH( sFreeLine, sTime );
 
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				// construct 'free' header trace
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << FREEH_ID << " "; //add FRH
-				cleanedTraces << sFreeLine << "\n"; //add the rest of the line
-				}
-
 				// Add alloc
 
 				//get 'alloc' line from realloc line
-				// only first string is unnecessary, lets remove it
+				// first string is for 'free' (address), lets remove it first
 				GetStringUntilNextSpace( sRestOfLine );
+				sAllocLine = sRestOfLine;
      			// add 'alloc' line
-				vProcessList[iProcessIDinList].AllocH( sRestOfLine, sTime );
-
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				// construct 'alloc' header trace
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << ALLOCH_ID << " "; //add FRH
-				cleanedTraces << sRestOfLine << "\n"; //add the rest of the line
-				}
+				vProcessList[iProcessIDinList].AllocH( sAllocLine, sTime );
 
 				// Subtests running?
 				vector<CSubTestData>::iterator viSubTestIter = vProcessList[iProcessIDinList].vSubTests.begin();
@@ -413,77 +365,46 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 					if( viSubTestIter->bRunning )
 					{
 						// Save realloc also to sub test
-						// Add free
 
-						// get 'free' line from realloc line
-						string sFreeRestOfLine = sRestOfLine;
-						string sFreeLine = "";
-						sFreeLine.append( GetStringUntilNextSpace( sFreeRestOfLine, true ) ); //append freed memory address
-						sFreeLine.append( " " );
-						// next two strings are for 'alloc' (address and size) - lets remove them
-						GetStringUntilNextSpace( sFreeRestOfLine, true );
-						GetStringUntilNextSpace( sFreeRestOfLine, true );
-						// add rest of line to 'free' line
-						sFreeLine.append( sFreeRestOfLine );
 						//add 'free' line
 						vProcessList[iProcessIDinList].FreeH( sFreeLine, sTime );
 
-						// Add alloc
-
-						//get 'alloc' line from realloc line
-						// only first string is unnecessary, lets remove it
-						GetStringUntilNextSpace( sRestOfLine );
      					// add 'alloc' line
-						vProcessList[iProcessIDinList].AllocH( sRestOfLine, sTime );
+						vProcessList[iProcessIDinList].AllocH( sAllocLine, sTime );
 					}
 					viSubTestIter++;
 				}
 			}
-			// rellocation fragment (call stack).
+			// rellocation fragment (call stack)
 			else if ( ! _stricmp( pCommand, REALLOCF_ID ) )
 			{
+				string sFreeLine = "";
+				string sAllocLine = "";
+
+				// Not used currently.
+				/*
 				// Add free fragment 
 
 				// get 'free' line from realloc line
 				string sFreeRestOfLine = sRestOfLine;
-				string sFreeLine = "";
 				sFreeLine.append( GetStringUntilNextSpace( sFreeRestOfLine, true ) ); //append freed memory address
 				sFreeLine.append( " " );
 				// next string is for 'alloc' (address) - lets remove it
 				GetStringUntilNextSpace( sFreeRestOfLine, true );
 				// add rest of line to 'free' line
 				sFreeLine.append( sFreeRestOfLine );
-				//add 'free' line
-				vProcessList[iProcessIDinList].FreeH( sFreeLine, sTime );
 
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				// construct 'free' fragment trace
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << FREEF_ID << " "; //add FRF
-				cleanedTraces << sFreeLine << "\n"; //add the rest of the line
-				}
+				//add 'free' line
+				vProcessList[iProcessIDinList].FreeF( sFreeLine, sTime );
+				*/
 
 				// Add alloc fragment
 
 				// first string is for 'free' (address), lets remove it first
 				GetStringUntilNextSpace( sRestOfLine, true );
+				sAllocLine = sRestOfLine;
 				//add 'alloc' line
-				vProcessList[iProcessIDinList].AllocF( sRestOfLine, sTime );
-
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				// construct 'alloc' fragment trace
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << ALLOCF_ID << " "; //add FRF
-				cleanedTraces << sRestOfLine << "\n"; //add the rest of the line
-				}
+				vProcessList[iProcessIDinList].AllocF( sAllocLine, sTime );
 				
 				// Subtests running?
 				vector<CSubTestData>::iterator viSubTestIter = vProcessList[iProcessIDinList].vSubTests.begin();
@@ -491,61 +412,23 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 				{
 					if( viSubTestIter->bRunning )
 					{
-						// Save alloc fragment also to sub test
-						// Add free fragment 
+						// Save realloc fragment also to sub test
 
-						// get 'free' line from realloc line
-						string sFreeRestOfLine = sRestOfLine;
-						string sFreeLine = "";
-						sFreeLine.append( GetStringUntilNextSpace( sFreeRestOfLine, true ) ); //append freed memory address
-						sFreeLine.append( " " );
-						// next string is for 'alloc' (address) - lets remove it
-						GetStringUntilNextSpace( sFreeRestOfLine, true );
-						// add rest of line to 'free' line
-						sFreeLine.append( sFreeRestOfLine );
+						// Not used currently.
+						/*
 						//add 'free' line
-						vProcessList[iProcessIDinList].FreeH( sFreeLine, sTime );
+						vProcessList[iProcessIDinList].FreeF( sFreeLine, sTime );
+						*/
 
-						// Add alloc fragment
-
-						// first string is for 'free' (address), lets remove it first
-						GetStringUntilNextSpace( sRestOfLine, true );
 						//add 'alloc' line
-						vProcessList[iProcessIDinList].AllocF( sRestOfLine, sTime );
+						vProcessList[iProcessIDinList].AllocF( sAllocLine, sTime );
 					}
 					viSubTestIter++;
 				}
 			}
-			// Command free
-			else if( ! _stricmp( pCommand, FREE_ID ) )
-			{
-				// Send free
-				vProcessList[iProcessIDinList].Free( sRestOfLine );
-
-				// Subtests running?
-				vector<CSubTestData>::iterator viSubTestIter = vProcessList[iProcessIDinList].vSubTests.begin();
-				while( viSubTestIter != vProcessList[iProcessIDinList].vSubTests.end() )
-				{
-					if( viSubTestIter->bRunning )
-					{
-						// Send free to subtest
-						viSubTestIter->Free( sRestOfLine );
-					}
-					viSubTestIter++;
-				}
-			}
-			// Header free.
+			// Free header
 			else if( ! _stricmp( pCommand, FREEH_ID ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				// Send free
 				vProcessList[iProcessIDinList].FreeH( sRestOfLine, sTime );
 
@@ -562,35 +445,19 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 				}
 			
 			}
+			// Free fragment
 			else if( ! _stricmp( pCommand, FREEF_ID ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
 				// Not used currently.
 			}
 			// Command process end
 			else if( ! _stricmp( pCommand, LABEL_PROCESS_END ) )
 			{
-				// append processID and time
+				// add processID and time
 				sWholeTempLine.append(" ");
 				sWholeTempLine.append( sProcessID );
 				sWholeTempLine.append(" ");
 				sWholeTempLine.append( sTime );
-
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
 
 				// Set process has ended.
 				vProcessList[iProcessIDinList].bProcessOnGoing = false;
@@ -670,34 +537,18 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 				vProcessList[iProcessIDinList].vSubTests.clear();
 				vProcessList[iProcessIDinList].vData.push_back( sWholeTempLine );
 			}
+			// Handle leak
 			else if( ! _stricmp( pCommand, LABEL_HANDLE_LEAK ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				// Make whole line
 				sTemp.append( " " );
 				sTemp.append( sRestOfLine );
 				vProcessList[iProcessIDinList].vHandleLeaks.push_back( sTemp );
 			}
+			// Dll load
 			else if( ! _stricmp( pCommand, LABEL_DLL_LOAD ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
-				// append time to the end of the line
+				// add time
 				sWholeTempLine.append( " " );
 				sWholeTempLine.append( sTime );
 
@@ -712,18 +563,10 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 				}
 
 			}
+			// Dll unload
 			else if( ! _stricmp( pCommand, LABEL_DLL_UNLOAD ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
-				// append time to the end of the line
+				// add time
 				sWholeTempLine.append( " " );
 				sWholeTempLine.append( sTime );
 
@@ -741,28 +584,11 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 				     sTemp.find( LABEL_PROCESS_END ) != string::npos || sTemp.find( LABEL_ERROR_OCCURED ) != string::npos ||
 					 sTemp.find( LABEL_HANDLE_LEAK ) != string::npos )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				vProcessList[iProcessIDinList].vData.push_back( sWholeTempLine );
 			}
+			// Subtest start
 			else if( ! _stricmp( pCommand, LABEL_TEST_START ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				bRet = true; // Set return value true we found start.
 				// Get sub test time
 				string sSubTestTime = GetStringUntilNextSpace( sRestOfLine );
@@ -779,17 +605,9 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 
 				vProcessList[iProcessIDinList].vSubTests.push_back( SubTestData );
 			}
+			// Subtest end
 			else if( ! _stricmp( pCommand, LABEL_TEST_END ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				// Get sub test time
 				string sSubTestEnd = GetStringUntilNextSpace( sRestOfLine );
 				// Get sub test name
@@ -810,43 +628,19 @@ bool CATParseTraceFile::StartParse( const char* pFileName, const char* pOutputFi
 					viSubTestIter++;
 				}
 			}
+			// Thread start
 			else if( ! _stricmp( pCommand, LABEL_THREAD_START ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				//currently not used
 			}
+			// Thread end
 			else if( ! _stricmp( pCommand, LABEL_THREAD_END ) )
 			{
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
-
 				//currently not used
 			}
 			else
 			{
-				// unknown tag, log it to cleaned file for carbide
-				if( bCreateCleanedTraces )
-				{
-				// add message to cleaned traces file
-				cleanedTraces << sTime << " "; //add time
-				cleanedTraces << MAIN_ID << " "; //add MAIN_ID
-				cleanedTraces << sProcessID << " "; //add process ID
-				cleanedTraces << sWholeTempLine << "\n"; //add the rest of the line
-				}
+				// unknown tag, only logged it to cleaned file for carbide
 			}
 		}
 	}

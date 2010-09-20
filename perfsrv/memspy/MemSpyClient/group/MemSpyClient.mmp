@@ -37,6 +37,7 @@ SOURCE		memspyapithreadinfoitem.cpp
 SOURCE		memspyapimemorytrackingcycle.cpp
 SOURCE 		memspyapiserver.cpp
 SOURCE 		memspyapiecom.cpp  
+SOURCE 		memspyapiwindowgroup.cpp
 
 USERINCLUDE ../inc
 

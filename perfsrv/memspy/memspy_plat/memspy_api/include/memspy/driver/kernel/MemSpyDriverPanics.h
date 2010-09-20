@@ -48,7 +48,8 @@ enum TMemSpyDriverPanic
     EPanicKernelHeapDataInitError,
     EPanicKernelHeapDataFetchError,
     EPanicHeapFreeCellStreamNotClosed,
-    EPanicHeapFreeCellStreamNotOpen
+    EPanicHeapFreeCellStreamNotOpen,
+    EPanicHeapKernelCopyExpected,
 	};
 
 

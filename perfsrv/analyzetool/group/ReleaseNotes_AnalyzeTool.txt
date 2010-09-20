@@ -1,7 +1,7 @@
 ===============================================================================
 
-RELEASE NOTES - ANALYZETOOL v1.10.0
-RELEASED 2nd July 2010
+RELEASE NOTES - ANALYZETOOL v1.10.1
+RELEASED 7th September 2010
 
 SUPPORTS SYMBIAN^1+
 
@@ -21,13 +21,12 @@ Main Features:
 ===============================================================================
 
 
-What's New in v1.10.0
+What's New in v1.10.1
 ====================
-  
-- Change: Storage server was removed
-- Change: New trace format
-- Change: Logging to binary file added
-- Change: Capture of reallocations implemented
+
+- Fix: Wrong memory addresses in analyze output for subtests
+- Fix: Commandline engine fixes
+- Change: Reallocations support for Carbide
 
 ===============================================================================
 
@@ -109,6 +108,17 @@ Known Issues:
 
 Version History:
 ================
+
+
+Version 1.10.0 - 2nd July 2010
+==============================
+  
+- Change: Storage server was removed
+- Change: New trace format
+- Change: Logging to binary file added
+- Change: Capture of reallocations implemented
+
+===============================================================================
 
 Version 1.9.1 - 29th April 2010
 ==============================

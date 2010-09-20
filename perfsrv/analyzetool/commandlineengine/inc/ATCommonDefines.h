@@ -130,8 +130,8 @@ const char AT_TEMP_LST_DIR[] = "atool_temp\\static_lsts\\";
 const string AT_PROCESSNAME_TAG = "%processname%";
 
 // Atool version number and date
-#define ATOOL_VERSION "1.10.0" // NOTE! This version number is written also to temporary cpp file.
-#define ATOOL_DATE "2nd July 2010"
+#define ATOOL_VERSION "1.10.1" // NOTE! This version number is written also to temporary cpp file.
+#define ATOOL_DATE "7th September 2010"
 
 // Default/min/max call stack sizes
 const int AT_ALLOC_CALL_STACK_SIZE_DEFAULT = 40;
@@ -144,7 +144,7 @@ const int AT_DLL_TIMESTAMP_DATA_VERSION = 2;
 
 // Constant compatibility string in temporary cpp.
 // Api version ; current version.
-#define ATOOL_COMPATIBILITY_STRING "1.7.6;1.10.0"
+#define ATOOL_COMPATIBILITY_STRING "1.7.6;1.10.1"
 
 // Datafile version
 #define AT_DATA_FILE_VERSION "DATA_FILE_VERSION 12"

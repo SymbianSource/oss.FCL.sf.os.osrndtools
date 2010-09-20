@@ -22,7 +22,7 @@
 
 class TMemSpyMemoryTrackingCycleData;
 
-class CMemSpyApiMemoryTrackingCycle
+NONSHARABLE_CLASS( CMemSpyApiMemoryTrackingCycle )
 	{
 public: // API
 	IMPORT_C TInt CycleNumber() const;

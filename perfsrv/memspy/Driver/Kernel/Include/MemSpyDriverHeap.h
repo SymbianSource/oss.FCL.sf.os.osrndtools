@@ -26,6 +26,7 @@
 
 // User includes
 #include "MemSpyDriverObjectsInternal.h"
+#include "MemSpyDriverOSAdaption.h"
 
 // Constants
 // We shouldn't be using any of these any more! -Tomsci
@@ -34,7 +35,6 @@ const TUint KRAllocatorAndRHeapMemberDataOffset = 4; // 4 bytes past start of al
 const TUint KRHeapMemberDataSize = KRHeapObjectSize - KRAllocatorAndRHeapMemberDataOffset;
 
 // Classes referenced
-class DMemSpyDriverOSAdaption;
 namespace LtkUtils
 	{
 	class RAllocatorHelper;
@@ -58,48 +58,11 @@ public: // Virtual API
 	virtual void Close();
     virtual DChunk& Chunk() = 0;
     virtual const DChunk& Chunk() const = 0;
+    virtual const TLinAddr ChunkBase() const = 0;
 
 protected:
 	LtkUtils::RAllocatorHelper* iHelper;
     };
-
-
-
-
-class RMemSpyDriverRHeapReadFromCopy : public RMemSpyDriverRHeapBase
-	{
-protected:
-    RMemSpyDriverRHeapReadFromCopy( DMemSpyDriverOSAdaption& aOSAdaption );
-
-public: // New API
-    void AssociateWithKernelChunk( DChunk* aChunk, TLinAddr aAddress, TUint32 aMappingAttributes );
-
-public: // From RMemSpyDriverRHeapBase
-    void Reset();
-    DChunk& Chunk();
-    const DChunk& Chunk() const;
-
-protected:
-    inline DMemSpyDriverOSAdaption& OSAdaption() { return iOSAdaption; }
-
-private:
-    DMemSpyDriverOSAdaption& iOSAdaption;
-
-    // Copy of the client's heap data
-    DChunk* iChunk;
-    TLinAddr iChunkAddress;
-    TUint32 iChunkMappingAttributes;
-
-    // Calculated delta between client's address space values and actual kernel
-    // address of the heap chunk.
-    //TUint iClientToKernelDelta;
-    };
-
-
-
-
-
-
 
 class RMemSpyDriverRHeapUser : public RMemSpyDriverRHeapBase
 	{
@@ -109,9 +72,11 @@ public:
 
 	DChunk& Chunk() { return *iChunk; }
 	const DChunk& Chunk() const { return *iChunk; }
+	const TLinAddr ChunkBase() const { return (TLinAddr)OSAdaption().DChunk().GetBase(*iChunk); } 
 
 private:
     inline DMemSpyDriverOSAdaption& OSAdaption() { return iOSAdaption; }
+    inline const DMemSpyDriverOSAdaption& OSAdaption() const { return iOSAdaption; } 
 
 private:
     DMemSpyDriverOSAdaption& iOSAdaption;
@@ -119,29 +84,39 @@ private:
     };
 
 
-
-class RMemSpyDriverRHeapKernelFromCopy : public RMemSpyDriverRHeapReadFromCopy
+class RMemSpyDriverRHeapKernelFromCopy : public RMemSpyDriverRHeapBase
     {
 public:
     RMemSpyDriverRHeapKernelFromCopy( DMemSpyDriverOSAdaption& aOSAdaption );
     
 public: // API
-    void SetKernelHeap( RHeapK& aKernelHeap );
+    TInt AssociateWithKernelChunk( DChunk* aKernelChunk, DChunk* aCopiedChunk, TLinAddr aCopiedChunkBase, TInt aOffset );
+    TBool IsOpen();
 
 public: // From RMemSpyDriverRHeapBase
-    //void DisassociateWithKernelChunk();
-	void Close();
+    void Reset();
+    void Close();
+    DChunk& Chunk();
+    const DChunk& Chunk() const;
+    const TLinAddr ChunkBase() const { return iChunkBase; } 
 
 private:
-    RHeapK* iKernelHeap;
-    };
+    inline DMemSpyDriverOSAdaption& OSAdaption() { return iOSAdaption; }
+    inline const DMemSpyDriverOSAdaption& OSAdaption() const { return iOSAdaption; }
+    
+private:
+    DMemSpyDriverOSAdaption& iOSAdaption;
 
+    // Copy of the client's heap data
+    DChunk* iChunk;
+    TLinAddr iChunkBase;
+    };
 
 
 class RMemSpyDriverRHeapKernelInPlace : public RMemSpyDriverRHeapBase
     {
 public:
-    RMemSpyDriverRHeapKernelInPlace();
+    RMemSpyDriverRHeapKernelInPlace( DMemSpyDriverOSAdaption& aOSAdaption );
 	TInt OpenKernelHeap();
     
 
@@ -150,10 +125,17 @@ public: // From RMemSpyDriverRHeapBase
 
     DChunk& Chunk();
     const DChunk& Chunk() const;
+    const TLinAddr ChunkBase() const { return (TLinAddr)OSAdaption().DChunk().GetBase(*iChunk); } 
 
-	// Only important member data is the base class's RAllocatorHelper
-	// We do cache the chunk though
 private:
+    inline DMemSpyDriverOSAdaption& OSAdaption() { return iOSAdaption; }
+    inline const DMemSpyDriverOSAdaption& OSAdaption() const { return iOSAdaption; }
+
+private:
+    DMemSpyDriverOSAdaption& iOSAdaption;
+
+    // Only important member data is the base class's RAllocatorHelper
+    // We do cache the chunk though
 	DChunk* iChunk;
     };
 

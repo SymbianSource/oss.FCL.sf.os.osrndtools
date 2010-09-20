@@ -1,7 +1,7 @@
 ===============================================================================
 
-RELEASE NOTES - MEMSPY v2.2.0
-RELEASED 24th August 2010 
+RELEASE NOTES - MEMSPY v2.2.1
+RELEASED 7th September 2010 
 
 SUPPORTS S60 5.0+
 
@@ -28,11 +28,12 @@ Main Features:
 
 ===============================================================================
 
-What's New in v2.2.0
+What's New in v2.2.1
 ====================
-- Feature: Servers view to display a list of running servers.
-- Feature: ECom view to display ECom categories, interfaces and implementations.
-- Feature: Processes can be now terminated.
+- Feature: Window Groups view to display window server items.
+- Fix: SWMT Timer status mismatch.
+- Fix: Non-supported SWMT categories removed.
+- Fix: Options - Open in Servers view not working.
 
 ===============================================================================
 
@@ -94,6 +95,12 @@ Known Issues:
 
 Version History:
 ================
+
+Version 2.2.0 - 24th August 2010
+--------------------------------
+- Feature: Servers view to display a list of running servers.
+- Feature: ECom view to display ECom categories, interfaces and implementations.
+- Feature: Processes can be now terminated.
 
 Version 2.1.0 - 15th June 2010 
 ------------------------------

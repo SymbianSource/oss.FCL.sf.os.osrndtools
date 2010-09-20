@@ -474,6 +474,23 @@ public: // API
     inline DMemSpyDriverOSAdaptionDTimer& DTimer() { return *iDTimer; }
     inline DMemSpyDriverOSAdaptionDPropertyRef& DPropertyRef() { return *iDPropertyRef; }
 
+    inline const DMemSpyDriverDevice& Device() const { return iDevice; }
+    inline const DMemSpyDriverOSAdaptionDProcess& DProcess() const { return *iDProcess; }
+    inline const DMemSpyDriverOSAdaptionDThread& DThread() const { return *iDThread; }
+    inline const DMemSpyDriverOSAdaptionDChunk& DChunk() const { return *iDChunk; }
+    inline const DMemSpyDriverOSAdaptionDServer& DServer() const { return *iDServer; }
+    inline const DMemSpyDriverOSAdaptionDSession& DSession() const { return *iDSession; }
+    inline const DMemSpyDriverOSAdaptionDCodeSeg& DCodeSeg() const { return *iDCodeSeg; }
+    inline const DMemSpyDriverOSAdaptionDSemaphore& DSemaphore() const { return *iDSemaphore; }
+    inline const DMemSpyDriverOSAdaptionDMutex& DMutex() const { return *iDMutex; }
+    inline const DMemSpyDriverOSAdaptionDLogicalDevice& DLogicalDevice() const { return *iDLogicalDevice; }
+    inline const DMemSpyDriverOSAdaptionDPhysicalDevice& DPhysicalDevice() const { return *iDPhysicalDevice; }
+    inline const DMemSpyDriverOSAdaptionDChangeNotifier& DChangeNotifier() const { return *iDChangeNotifier; }
+    inline const DMemSpyDriverOSAdaptionDUndertaker& DUndertaker() const { return *iDUndertaker; }
+    inline const DMemSpyDriverOSAdaptionDCondVar& DCondVar() const { return *iDCondVar; }
+    inline const DMemSpyDriverOSAdaptionDTimer& DTimer() const { return *iDTimer; }
+    inline const DMemSpyDriverOSAdaptionDPropertyRef& DPropertyRef() const { return *iDPropertyRef; }    
+    
 private: // Data members
     DMemSpyDriverDevice& iDevice;
     DMemSpyDriverOSAdaptionDThread* iDThread;

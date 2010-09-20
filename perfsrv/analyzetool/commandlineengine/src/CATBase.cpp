@@ -144,12 +144,12 @@ string CATBase::GetPathOrFileName( bool bFileName, string sInput )
 {
 	LOG_LOW_FUNC_ENTRY("CATBase::GetPathOrFileName");
 	string sRet;
-	size_t iPos = sInput.size()-1;
+	size_t iPos = sInput.size();
 
 	sInput = ChangeSlashToBackSlash( sInput );
 
 	//Find character '\' starting from end of string
-	while( iPos > 0 && sInput[iPos] != '\\' )
+	while( iPos > 0 && sInput[iPos-1] != '\\' )
 	{
 		iPos--;
 	}
@@ -158,12 +158,12 @@ string CATBase::GetPathOrFileName( bool bFileName, string sInput )
 		//Return file name
 		if( bFileName )
 		{
-			sInput.erase( 0, iPos+1 );
+			sInput.erase( 0, iPos );
 			sRet = sInput;
 		}
 		else //Return file path
 		{
-			sInput.erase( iPos+1, string::npos );
+			sInput.erase( iPos, string::npos );
 			sRet = sInput;
 		}
 	}
@@ -1057,7 +1057,7 @@ bool CATBase::CreateTemporaryCpp( const string& sId,
 
 	// Hardcoded version number for support.
 	out << "\n/* The AnalyzeTool version number used. */";
-	out << "\n_LIT( KAtoolVersion, \"1.7.6;1.10.0\" );\n";
+	out << "\n_LIT( KAtoolVersion, \"1.7.6;1.10.1\" );\n";
 
 	out << "\nconst TFileName LogFileName()";
 	out << "\n    {";

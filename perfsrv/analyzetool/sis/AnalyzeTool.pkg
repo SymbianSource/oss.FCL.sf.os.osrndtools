@@ -18,7 +18,7 @@
 &EN
 
 ; standard SIS file header
-#{"AnalyzeTool"},(0x20012432),1,10,0,TYPE=SA, RU
+#{"AnalyzeTool"},(0x20012432),1,10,1,TYPE=SA, RU
 
 ;Localised Vendor name
 %{"Nokia Corporation"}

@@ -379,6 +379,10 @@ enum TMemSpyClientServerOp
 	            
 	EMemSpyClientServerOpGetEComImplementations,
 	
+	EMemSpyClientServerOpGetWindowGroupCount,
+	    
+	EMemSpyClientServerOpGetWindowGroups,
+	
 	EMemSpyClientServerOpMarkerUiLast,		
 	
 	/**
