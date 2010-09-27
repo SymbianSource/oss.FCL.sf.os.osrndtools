@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SystemDefinition schema="3.0.0">
-  <package id="osrndtools" name="OS R&amp;D Tools">
+  <package id="osrndtools" name="OS R&amp;D Tools" levels="trace analysis">
     <collection id="debugsrv" name="Debug Services" level="trace">
       <component id="runmodedebug" filter="s60" name="Run Mode Debug" purpose="development">
         <unit bldFile="debugsrv/runmodedebug/group"/>
@@ -17,7 +17,7 @@
         <unit bldFile="perfsrv/piprofiler/group"/>
       </component>
     </collection>
-    <collection id="tracefw" name="Trace Services" level="trace">
+    <collection id="tracefw" name="Trace Framework" level="trace">
       <component id="tracecompiler" filter="s60" name="TraceCompiler" purpose="development">
         <unit bldFile="tracefw/tracecompiler/group"/>
       </component>
