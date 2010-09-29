@@ -67,7 +67,7 @@ public: // Nasty, but I don't care...
 
 
 
-class DMemSpyEventMonitor : public DKernelEventHandler
+NONSHARABLE_CLASS(DMemSpyEventMonitor) : public DKernelEventHandler
 	{
 public:
 	DMemSpyEventMonitor();

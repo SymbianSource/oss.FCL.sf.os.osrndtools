@@ -26,7 +26,7 @@
 class DMemSpyDriverDevice;
 
 
-class DMemSpyDriverXferBuffer : public DBase
+NONSHARABLE_CLASS(DMemSpyDriverXferBuffer) : public DBase
 	{
     friend class RMemSpyMemStreamWriter;
 

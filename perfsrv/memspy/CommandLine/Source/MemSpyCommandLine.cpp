@@ -71,7 +71,7 @@ void CMemSpyCommandLine::PerformOpL(const CCommandLineArguments& aCommandLine)
 	const TInt count = aCommandLine.Count();
 	TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - START - arg count: %d, this: 0x%08x", count, this ) );
 
-	if (count >= 1)
+	if (count > 1)
 		{
 		// Get main command
 		TBuf<KMemSpyCommandLineMaxLength> command;
@@ -91,6 +91,10 @@ void CMemSpyCommandLine::PerformOpL(const CCommandLineArguments& aCommandLine)
 
 		// Tidy up
 		CleanupStack::PopAndDestroy(args);
+		}
+	else if ( count == 1 )
+		{
+		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - nno commands and parameters set" ) );
 		}
 	else
 		{

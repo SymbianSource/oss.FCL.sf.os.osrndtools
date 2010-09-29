@@ -34,7 +34,7 @@ class DMemSpyDriverXferBuffer;
 class DMemSpyDriverOSAdaption;
 class DMemSpySuspensionManager;
 
-class DMemSpyDriverLogChanBase : public DBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanBase) : public DBase
 	{
 public:
 	~DMemSpyDriverLogChanBase();

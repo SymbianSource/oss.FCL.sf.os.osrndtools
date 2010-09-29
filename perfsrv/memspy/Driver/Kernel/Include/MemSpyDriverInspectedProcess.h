@@ -83,7 +83,7 @@ public: // Data members
 
 
 
-class DMemSpyInspectedProcess : public DBase, public MMemSpyEventMonitorObserver
+NONSHARABLE_CLASS(DMemSpyInspectedProcess) : public DBase, public MMemSpyEventMonitorObserver
     {
 public: // Construct / destruct
 	DMemSpyInspectedProcess( DMemSpyDriverDevice& aDevice );

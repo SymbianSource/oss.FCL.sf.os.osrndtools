@@ -30,7 +30,7 @@ class DMemSpyDriverDevice;
 class TMemSpyDriverInternalReadMemParams;
 
 
-class DMemSpyDriverLogChanRawMemory : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanRawMemory) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanRawMemory( DMemSpyDriverDevice& aDevice, DThread& aThread );

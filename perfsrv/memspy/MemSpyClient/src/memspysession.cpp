@@ -779,7 +779,7 @@ EXPORT_C TBool RMemSpySession::IsSwmtRunningL()
 	{
 	TPckgBuf<TBool> ret;
 	User::LeaveIfError(SendReceive(EMemSpyClientServerOpIsSwmtRunning, TIpcArgs(&ret)));
-	
+		
 	return ret();
 	}
 
@@ -787,6 +787,12 @@ EXPORT_C void RMemSpySession::StartSwmtTimerL(TInt aPeriod)
 	{
 	SetSwmtTimerIntervalL(aPeriod);
 	User::LeaveIfError(SendReceive(EMemSpyClientServerOpSystemWideMemoryTrackingTimerStart));
+	}
+
+EXPORT_C void RMemSpySession::StartSwmtTimer( TRequestStatus& aStatus )
+	{
+	SendReceive( EMemSpyClientServerOpSystemWideMemoryTrackingTimerStart, 
+			TIpcArgs(), aStatus );
 	}
 
 EXPORT_C void RMemSpySession::StartSwmtTimerL()

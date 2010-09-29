@@ -21,6 +21,13 @@
 #include "MemSpyDriverUtils.h"
 #include "MemSpyDriverXferBuffer.h"
 
+#if defined(__GCC32__)
+#define __RETURN_ADDRESS() __builtin_return_address(0)
+#elif defined (__ARMCC__)
+#define __RETURN_ADDRESS() ((TAny*)__return_address())
+#else
+#define __RETURN_ADDRESS() 0 // not supported
+#endif 
 
 
 RMemSpyMemStreamWriter::RMemSpyMemStreamWriter()
@@ -69,7 +76,7 @@ TInt32* RMemSpyMemStreamWriter::WriteInt32( TInt32 aValue )
         }
     else
         {
-        //TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteInt32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __return_address() ) );
+        TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteInt32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __RETURN_ADDRESS() ) );
         }
     //
     return ret;
@@ -89,7 +96,7 @@ TUint32* RMemSpyMemStreamWriter::WriteUint32( TUint32 aValue )
         }
     else
         {
-        //TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteUint32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __return_address() ) );
+        TRACE( Kern::Printf( "RMemSpyMemStreamWriter::WriteUint32() - asked to write: 0x%08x from fn: 0x%08x BUT AM FULL", aValue, __RETURN_ADDRESS() ) );
         }
     //
     return ret;

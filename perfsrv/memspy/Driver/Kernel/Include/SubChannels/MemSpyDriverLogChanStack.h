@@ -35,7 +35,7 @@ class TMemSpyDriverInternalStackDataParams;
 
 
 
-class DMemSpyDriverLogChanStack : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanStack) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanStack( DMemSpyDriverDevice& aDevice, DThread& aThread );

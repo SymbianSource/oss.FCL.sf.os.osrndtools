@@ -33,7 +33,7 @@ class DMemSpyDriverDevice;
 class DMemSpyDriverClientEM;
 
 
-class DMemSpyDriverClientEMManager : public DBase
+NONSHARABLE_CLASS(DMemSpyDriverClientEMManager) : public DBase
     {
 public:
     DMemSpyDriverClientEMManager( DMemSpyDriverDevice& aDevice );
@@ -58,7 +58,7 @@ private:
 /**
  * This class represents a client-originated Event Monitor request
  */
-class DMemSpyDriverClientEM : public DBase, public MMemSpyEventMonitorObserver
+NONSHARABLE_CLASS(DMemSpyDriverClientEM) : public DBase, public MMemSpyEventMonitorObserver
 	{
 public:
 	DMemSpyDriverClientEM( DMemSpyDriverDevice& aDevice, TUint aHandle );

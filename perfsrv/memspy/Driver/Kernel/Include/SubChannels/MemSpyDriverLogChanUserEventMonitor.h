@@ -31,7 +31,7 @@ class DMemSpyDriverClientEMManager;
 class TMemSpyDriverInternalEventMonitorParams;
 
 
-class DMemSpyDriverLogChanUserEventMonitor : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanUserEventMonitor) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanUserEventMonitor( DMemSpyDriverDevice& aDevice, DThread& aThread );

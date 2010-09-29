@@ -43,7 +43,7 @@ namespace LtkUtils
 /**
  * Essentially a mirror of RAllocator and RHeap's layout.
  */
-class RMemSpyDriverRHeapBase
+NONSHARABLE_CLASS(RMemSpyDriverRHeapBase)
 	{
 protected:
     RMemSpyDriverRHeapBase();
@@ -64,7 +64,7 @@ protected:
 	LtkUtils::RAllocatorHelper* iHelper;
     };
 
-class RMemSpyDriverRHeapUser : public RMemSpyDriverRHeapBase
+NONSHARABLE_CLASS(RMemSpyDriverRHeapUser) : public RMemSpyDriverRHeapBase
 	{
 public:
     RMemSpyDriverRHeapUser( DMemSpyDriverOSAdaption& aOSAdaption );
@@ -84,7 +84,7 @@ private:
     };
 
 
-class RMemSpyDriverRHeapKernelFromCopy : public RMemSpyDriverRHeapBase
+NONSHARABLE_CLASS(RMemSpyDriverRHeapKernelFromCopy) : public RMemSpyDriverRHeapBase
     {
 public:
     RMemSpyDriverRHeapKernelFromCopy( DMemSpyDriverOSAdaption& aOSAdaption );
@@ -113,7 +113,7 @@ private:
     };
 
 
-class RMemSpyDriverRHeapKernelInPlace : public RMemSpyDriverRHeapBase
+NONSHARABLE_CLASS(RMemSpyDriverRHeapKernelInPlace) : public RMemSpyDriverRHeapBase
     {
 public:
     RMemSpyDriverRHeapKernelInPlace( DMemSpyDriverOSAdaption& aOSAdaption );

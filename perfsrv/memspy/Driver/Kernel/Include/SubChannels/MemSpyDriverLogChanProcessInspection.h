@@ -30,7 +30,7 @@ class DMemSpyDriverDevice;
 class TMemSpyDriverProcessInspectionInfo;
 
 
-class DMemSpyDriverLogChanProcessInspection : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanProcessInspection) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanProcessInspection( DMemSpyDriverDevice& aDevice, DThread& aThread );

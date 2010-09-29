@@ -39,7 +39,7 @@ class DMemSpyDriverDevice;
 class TMemSpyDriverLogChanHeapWalkObserver;
 
 
-class DMemSpyDriverLogChanHeapWalkUser : public DMemSpyDriverLogChanHeapBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanHeapWalkUser) : public DMemSpyDriverLogChanHeapBase
 	{
 public:
 	DMemSpyDriverLogChanHeapWalkUser( DMemSpyDriverDevice& aDevice, DThread& aThread );

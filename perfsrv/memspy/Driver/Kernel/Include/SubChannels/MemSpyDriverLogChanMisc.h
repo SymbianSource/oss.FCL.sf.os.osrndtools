@@ -29,7 +29,7 @@
 class DMemSpyDriverDevice;
 
 
-class DMemSpyDriverLogChanMisc : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanMisc) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanMisc( DMemSpyDriverDevice& aDevice, DThread& aThread );

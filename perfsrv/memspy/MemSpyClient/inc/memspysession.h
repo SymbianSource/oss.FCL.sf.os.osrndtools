@@ -201,6 +201,8 @@ public:	//API
     
     IMPORT_C void StartSwmtTimerL(TInt aPeriod);
     
+    IMPORT_C void StartSwmtTimer( TRequestStatus& aStatus );
+    
     IMPORT_C void StartSwmtTimerL(); // for CLI
     
     IMPORT_C void SetSwmtTimerIntervalL(TInt aPeriod); //for CLI

@@ -41,7 +41,7 @@ class RMemSpyMemStreamWriter;
 
 const static TInt KPageSize = 4096;
 
-class DMemSpyDriverLogChanHeapDataBase : public DMemSpyDriverLogChanHeapBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanHeapDataBase) : public DMemSpyDriverLogChanHeapBase
 	{
 public:
 	DMemSpyDriverLogChanHeapDataBase( DMemSpyDriverDevice& aDevice, DThread& aThread );

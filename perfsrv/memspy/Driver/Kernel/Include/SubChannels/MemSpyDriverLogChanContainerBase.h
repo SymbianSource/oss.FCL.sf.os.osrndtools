@@ -33,7 +33,7 @@ class DMemSpyDriverDevice;
 const TInt KMemSpyDriverMaxHandles = 1024 * 2;
 
 
-class DMemSpyDriverLogChanContainerBase : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanContainerBase) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanContainerBase( DMemSpyDriverDevice& aDevice, DThread& aThread );

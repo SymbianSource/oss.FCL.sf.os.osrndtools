@@ -30,7 +30,7 @@ class DMemSpyDriverDevice;
 class DMemSpyInspectedProcess;
 
 
-class DMemSpyInspectedProcessManager : public DObject, public MMemSpyEventMonitorObserver
+NONSHARABLE_CLASS(DMemSpyInspectedProcessManager) : public DObject, public MMemSpyEventMonitorObserver
 	{
 public:
 	DMemSpyInspectedProcessManager();

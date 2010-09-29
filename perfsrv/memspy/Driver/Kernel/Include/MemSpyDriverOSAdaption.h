@@ -449,7 +449,7 @@ private: // Data members
 
 
 
-class DMemSpyDriverOSAdaption : public DBase
+NONSHARABLE_CLASS(DMemSpyDriverOSAdaption) : public DBase
 	{
 public:
     DMemSpyDriverOSAdaption( DMemSpyDriverDevice& aDevice );

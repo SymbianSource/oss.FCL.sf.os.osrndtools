@@ -32,7 +32,7 @@ class TMemSpyDriverInternalServerSessionHandleParams;
 
 
 
-class DMemSpyDriverLogChanClientServer : public DMemSpyDriverLogChanContainerBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanClientServer) : public DMemSpyDriverLogChanContainerBase
 	{
 public:
 	DMemSpyDriverLogChanClientServer( DMemSpyDriverDevice& aDevice, DThread& aThread );

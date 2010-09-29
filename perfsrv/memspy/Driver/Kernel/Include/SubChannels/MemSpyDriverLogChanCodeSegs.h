@@ -31,7 +31,7 @@ class TMemSpyDriverInternalCodeSegParams;
 class TMemSpyDriverInternalCodeSnapshotParams;
 
 
-class DMemSpyDriverLogChanCodeSegs : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanCodeSegs) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanCodeSegs( DMemSpyDriverDevice& aDevice, DThread& aThread );

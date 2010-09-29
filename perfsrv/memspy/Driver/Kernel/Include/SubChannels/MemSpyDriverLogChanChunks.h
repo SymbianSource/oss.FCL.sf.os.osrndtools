@@ -33,7 +33,7 @@ class TMemSpyDriverInternalChunkInfoParams;
 class TMemSpyDriverInternalChunkHandleParams;
 
 
-class DMemSpyDriverLogChanChunks : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanChunks) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanChunks( DMemSpyDriverDevice& aDevice, DThread& aThread );

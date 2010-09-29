@@ -35,7 +35,7 @@ class TMemSpyDriverInternalCondVarSuspendedThreadParams;
 class TMemSpyDriverCondVarSuspendedThreadInfo;
 
 
-class DMemSpyDriverLogChanContainers : public DMemSpyDriverLogChanContainerBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanContainers) : public DMemSpyDriverLogChanContainerBase
 	{
 public:
 	DMemSpyDriverLogChanContainers( DMemSpyDriverDevice& aDevice, DThread& aThread );

@@ -27,7 +27,7 @@ class DMemSpyDriverOSAdaption;
 class DMemSpySuspensionManager;
 class DMemSpyInspectedProcessManager;
 
-class DMemSpyDriverDevice : public DLogicalDevice
+NONSHARABLE_CLASS(DMemSpyDriverDevice) : public DLogicalDevice
 	{
 public:
 	DMemSpyDriverDevice();

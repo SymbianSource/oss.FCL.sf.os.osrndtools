@@ -21,7 +21,7 @@
 // User includes
 #include "MemSpyDriverLogChanHeapDataBase.h"
 
-class DMemSpyDriverLogChanHeapDataKernel : public DMemSpyDriverLogChanHeapDataBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanHeapDataKernel) : public DMemSpyDriverLogChanHeapDataBase
 	{
 public:    
     DMemSpyDriverLogChanHeapDataKernel( DMemSpyDriverDevice& aDevice, DThread& aThread );

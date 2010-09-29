@@ -788,7 +788,7 @@ void CMemSpyEngineHelperHeap::OutputHeapDataKernelL( TBool aCreateDataStream )
     OutputHeapDataKernelL( heapInfo, aCreateDataStream, &cells );
     
     CleanupStack::PopAndDestroy( &cells );
-    CleanupStack::PopAndDestroy( this );
+    CleanupStack::PopAndDestroy( this ); // runs CleanupHeapDataKernel
     }    
 
 void CMemSpyEngineHelperHeap::OutputHeapDataKernelL(const TMemSpyHeapInfo& aHeapInfo, 

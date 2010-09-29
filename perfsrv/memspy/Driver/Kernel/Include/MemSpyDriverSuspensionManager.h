@@ -26,7 +26,7 @@
 class DMemSpyDriverDevice;
 
 
-class DMemSpySuspensionManager : public DBase
+NONSHARABLE_CLASS(DMemSpySuspensionManager) : public DBase
 	{
 public: // Construct & destruct
 	DMemSpySuspensionManager( DMemSpyDriverDevice& aDevice );

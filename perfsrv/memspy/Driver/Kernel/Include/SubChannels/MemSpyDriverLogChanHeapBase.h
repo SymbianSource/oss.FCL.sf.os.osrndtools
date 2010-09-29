@@ -38,7 +38,7 @@ class RMemSpyDriverRHeapKernelInPlace;
 class RMemSpyDriverRHeapKernelFromCopy;
 
 
-class DMemSpyDriverLogChanHeapBase : public DMemSpyDriverLogChanBase, public MMemSpyHeapWalkerObserver
+NONSHARABLE_CLASS(DMemSpyDriverLogChanHeapBase) : public DMemSpyDriverLogChanBase, public MMemSpyHeapWalkerObserver
 	{
 public:
     enum TDrmMatchType

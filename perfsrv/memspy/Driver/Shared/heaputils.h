@@ -178,7 +178,7 @@ private:
 
 #ifdef __KERNEL_MODE__
 
-class RUserAllocatorHelper : public RAllocatorHelper
+HUCLASS(RUserAllocatorHelper) : public RAllocatorHelper
     {
 public:
     RUserAllocatorHelper();
@@ -195,7 +195,7 @@ private:
     DThread* iThread;
     };
 
-class RKernelCopyAllocatorHelper : public RAllocatorHelper
+HUCLASS(RKernelCopyAllocatorHelper) : public RAllocatorHelper
     {
 public:
     RKernelCopyAllocatorHelper();
@@ -215,7 +215,7 @@ private:
 
 #else
 
-class RProxyAllocatorHelper : public RAllocatorHelper
+HUCLASS(RProxyAllocatorHelper) : public RAllocatorHelper
 	{
 public:
 	HUIMPORT_C RProxyAllocatorHelper();

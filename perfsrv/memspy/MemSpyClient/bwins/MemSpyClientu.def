@@ -235,4 +235,5 @@ EXPORTS
 	?Name@CMemSpyApiWindowGroup@@QBEABVTDesC16@@XZ @ 234 NONAME ; class TDesC16 const & CMemSpyApiWindowGroup::Name(void) const
 	?ProcessHandles@CMemSpyApiThread@@QBEHXZ @ 235 NONAME ; int CMemSpyApiThread::ProcessHandles(void) const
 	?Name@CMemSpyApiThread@@QBEABVTDesC16@@XZ @ 236 NONAME ; class TDesC16 const & CMemSpyApiThread::Name(void) const
+	?StartSwmtTimer@RMemSpySession@@QAEXAAVTRequestStatus@@@Z @ 237 NONAME ; void RMemSpySession::StartSwmtTimer(class TRequestStatus &)
 

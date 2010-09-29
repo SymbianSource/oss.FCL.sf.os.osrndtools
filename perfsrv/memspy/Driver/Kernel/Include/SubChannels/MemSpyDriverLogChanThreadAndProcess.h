@@ -31,7 +31,7 @@ class TMemSpyDriverProcessInfo;
 class TMemSpyDriverInternalThreadInfoParams;
 
 
-class DMemSpyDriverLogChanThreadAndProcess : public DMemSpyDriverLogChanBase
+NONSHARABLE_CLASS(DMemSpyDriverLogChanThreadAndProcess) : public DMemSpyDriverLogChanBase
 	{
 public:
 	DMemSpyDriverLogChanThreadAndProcess( DMemSpyDriverDevice& aDevice, DThread& aThread );

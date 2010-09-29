@@ -27,7 +27,7 @@ class DMemSpyDriverDevice;
 class DMemSpyDriverLogChanBase;
 
 
-class DMemSpyDriverLogicalChannel : public DLogicalChannelBase
+NONSHARABLE_CLASS(DMemSpyDriverLogicalChannel) : public DLogicalChannelBase
 	{
 public:
 	DMemSpyDriverLogicalChannel();
