@@ -1,0 +1,14 @@
+EXPORTS
+	?ValidatePayload@TTraceDataParser@@SAHAAVTDesC8@@HEKKHHPAV2@@Z @ 1 NONAME ; int TTraceDataParser::ValidatePayload(class TDesC8 &, int, unsigned char, unsigned long, unsigned long, int, int, class TDesC8 *)
+	?ValidatePayload@TTraceDataParser@@SAHAAVTDesC8@@HKEKKHHHHH@Z @ 2 NONAME ; int TTraceDataParser::ValidatePayload(class TDesC8 &, int, unsigned long, unsigned char, unsigned long, unsigned long, int, int, int, int, int)
+	?ReadUint32FromBuf@TTraceDataParser@@SAKAAPAEH@Z @ 3 NONAME ; unsigned long TTraceDataParser::ReadUint32FromBuf(unsigned char * &, int)
+	?Swap@TTraceDataParser@@SAKK@Z @ 4 NONAME ; unsigned long TTraceDataParser::Swap(unsigned long)
+	?DataHasPrintfStringL@TTraceDataParser@@SAHABVTDesC16@@AAVRFs@@ABVTDesC8@@AAH@Z @ 5 NONAME ; int TTraceDataParser::DataHasPrintfStringL(class TDesC16 const &, class RFs &, class TDesC8 const &, int &)
+	?DataHasPrintfString@TTraceDataParser@@SAHAAVTDesC8@@ABV2@AAH@Z @ 6 NONAME ; int TTraceDataParser::DataHasPrintfString(class TDesC8 &, class TDesC8 const &, int &)
+	?ParsePrimingDataL@TTraceDataParser@@SAHABVTDesC16@@AAVRFs@@EAAH2HKK@Z @ 7 NONAME ; int TTraceDataParser::ParsePrimingDataL(class TDesC16 const &, class RFs &, unsigned char, int &, int &, int, unsigned long, unsigned long)
+	?DataHasTraceSequenceL@TTraceDataParser@@SAHABVTDesC16@@AAVRFs@@AAH2PAVTDesC8@@EK@Z @ 8 NONAME ; int TTraceDataParser::DataHasTraceSequenceL(class TDesC16 const &, class RFs &, int &, int &, class TDesC8 *, unsigned char, unsigned long)
+	?GetPrintfFromTrace@TTraceDataParser@@SAHAAVTDesC8@@AAVTDes8@@@Z @ 9 NONAME ; int TTraceDataParser::GetPrintfFromTrace(class TDesC8 &, class TDes8 &)
+	?ParsePrimingDataL@TTraceDataParser@@SAHAAVTDesC8@@EAAH1HKK@Z @ 10 NONAME ; int TTraceDataParser::ParsePrimingDataL(class TDesC8 &, unsigned char, int &, int &, int, unsigned long, unsigned long)
+	?ReadUint16FromBuf@TTraceDataParser@@SAGAAPAE@Z @ 11 NONAME ; unsigned short TTraceDataParser::ReadUint16FromBuf(unsigned char * &)
+	?ValidateMultipartTraces@TTraceDataParser@@SAHAAVTDesC8@@EKAAH1@Z @ 12 NONAME ; int TTraceDataParser::ValidateMultipartTraces(class TDesC8 &, unsigned char, unsigned long, int &, int &)
+

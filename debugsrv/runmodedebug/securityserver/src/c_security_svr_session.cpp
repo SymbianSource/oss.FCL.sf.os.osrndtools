@@ -1,7 +1,7 @@
 // Copyright (c) 2006-2010 Nokia Corporation and/or its subsidiary(-ies).
 // All rights reserved.
 // This component and the accompanying materials are made available
-// under the terms of the License "Eclipse Public License v1.0"
+// under the terms of "Eclipse Public License v1.0"
 // which accompanies this distribution, and is available
 // at the URL "http://www.eclipse.org/legal/epl-v10.html".
 //
@@ -15,18 +15,12 @@
 // 
 //
 
-/**
- @file
- @internalTechnology
- @released
-*/
 
 // Needed so we get the text strings for capabilities
 #define __INCLUDE_CAPABILITY_NAMES__
 
 #include <e32std.h>
 #include <e32std_private.h>
-#include <e32btrace.h>
 #include <d32btrace.h>
 #include <e32base.h>
 #include <e32base_private.h>
@@ -597,7 +591,6 @@ void CSecuritySvrSession::WriteMemoryL(const RMessage2& aMessage)
 	}
 
 /**
-@internalTechnology
 
 Notes: This call is used to set a thread specific breakpoint. Its input arguments
 are the thread id, address and architecture type of the breakpoint. It returns success
@@ -729,7 +722,6 @@ void CSecuritySvrSession::BreakInfoL(const RMessage2& aMessage)
 	}
 
 /**
-@internalTechnology
 
 Modify a previously set breakpoint.
 
@@ -778,7 +770,6 @@ void CSecuritySvrSession::ModifyBreakL(const RMessage2& aMessage)
 	}
 
 /**
-@internalTechnology
 
 Notes: This call is used to set a process wide breakpoint. Its input arguments
 are the process id, address and architecture type of the breakpoint. It returns success
@@ -827,7 +818,6 @@ void CSecuritySvrSession::SetProcessBreakL(const RMessage2& aMessage)
 	}
 
 /**
-@internalTechnology
 
 Modify a previously set process breakpoint.
 
@@ -1267,7 +1257,7 @@ void CSecuritySvrSession::GetDebugAgentOEMTokenCapsL(void)
 
 	CleanupClosePushL(debugAgentProcess);
 
-	debugAgentProcess.Open(iDebugAgentProcessId);
+	User::LeaveIfError(debugAgentProcess.Open(iDebugAgentProcessId));
 
 	// We have now obtained a process handle based on the token executable, so we can check its security properties.
 	TSecurityInfo secInfo(debugAgentProcess);

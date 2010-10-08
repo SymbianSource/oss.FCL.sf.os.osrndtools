@@ -1,7 +1,7 @@
 // Copyright (c) 2004-2010 Nokia Corporation and/or its subsidiary(-ies).
 // All rights reserved.
 // This component and the accompanying materials are made available
-// under the terms of the License "Eclipse Public License v1.0"
+// under the terms of "Eclipse Public License v1.0"
 // which accompanies this distribution, and is available
 // at the URL "http://www.eclipse.org/legal/epl-v10.html".
 //
@@ -47,11 +47,11 @@
 
 using namespace Debug;
 
-/////////////////////////////////////////////////////////////////////////
+//
 //
 // DRM_DebugDriverFactory implementation
 //
-/////////////////////////////////////////////////////////////////////////
+//
 
 //
 // DRM_DebugDriverFactory constructor
@@ -93,11 +93,11 @@ void DRM_DebugDriverFactory::GetCaps(TDes8& aDes) const
 	Kern::InfoCopy(aDes,(TUint8*)&b,sizeof(b));
 	}
 
-/////////////////////////////////////////////////////////////////////////
+//
 //
 // DRM_DebugChannel implementation
 //
-/////////////////////////////////////////////////////////////////////////
+//
 
 //
 // DRM_DebugChannel constructor

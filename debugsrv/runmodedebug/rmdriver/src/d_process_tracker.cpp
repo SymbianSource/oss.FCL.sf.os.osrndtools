@@ -1,7 +1,7 @@
 // Copyright (c) 2006-2010 Nokia Corporation and/or its subsidiary(-ies).
 // All rights reserved.
 // This component and the accompanying materials are made available
-// under the terms of the License "Eclipse Public License v1.0"
+// under the terms of "Eclipse Public License v1.0"
 // which accompanies this distribution, and is available
 // at the URL "http://www.eclipse.org/legal/epl-v10.html".
 //
@@ -42,7 +42,6 @@ DProcessTracker::DProcessTracker()
 /**
  * dtor
  * Go through forzen thread list and resume each one before clearing our structures
- * @internalTechnology
  */
 DProcessTracker::~DProcessTracker()
 	{
@@ -62,7 +61,6 @@ DProcessTracker::~DProcessTracker()
 	}
 
 /**
- * @internalTechnology
  *
  * Creates and stores an internal mapping of debug agent to debugged process.
  * Note that an individual process may be mapped to a number of debug agents.
@@ -162,7 +160,6 @@ TInt DProcessTracker::AttachProcess(const TDesC8& aProcessName,TUint64 aAgentId)
 	}
 
 /**
- * @internalTechnology
  * 
  * Removes a previously created mapping between a debug agent and a debugged process,
  * as created by AttachProcess.
@@ -239,7 +236,6 @@ TInt DProcessTracker::DetachProcess(const TDesC8& aProcessName, TUint64 aAgentId
 	}
 
 /**
- * @internalTechnology
  *
  * Detachs a debug agent from every process being debugged. Used when a debug agent is being detached
  * from the debug security server and has not supplied a specific process name from which to detach.
@@ -287,7 +283,6 @@ TInt DProcessTracker::DetachAgent(const TUint64 aAgentId)
 	}
 
 /**
- * @internalTechnology
  *
  * Returns a pointer to a DTargetProcess object representing the mapping of a debugged process
  * with all the relevant debug agents interested in that process, as determined
@@ -330,7 +325,6 @@ DTargetProcess* DProcessTracker::FindProcess(const TDesC8& aProcessName) const
 	}
 
 /**
- * @internalTechnology
  *
  * Returns a pointer to a DTargetProcess object representing the mapping of a debugged process
  * with all the relevant debug agents interested in that process, as determined

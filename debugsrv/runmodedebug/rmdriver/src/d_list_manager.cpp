@@ -1,7 +1,7 @@
 // Copyright (c) 2007-2009 Nokia Corporation and/or its subsidiary(-ies).
 // All rights reserved.
 // This component and the accompanying materials are made available
-// under the terms of the License "Eclipse Public License v1.0"
+// under the terms of "Eclipse Public License v1.0"
 // which accompanies this distribution, and is available
 // at the URL "http://www.eclipse.org/legal/epl-v10.html".
 //
@@ -411,7 +411,6 @@ TInt TListManager::GetGlobalCodeSegList(TDes8& aBuffer, TUint32& aDataSize) cons
 				return err;
 				}
 			//calculate data values
-			TFileName fileName(codeSeg->iFileName->Ptr());
 			TBool isXip = (TBool)(codeSeg->iXIP);
 
 			//get the code seg type, can ignore error as have already checked codeSeg is not NULL
@@ -424,7 +423,7 @@ TInt TListManager::GetGlobalCodeSegList(TDes8& aBuffer, TUint32& aDataSize) cons
 
 			TUint32 uid3 = codeSeg->iUids.iUid[2].iUid;
 			//append data to buffer
-			err = AppendCodeSegData(aBuffer, aDataSize, memoryInfo, isXip, type, fileName, uid3);
+			err = AppendCodeSegData(aBuffer, aDataSize, memoryInfo, isXip, type, *codeSeg->iFileName, uid3);
 			if(err != KErrNone)
 				{
 				// Release the codeseglock mutex again
@@ -526,7 +525,6 @@ TInt TListManager::GetCodeSegListForProcess(TDes8& aBuffer, TUint32& aDataSize, 
 			err = codeSeg->GetMemoryInfo(memoryInfo, NULL);
 			if (err) break;
 
-			TFileName fileName(codeSeg->iFileName->Ptr());
 			TBool isXip = (TBool)(codeSeg->iXIP);
 
 			//get the code seg type, can ignore error as have already checked codeSeg is not NULL
@@ -539,7 +537,7 @@ TInt TListManager::GetCodeSegListForProcess(TDes8& aBuffer, TUint32& aDataSize, 
 
 			TUint32 uid3 = codeSeg->iUids.iUid[2].iUid;
 			//append data to buffer
-			err = AppendCodeSegData(aBuffer, aDataSize, memoryInfo, isXip, type, fileName, uid3);
+			err = AppendCodeSegData(aBuffer, aDataSize, memoryInfo, isXip, type, *codeSeg->iFileName, uid3);
 			if (err) break;
 			}
 		}

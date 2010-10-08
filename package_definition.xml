@@ -17,9 +17,12 @@
         <unit bldFile="perfsrv/piprofiler/group"/>
       </component>
     </collection>
-    <collection id="tracefw" name="Trace Framework" level="trace">
-      <component id="tracecompiler" filter="s60" name="TraceCompiler" purpose="development">
-        <unit bldFile="tracefw/tracecompiler/group"/>
+    <collection id="tracesrv" name="Trace Services" level="trace">
+      <component id="tracecompiler" filter="s60" name="Trace Compiler" purpose="development">
+        <unit bldFile="tracesrv/tracecompiler/group"/>
+      </component>
+      <component id="tracecore" filter="s60" name="Trace Core" purpose="development">
+        <unit bldFile="tracesrv/tracecore/group"/>
       </component>
     </collection>
   </package>

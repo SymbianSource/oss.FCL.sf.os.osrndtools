@@ -1,0 +1,38 @@
+// Copyright (c) 2010 Nokia Corporation and/or its subsidiary(-ies).
+// All rights reserved.
+// This component and the accompanying materials are made available
+// under the terms of "Eclipse Public License v1.0"
+// which accompanies this distribution, and is available
+// at the URL "http://www.eclipse.org/legal/epl-v10.html".
+//
+// Initial Contributors:
+// Nokia Corporation - initial contribution.
+//
+// Contributors:
+//
+// Description:
+// Generic MMH file for TraceCore tests
+//
+
+#include "../../../../group/tracecore.hrh"
+
+OS_LAYER_SYSTEMINCLUDE
+
+userinclude         ../inc
+userinclude         ../../d_tracecore/inc
+userinclude         ../../../inc
+userinclude         ../../inc
+
+sourcepath          ../src
+source              t_tracecore.cpp 
+
+LIBRARY             euser.lib
+LIBRARY             tracecore.lib		
+LIBRARY             tracedataparser.lib 
+        
+// Define so macro implementations will not be empty
+// although trace compiler isn't actually being run
+// for this test
+MACRO OST_TRACE_COMPILER_IN_USE
+
+SMPSAFE

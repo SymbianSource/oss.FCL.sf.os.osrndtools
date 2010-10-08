@@ -1,0 +1,38 @@
+// Copyright (c) 2007-2010 Nokia Corporation and/or its subsidiary(-ies).
+// All rights reserved.
+// This component and the accompanying materials are made available
+// under the terms of "Eclipse Public License v1.0"
+// which accompanies this distribution, and is available
+// at the URL "http://www.eclipse.org/legal/epl-v10.html".
+//
+// Initial Contributors:
+// Nokia Corporation - initial contribution.
+//
+// Contributors:
+//
+// Description:
+
+#include "TraceCoreRegisterWriter.h"
+
+/**
+ * InterrupsDisabled
+ * Check if interrupts IRQ/FIQ disabled
+ * Return 0x08 if only IRQ disabled, 0x04 if only FIQ disabled, 0x0C if both disabled.
+ * @return true if interrupt(s) disabled, otherwise 0 (false)
+ */
+/*EXPORT_C*/ __NAKED__ TUint32 DTraceCoreRegisterWriter::InterruptsDisabled() 
+    {
+    // save work regs
+    asm( "stmfd sp!, {r2, r4}" );
+	
+    // check if interrupts disabled
+    asm( "mrs r2,cpsr" );
+    asm( "and r0,r2,#0xc0" ); // 0b11000000 IRQ disabled bit 7, FIQ disabled bit 6
+		
+    // restore work regs
+    asm( "ldmfd sp!,{r2,r4}" );
+	
+    // move pc,lr
+    asm( "bx lr" );
+    }
+

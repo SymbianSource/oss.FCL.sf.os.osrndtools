@@ -1,7 +1,7 @@
 // Copyright (c) 2004-2010 Nokia Corporation and/or its subsidiary(-ies).
 // All rights reserved.
 // This component and the accompanying materials are made available
-// under the terms of the License "Eclipse Public License v1.0"
+// under the terms of "Eclipse Public License v1.0"
 // which accompanies this distribution, and is available
 // at the URL "http://www.eclipse.org/legal/epl-v10.html".
 //
@@ -13,14 +13,6 @@
 // Description:
 // Refactored class containing breakpoint related code from rm_debug_kerneldriver.cpp
 //
-
-
-
-/**
- @file
- @internalComponent
- @released
-*/
 
 #ifndef D_RMD_BREAKPOINTS_H
 #define D_RMD_BREAKPOINTS_H
@@ -125,7 +117,6 @@ public:
 	TInt		iNumSteps;
 };
 /**
-@internalTechnology
 
 This class encapsulates all the data concerning run-mode and stop mode breakpoints
 as understood by the run-mode and stop-mode debug system.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api id="e057f0af34c6153438db9d7dbc71f1f2" dataversion="2.0">
+  <name>run_mode_debug_api</name>
+  <description>Run Mode Debug API</description>
+  <type>c++</type>
+  <collection>debugsrv</collection>
+  <libs/>
+  <release category="platform" sinceversion=""/>
+  <attributes>
+    <htmldocprovided>no</htmldocprovided>
+    <adaptation>no</adaptation>
+  </attributes>
+</api>

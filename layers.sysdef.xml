@@ -8,8 +8,11 @@
     <layer name="os_layer">
       <module name="osrndtools">
         <component name="tracecompiler">
-          <unit unitID="tools.tracecompiler" mrp="" bldFile="&layer_real_source_path;/tracefw/tracecompiler/group" name="tracecompiler" />
+          <unit unitID="tools.tracecompiler" mrp="" bldFile="&layer_real_source_path;/tracesrv/tracecompiler/group" name="tracecompiler" />
         </component>
+        <component name="tracecore">
+        	<unit unitID="tools.tracecore" mrp="" bldFile="&layer_real_source_path;/tracesrv/tracecore/group" name="tracecore" />
+      	</component>
         <component name="runmodedebug">
           <unit unitID="tools.runmodedebug" mrp="" bldFile="&layer_real_source_path;/debugsrv/runmodedebug/group" name="runmodedebug" />
         </component>       

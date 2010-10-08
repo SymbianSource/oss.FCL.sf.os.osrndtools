@@ -1,7 +1,7 @@
 // Copyright (c) 2004-2010 Nokia Corporation and/or its subsidiary(-ies).
 // All rights reserved.
 // This component and the accompanying materials are made available
-// under the terms of the License "Eclipse Public License v1.0"
+// under the terms of "Eclipse Public License v1.0"
 // which accompanies this distribution, and is available
 // at the URL "http://www.eclipse.org/legal/epl-v10.html".
 //
@@ -39,7 +39,7 @@
 
 using namespace Debug;
 
-/* @internalTechnology
+/**
  *
  * Checks whether aAddress is correctly aligned for placing a breakpoint of
  * cpu architecture aMode.
@@ -89,7 +89,7 @@ TBool D_RMD_Breakpoints::Aligned(TUint32 aAddress, Debug::TArchitectureMode aMod
 	return ETrue;
 	};
 
-/* @internalTechnology
+/**
  *
  * Returns the size of a breakpoint of architecture aMode in bytes
  * 
@@ -121,7 +121,7 @@ TInt D_RMD_Breakpoints::BreakSize(Debug::TArchitectureMode aMode)
 		}
 	};
 
-/* @internalTechnology
+/**
  *
  * Checks whether two TBreakEntrys overlap
  *
@@ -163,7 +163,7 @@ TBool D_RMD_Breakpoints::BreakpointsOverlap(TBreakEntry& aFirst, TBreakEntry& aS
 	return ETrue;
 	}
 
-/* @internalTechnology
+/**
  * 
  * Returns the breakpoint bitpattern to use for each architecture type
  *

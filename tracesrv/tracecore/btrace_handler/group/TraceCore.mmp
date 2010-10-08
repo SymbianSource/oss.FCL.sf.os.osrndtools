@@ -1,0 +1,72 @@
+// Copyright (c) 2007-2010 Nokia Corporation and/or its subsidiary(-ies).
+// All rights reserved.
+// This component and the accompanying materials are made available
+// under the terms of "Eclipse Public License v1.0"
+// which accompanies this distribution, and is available
+// at the URL "http://www.eclipse.org/legal/epl-v10.html".
+//
+// Initial Contributors:
+// Nokia Corporation - initial contribution.
+//
+// Contributors:
+//
+// Description:
+// Trace Core 
+//
+// mmp file that builds the tracecore with a KEXT entry point
+
+#include "tracecore.mmh"
+
+targettype      KEXT
+target          tracecore.dll
+uid             0 0x20010221
+capability      all
+vendorid        VID_DEFAULT
+
+deffile         ../~/tracecore.def
+
+OS_LAYER_SYSTEMINCLUDE
+
+userinclude     ../inc
+userinclude     ../traces
+
+sourcepath      ../src
+
+source          TraceCore.cpp
+source          TraceCoreMediaIf.cpp
+source          TraceCorePluginIf.cpp
+source          TraceCoreMediaPlugin.cpp
+source          TraceCoreSendReceive.cpp
+source          TraceCoreRouter.cpp
+source          TraceCoreSubscriber.cpp
+source          TraceCoreWriter.cpp
+source          TraceCoreMediaSWriter.cpp
+source          TraceCoreHandler.cpp
+source          TraceCorePrintfTraceHandler.cpp
+source          TraceCoreBTraceHandler.cpp
+source          BTraceCategoryHandler.cpp
+source          TraceCoreInternalMessageHandler.cpp
+source          TraceCoreActivationBase.cpp
+source          TraceCoreTraceActivationIf.cpp
+source          BTraceKernelCategoryHandler.cpp
+source          TraceCoreSettings.cpp
+source          BTraceOstCategoryHandler.cpp
+source          BTraceOstCategoryBitmap.cpp
+source          TraceCoreNotificationReceiver.cpp
+source          TraceCoreNotifier.cpp
+source          TraceCoreConfiguration.cpp
+source          TraceCoreMessageUtils.cpp
+source          TraceCoreOstLddIf.cpp
+source 			tracecore_ext.cpp
+
+library         trace_certification.lib
+
+#if !defined( SMP )
+exportlibrary   tracecore.lib
+#else
+noexportlibrary
+#endif
+
+epocallowdlldata
+SMPSAFE
+macro	USE_OPTIMIZED_WRITE

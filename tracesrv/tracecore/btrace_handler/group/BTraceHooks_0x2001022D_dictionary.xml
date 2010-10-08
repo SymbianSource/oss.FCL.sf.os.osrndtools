@@ -1,0 +1,1300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+Copyright (c) 2007-2010 Nokia Corporation and/or its subsidiary(-ies).
+All rights reserved.
+This component and the accompanying materials are made available
+under the terms of "Eclipse Public License v1.0"
+which accompanies this distribution, and is available
+at the URL "http://www.eclipse.org/legal/epl-v10.html".
+
+Initial Contributors:
+Nokia Corporation - initial contribution.
+
+Contributors:
+
+Description:
+BTrace Kernel trace dictionary
+ 
+ -->
+<tracedictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="DictionarySchema.xsd">
+	<typedefs>
+		<object type="S32" size="4" formatchar="d" classification="integer"/>
+		<object type="H32" size="4" formatchar="x" classification="hex"/>
+		<object type="U32" size="4" formatchar="u" classification="integer"/>
+		<object type="S16" size="2" formatchar="hd" classification="integer"/>
+		<object type="H16" size="2" formatchar="hx" classification="hex"/>
+		<object type="U16" size="2" formatchar="hu" classification="integer"/>
+		<object type="S8" size="1" formatchar="hhd" classification="integer"/>
+		<object type="H8" size="1" formatchar="hhx" classification="hex"/>
+		<object type="U8" size="1" formatchar="hhu" classification="integer"/>
+		<object type="S64" size="8" formatchar="Ld" classification="integer"/>
+		<object type="H64" size="8" formatchar="Lx" classification="hex"/>
+		<object type="U64" size="8" formatchar="Lu" classification="integer"/>
+		<object type="ASCII" size="1" formatchar="s" classification="string"/>
+		<object type="UNICODE" size="2" formatchar="S" classification="string"/>
+	</typedefs>
+	<data>
+	
+	  <!-- SYMBIAN_KERNEL_THREAD_IDENTIFICATION traces -->
+		<def id="1" type="string">NThread created;NThread:0x%x</def>
+		<def id="2" type="string">NThread destroyed;NThread:0x%x</def>
+		<def id="3" type="string">Thread created;NThread:0x%x;DProcess:0x%x;Name:%{ASCII}</def>
+		<def id="4" type="string">Thread destroyed;NThread:0x%x;DProcess:0x%x;RThread ID:%u</def>
+		<def id="5" type="string">Thread name assigned;NThread:0x%x;DProcess:0x%x;Name:%{ASCII}</def>
+		<def id="6" type="string">Process name assigned;NThread:0x%x;DProcess:0x%x;Name:%{ASCII}</def>
+		<def id="7" type="string">Thread ID assigned;NThread:0x%x;DProcess:0x%x;RThread ID:%u</def>
+		<def id="8" type="string">Process created;DProcess:0x%x</def>
+		<def id="9" type="string">Process destroyed;DProcess:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_CPU_USAGE traces -->
+		<def id="51" type="string">Irq start</def>
+		<def id="52" type="string">Irq end</def>
+		<def id="53" type="string">Fiq start</def>
+		<def id="54" type="string">Fiq end</def>
+		<def id="55" type="string">IDFC start</def>
+		<def id="56" type="string">IDFC end</def>
+		<def id="57" type="string">New context</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_CLIENT_SERVER traces -->
+		<def id="101" type="string">Server created;DServer:0x%x;DThread:0x%x;Name:%{ASCII}</def>
+		<def id="102" type="string">Server destroyed;DServer:0x%x</def>
+		<def id="103" type="string">Session attached;DSession:0x%x;DServer:0x%x;DObject:0x%x</def>
+		<def id="104" type="string">Session detached;DSession:0x%x;Reason:%d</def>
+		<def id="105" type="string">Message sent;Message handle:0x%x;iFunction:0x%x;DSession:0x%x</def>
+		<def id="106" type="string">Message received;Message handle:0x%x</def>
+		<def id="107" type="string">MessageComplete;Message handle:0x%x;Reason:%d</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_REQUESTS traces -->
+		<def id="151" type="string">Request completed;Signalled NThread:0x%x;TRequestStatus:0x%x;Reason:%d</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_CHUNKS traces -->
+		<def id="201" type="string">Chunk created;DChunk:0x%x;Max Size:%u;Name:%{ASCII}</def>
+		<def id="202" type="string">Chunk info;DChunk:0x%x;Type:%u;Attributes:0x%x</def>
+		<def id="203" type="string">Chunk destroyed;DChunk:0x%x</def>
+		<def id="204" type="string">Allocated memory from chunk;DChunk:0x%x;Block offset:0x%x;Block size:%u</def>
+		<def id="205" type="string">Deallocated memory from chunk;DChunk:0x%x;Block offset:0x%x;Block size:%u</def>
+		<def id="206" type="string">Committed memory to chunk;DChunk:0x%x;Block offset:0x%x;Block size:%u</def>
+		<def id="207" type="string">Decommitted memory from chunk;DChunk:0x%x;Block offset:0x%x;Block size:%u</def>
+		<def id="208" type="string">Chunk owner;DChunk:0x%x;DProcess:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_CODE_SEGS traces -->
+		<def id="251" type="string">Code segment associated to file;DCodeSeg:0x%x;Name:%{ASCII}</def>
+		<def id="252" type="string">Code segment created;DCodeSeg:0x%x;Attributes:0x%x;text address:0x%x;text size:%u;rodata address:0x%x;rodata size:%u;data address:0x%x;data size:%u;bss address:0x%x;bss size:%u</def>
+		<def id="253" type="string">Code segment destroyed;DCodeSeg:0x%x</def>
+		<def id="254" type="string">Code segment mapped;DCodeSeg:0x%x;DProcess:0x%x</def>
+		<def id="255" type="string">Code segment unmapped;DCodeSeg:0x%x;DProcess:0x%x</def>
+		<def id="256" type="string">Memory allocated to code segment;DCodeSeg:0x%x;Block size:%u</def>
+		<def id="257" type="string">Memory deallocated from code segment;DCodeSeg:0x%x;Block size:%u</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_PAGING traces -->
+		<def id="301" type="string">Page in begin;Address:0x%x;pc:0x%x</def>
+		<def id="302" type="string">Page in unneeded</def>
+		<def id="303" type="string">Page in ROM;PhysAddr:0x%x;VirtualAddr:0x%x</def>
+		<def id="304" type="string">Page out ROM;PhysAddr:0x%x;VirtualAddr:0x%x</def>
+		<def id="305" type="string">Page in free;PhysAddr:0x%x</def>
+		<def id="306" type="string">Page out free;PhysAddr:0x%x</def>
+		<def id="307" type="string">Rejuvenate;PhysAddr:0x%x;VirtualAddr:0x%x;pc:0x%x</def>
+		<def id="308" type="string">Page nop;x;PhysAddr:0x%x;VirtualAddr:0x%x;pc:0x%x</def>
+		<def id="309" type="string">Page lock;PhysAddr:0x%x;LockCount:0x%x</def>
+		<def id="310" type="string">Page unlock;PhysAddr:0x%x;LockCount:0x%x</def>
+		<def id="311" type="string">Page out cache;PhysAddr:0x%x;VirtualAddr:0x%x</def>
+		<def id="312" type="string">Page in code;PhysAddr:0x%x;VirtualAddr:0x%x</def>
+		<def id="313" type="string">Page out code;PhysAddr:0x%x;VirtualAddr:0x%x</def>
+		<def id="314" type="string">Page map code;PhysAddr:0x%x;VirtualAddr:0x%x</def>
+		<def id="315" type="string">Page aged;PhysAddr:0x%x</def>
+		<def id="316" type="string">Page decompress start;Compression type:%d</def>
+		<def id="317" type="string">Page decompress end</def>
+		<def id="318" type="string">Page memory model %d</def>
+		<def id="319" type="string">Page donated to cache via RChunk::Unlock();Chunk ID:0x%x;Index:%d</def>
+		<def id="320" type="string">Page reclaimed from cache via RChunk::Lock();Chunk ID:0x%x;Index:%d</def>
+		<def id="321" type="string">Page has been paged in;PhysAddr:0x%x;Memory object ID:%x;Index:%d</def>
+		<def id="322" type="string">Page has been paged out;PhysAddr:0x%x</def>
+		<def id="323" type="string">Page in activity terminated. Page already paged but not mapped;PhysAddr:0x%x</def>
+		<def id="324" type="string">Page donated to the cache via RChunk::Unlock();PhysAddr:0x%x;Memory object ID:%x;Index:%d</def>
+		<def id="325" type="string">Page reclaimed from cache via RChunk::Lock();PhysAddr ID:0x%x</def>
+		<def id="326" type="string">Page moved to oldest clean list because it was the last old page and it was clean;PhysAddr:0x%x</def>
+		<def id="327" type="string">Page moved to oldest dirty list because it was the last old page and it was dirty;PhysAddr:0x%x</def>
+		<def id="328" type="string">Page allocated to hold the MMU page tables required to map demand paged memory;PhysAddr:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_THREAD_PRIORITY traces -->
+		<def id="351" type="string">NThread priority changed;NThread:0x%x;Priority:%d</def>
+		<def id="352" type="string">DThread priority changed;NThread:0x%x;iThreadPriority:%d;Priority:%d</def>
+		<def id="353" type="string">Process priority changed;DProcess:0x%x;Priority:%d</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_PAGING_MEDIA traces -->
+		<def id="401" type="string">Page in begin;Write address:0x%x;Partition offset:%u;Num bytes read:%u;Drive:%d;Object address:0x%x</def>
+		<def id="402" type="string">Paged in;Object address:0x%x;Completion code:%d;Request Id:%d</def>
+		<def id="403" type="string">Page in deferred;Object address:0x%x;Request Id:%d</def>
+		<def id="404" type="string">Page in deferred reposted;Object address:0x%x;Request Id:%d</def>
+		<def id="405" type="string">Page in re-deferred;Object address:0x%x;Request Id:%d</def>
+		<def id="406" type="string">Page in quietly deferred;Object address:0x%x;Media state:%d;Request Id:%d</def>
+		<def id="407" type="string">Fragment begin;Object address:0x%x;Fragment Id:%u;Fragment length:%u;Fragment offset:%u;Partition offset:%u;DThread:0x%x</def>
+		<def id="408" type="string">Fragment end;Object address:0x%x;Completion code:%u</def>
+		<def id="409" type="string">Driver begin;Media device:%d;Object address:0x%x</def>
+		<def id="410" type="string">Driver write back;Media device:%d;Object address:0x%x;Buffer address:0x%x;Buffer offset:%u;Write length:%u</def>
+		<def id="411" type="string">Driver on-hold;Media device:%d;Object address:0x%x</def>
+		<def id="412" type="string">Data read by a 'page out' request is read from buffer;Type:%d;ObjectAddr:0x%x;BufAddr:0x%x;Offset:%d;Length:%d</def>
+		<def id="413" type="string">Data read by a 'page out' request is read from buffer;Type:%d;ObjectAddr:0x%x;BufAddr:0x%x;Offset:%d;Length:%d</def>
+		<def id="414" type="string">Request to 'page out' data is received by Local Media Subsystem;BufAddr:0x%x;Offset:%d;Length:%d;ObjectAddr:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_KERNEL_MEMORY traces -->
+		<def id="451" type="string">Initial free RAM;Bytes:%d</def>
+		<def id="452" type="string">Current free RAM;Bytes:%d</def>
+		<def id="453" type="string">Misc kernel allocation;Size:%d</def>
+		<def id="454" type="string">Misc kernel free;Size:%d</def>
+		<def id="455" type="string">Demand paging cache;Size:%d</def>
+		<def id="456" type="string">Physical RAM allocation;Size:%d;Address:0x%x</def>
+		<def id="457" type="string">Physical RAM free;Size:%d;Address:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_HEAP traces -->
+		<def id="501" type="string">Heap create;Heap ID:0x%x;Heap header overhead:%hd;Heap footer overhead:%hd</def>
+		<def id="502" type="string">Heap chunk create;Heap ID:0x%x;Chunk ID:0x%x</def>
+		<def id="503" type="string">Heap allocation;Heap ID:0x%x;Address:0x%x;Size:%d;Requested size:%d</def>
+		<def id="504" type="string">Heap reallocation;Heap ID:0x%x;Address:0x%x;Size:%d;Requested size:%d;Old address:0x%x</def>
+		<def id="505" type="string">Heap free;Heap ID:0x%x;Address:0x%x</def>
+		<def id="506" type="string">RHeap::Alloc() failed;Heap ID:0x%x;Requested size:%d</def>
+		<def id="507" type="string">RHeap::ReAlloc() failed;Heap ID:0x%x;Address:0x%x;Requested size:%d</def>
+		<def id="508" type="string">Heap memory corrupted;Heap ID:0x%x;Address:0x%x;Length:%d</def>
+		<def id="509" type="string">Heap call stack;Heap ID:0x%x;CallStack:%{S32[]}</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_META_TRACE traces -->
+		<def id="551" type="string">Timestamp info;Timestamp:%d;Timestamp2:%d;Flags:%d</def>
+		<def id="552" type="string">Measurement start;Value:%d;FurtherValue:%d;Info:%{ASCII}</def>
+		<def id="553" type="string">Measurement end;Value:%d;FurtherValue:%d</def>
+		<def id="554" type="string">Filter change;Category:%hhd;Filter:%hhd</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_RAM_ALLOCATOR traces -->
+		<def id="601" type="string">Number of RAM zones;Count:%d</def>
+		<def id="602" type="string">RAM zone info;PageCount:%d;PhysAddr:0x%x;ID:0x%x;Preference:%hhd;Flags:%hhd</def>
+		<def id="603" type="string">Boot allocation;AllocCount:%d;PhysAddr:0x%x</def>
+		<def id="604" type="string">Boot allocation end</def>
+		<def id="605" type="string">Flags modified;ZoneID:0x%x;Flags:%d</def>
+		<def id="606" type="string">RAM Pages claimed;NrOfPages:%d;BaseAddr:0x%x</def>
+		<def id="607" type="string">Mark allocated;PageType:%d;Addr:0x%x</def>
+		<def id="608" type="string">Contiguous RAM allocated;PageType:%d;NrOfPages:%d;BaseAddr:0x%x</def>
+		<def id="609" type="string">RAM page freed;PageType:%d;Addr:0x%x</def>
+		<def id="610" type="string">Contiguous RAM freed;NrOfPages:%d;BaseAddr:0x%x</def>
+		<def id="611" type="string">Allocate RAM pages;PageType:%d;NrOfPages:%d;BaseAddr:0x%x</def>
+		<def id="612" type="string">Free RAM pages;PageType:%d;NrOfPages:%d;BaseAddr:0x%x</def>
+		<def id="613" type="string">All pages allocated</def>
+		<def id="614" type="string">All pages freed</def>
+		<def id="615" type="string">Page type changed;NewPageType:%d;PhysAddr:0x%x</def>
+		<def id="616" type="string">Required pages allocated;PageType:%d;NrOfPages:%d;PhysAddr:0x%x</def>
+		<def id="617" type="string">All requested pages allocated</def>
+		<def id="618" type="string">Requested zone claimed;ID:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_FAST_MUTEX traces -->
+		<def id="651" type="string">Acquire mutex;ID:0x%x</def>
+		<def id="652" type="string">Release mutex;ID:0x%x</def>
+		<def id="653" type="string">Mutex flashed;ID:0x%x</def>
+		<def id="654" type="string">Mutex name;ID:0x%x;Unspecified:0x%x;Name:%{ASCII}</def>
+		<def id="655" type="string">Thread blocks on a fast mutex;ID:0x%x</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_PROFILING traces -->
+		<def id="701" type="string">CPUFullSample;PC:0x%x;NThread:0x%x</def>
+		<def id="702" type="string">CpuOptimisedSample;PC:0x%x</def>
+		<def id="703" type="string">IDfcSample;PC:0x%x</def>
+		<def id="704" type="string">NonSymbianThreadSample</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_RESOURCE_MANAGER traces -->
+		<def id="751" type="string">Resource registration;ID:%d;Addr:0x%x;Data:0x%{H8[]}</def>
+		<def id="752" type="string">Client registration;ClientId:%d;Addr:0x%x;Name:%s</def>
+		<def id="753" type="string">Client deregistration;ClientId:%d;Addr:0x%x;Name:%s</def>
+		<def id="754" type="string">Resource state change start operation;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="755" type="string">Resource state change end operation;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="756" type="string">Registration for post notification;ClientId:%d;Resource ID:%d;CallbackAddr:0x%x;RetVal:%d</def>
+		<def id="757" type="string">Deregistration for post notification;ClientId:%d;Resource ID:%d;CallbackAddr:0x%x;RetVal:%d</def>
+		<def id="758" type="string">Post notification sent;ClientId:%d;Resource ID:%d</def>
+		<def id="759" type="string">Callback complete;ClientId:%d;Resource ID:%d</def>
+		<def id="760" type="string">Resource manager memory usage;Memory allocated:%d bytes</def>
+		<def id="761" type="string">Get resource state start operation;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="762" type="string">Get resource state end operation;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="763" type="string">Cancellation of long latency operation;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="764" type="string">Booting of resource manager;Entry point:0x%x</def>
+		<def id="765" type="string">PSL resource state change operation start;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="766" type="string">PSL resource state change operation end;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="767" type="string">Get resource state start operation in PSL;ClientId:%d;Resource ID:%d;Name:%s</def>
+		<def id="768" type="string">Get resource state end operation in PSL;ClientId:%d;Resource ID:%d;Data:0x%{H8[]}</def>
+		<def id="769" type="string">Resource creation;MinValue:%d;MaxValue:%d;DefaultValue:%d;Properties:%d;Name:%s</def>
+		<def id="770" type="string">Static resource with dependency registration;ResourceId:%d;Addr:0x%x;Data:0x%{H8[]}</def>
+		<def id="771" type="string">Dynamic resource registration;ClientId:%d;ResourceId:%d;Data:0x%{H8[]}</def>
+		<def id="772" type="string">Dynamic resource deregistration;ClientId:%d;ResourceId:%d;Data:0x%{H8[]}</def>
+		<def id="773" type="string">Resource dependency registration;ClientId:%d;ResourceId:%d;Data:0x%{H8[]}</def>
+		<def id="774" type="string">Resource dependency deregistration;ClientId:%d;ResourceId:%d;Data:0x%{H8[]}</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_RESOURCE_MANAGER_US traces -->
+		<def id="801" type="string">Start opening channel;Unused:%d;ClientThreadId:0x%x;Name:%s</def>
+		<def id="802" type="string">End opening channel;Unused:%d;ClientId:%d;Name:%s</def>
+		<def id="803" type="string">Start registering client;SupportedOps:%d;SupportedNotifications:%d;Data:0x%{H8[]}</def>
+		<def id="804" type="string">End registering client;ClientId:%d;ReturnValue:%d</def>
+		<def id="805" type="string">Start de-registering client;Unused:%d;ClientId:%d;Name:%s</def>
+		<def id="806" type="string">End de-registering client;ClientId:%d</def>
+		<def id="807" type="string">Start of a GetResourceState request;ResourceId:%d;ClientId:%d;Name:%s</def>
+		<def id="808" type="string">End of a GetResourceState request;ResourceId:%d;ResourceLevel:%d;ClientId:%d;RetVal:%d</def>
+		<def id="809" type="string">Start of a ChangeResourceState request;ResourceId:%d;RequiredState:%d;Data:0x%{H8[]}</def>
+		<def id="810" type="string">End of a ChangeResourceState request;ResourceId:%d;RequestedState:%d;ClientId:%d;RetVal:%d</def>
+		<def id="811" type="string">Start of a cancel GetResourceState request;ResourceId:%d;ClientId:%d;Name:%s</def>
+		<def id="812" type="string">End of a cancel GetResourceState request;ResourceId:%d;ClientId:%d;Name:%s</def>
+		<def id="813" type="string">Start of a cancel ChangeResourceState request;ResourceId:%d;ClientId:%d;Name:%s</def>
+		<def id="814" type="string">End of a cancel ChangeResourceState request;ResourceId:%d;ClientId:%d;Name:%s</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_RAW_EVENT traces -->
+		<def id="851" type="string">Padding trace, enum starts from trace number 1</def>
+		<def id="852" type="string">Set Function in the TRawEvent class;Data:0x%{H8[]}</def>
+		<def id="853" type="string">User side SetTip Event;Tip info:%d</def>
+		<def id="854" type="string">SetTilt Event;Event type:%d;Phi polar coordinate:%d;Theta polar coordinate:%d</def>
+		<def id="855" type="string">SetRotation Event;Event type:%d;Rotation angle:%d</def>
+		<def id="856" type="string">SetPointerNumber Event;Pointer number:%d</def>
+		<def id="857" type="string">User side addevent (User::AddEvent);Event type:%d</def>
+		<def id="858" type="string">Kernel side addevent (Kern::AddEvent);Event type:%d</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_USB traces -->
+		<def id="901" type="string">Padding trace, no USB traces exist yet</def>
+	
+		
+		
+		<!-- SYMBIAN_KERNEL_SYNC traces -->
+		<def id="951" type="string">SemaphoreCreate;DSemaphore:0x%x;DProcess:0x%x;Name:%{ASCII}</def>
+		<def id="952" type="string">SemaphoreDestroy;DSemaphore:0x%x</def>
+		<def id="953" type="string">SemaphoreAcquire;DSemaphore:0x%x</def>
+		<def id="954" type="string">SemaphoreRelease;DSemaphore:0x%x</def>
+		<def id="955" type="string">SemaphoreBlock;DSemaphore:0x%x</def>
+		
+		<def id="956" type="string">MutexCreate;DMutex:0x%x;DProcess:0x%x;Name:%{ASCII}</def>
+		<def id="957" type="string">MutexDestroy;DMutex:0x%x</def>
+		<def id="958" type="string">MutexAcquire;DMutex:0x%x</def>
+		<def id="959" type="string">MutexRelease;DMutex:0x%x</def>
+		<def id="960" type="string">MutexBlock;DMutex:0x%x</def>
+		
+		<def id="961" type="string">CondVarCreate;DCondVar:0x%x;DProcess:0x%x;Name:%{ASCII}</def>
+		<def id="962" type="string">CondVarDestroy;DCondVar:0x%x</def>
+		<def id="963" type="string">CondVarBlock;DCondVar:0x%x;DMutex:0x%x</def>
+		<def id="964" type="string">CondVarWakeUp;DCondVar:0x%x;DMutex:0x%x</def>
+		<def id="965" type="string">CondVarSignal;DCondVar:0x%x;DMutex:0x%x</def>
+		<def id="966" type="string">CondVarBroadcast;DCondVar:0x%x;DMutex:0x%x</def>
+
+
+
+		<!-- SYMBIAN_KERNEL_FLEXIBLE_MEMMODEL traces -->
+		<def id="1001" type="string">Create memory object;DMemoryObject:0x%x;Size:0x%x</def>
+		<def id="1002" type="string">Destroy memory object;DMemoryObject:0x%x</def>
+		<def id="1003" type="string">Create memory mapping;DMemoryMapping:0x%x;DMemoryObject:0x%x;Offset:0x%x;Size:0x%x;ASID:0x%hx;Unspecified:0x%hx;VirtualAddr:0x%x;</def>
+		<def id="1004" type="string">Destroy memory mapping;DMemoryMapping:0x%x</def>
+		<def id="1005" type="string">Object is Chunk;DMemoryObject:0x%x;DChunk:0x%x</def>
+		<def id="1006" type="string">Object is CodeSeg;DMemoryObject:0x%x;DCodeSeg:0x%x</def>
+		<def id="1007" type="string">Object is Process static data;DMemoryObject:0x%x;DProcess:0x%x</def>
+		<def id="1008" type="string">Object is DLL static data;DMemoryObject:0x%x;DCodeSeg:0x%x;DProcess:0x%x</def>
+		<def id="1009" type="string">Object is threads supervisor stack;DMemoryObject:0x%x;DThread:0x%x</def>
+		<def id="1010" type="string">Object is user stack;DMemoryObject:0x%x;DThread:0x%x</def>
+		<def id="1011" type="string">Address Space ID;DMemoryObject:0x%x;ASID:0x%hx</def>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_IIC traces -->
+		<def id="1051" type="string">Register Chans Start PSL;Addr:0x%x;NrOfChans:%d</def>
+		<def id="1052" type="string">Register Chans Start PIL;Addr:0x%x;NrOfChans:%d;NrOfChansRegistered:%d</def>
+		<def id="1053" type="string">Register Chans End PIL;Addr:0x%x;NrOfChansRegistered:%d</def>
+		<def id="1054" type="string">Register Chans End PSL;Addr:0x%x;NrOfChansRegistered:%d;RetVal:%d</def>
+		<def id="1055" type="string">Deregister Chans Start PSL;Addr:0x%x</def>
+		<def id="1056" type="string">Deregister Chans Start PIL;Addr:0x%x;NrOfChansRegistered:%d</def>
+		<def id="1057" type="string">Deregister Chans End PIL;Addr:0x%x;NrOfChansRegistered:%d</def>
+		<def id="1058" type="string">Deregister Chans End PSL;Addr:0x%x;RetVal:%d</def>
+		<def id="1059" type="string">Sync queue transaction request Start PIL;BusVarToken:%d;TransObject:0x%x</def>
+		<def id="1060" type="string">Sync queue transaction request End PIL;BusVarToken:%d;RetVal:%d</def>
+		<def id="1061" type="string">Async queue transaction request Start PIL;BusVarToken:%d;TransObj:0x%x;CallbackObj:0x%x</def>
+		<def id="1062" type="string">Async queue transaction request End PIL;BusVarToken:%d;RetVal:%d</def>
+		<def id="1063" type="string">Cancel async queue transaction request Start PIL;BusVarToken:%d;TransObj:0x%x</def>
+		<def id="1064" type="string">Cancel async queue transaction request End PIL;TransObj:0x%x;RetVal:%d</def>
+		<def id="1065" type="string">Processing transaction request Start PIL;Addr:0x%x;TransObj:0x%x</def>
+		<def id="1066" type="string">Processing transaction request Start PSL;TransObj:0x%x</def>
+		<def id="1067" type="string">Processing transaction request End PSL;RetVal:%d</def>
+		<def id="1068" type="string">Processing transaction request End PIL;Addr:0x%x;TransObj:0x%x;RetVal:%d;CallbackObj:0x%x</def>
+		<def id="1069" type="string">Sync capturing Slave channel Start PIL;BusVarToken:%d;Configuration:0x%x</def>
+		<def id="1070" type="string">Sync capturing Slave channel Start PSL;Addr:0x%x;Configuration:0x%x</def>
+		<def id="1071" type="string">Sync capturing Slave channel End PSL;Addr:0x%x;RetVal:%d</def>
+		<def id="1072" type="string">Sync capturing Slave channel End PIL;BusVarToken:%d;ChanIdCookie:%d;RetVal:%d</def>
+		<def id="1073" type="string">ASync capturing Slave channel Start PIL;BusVarToken:%d;Configuration:0x%x;CallbackObj:0x%x</def>
+		<def id="1074" type="string">ASync capturing Slave channel Start PSL;ChannelObj:0x%x;Configuration:0x%x</def>
+		<def id="1075" type="string">ASync capturing Slave channel End PSL;ChannelObj:0x%x;RetVal:%d</def>
+		<def id="1076" type="string">ASync capturing Slave channel End PIL;ChannelObj:0x%x;RetVal:%d</def>
+		<def id="1077" type="string">Release Slave channel Start PIL;ChanIdCookie:%d</def>
+		<def id="1078" type="string">Release Slave channel Start PSL;ChannelObj:0x%x</def>
+		<def id="1079" type="string">Release Slave channel End PSL;ChannelObj:0x%x;RetVal:%d</def>
+		<def id="1080" type="string">Release Slave channel End PIL;ChanIdCookie:%d;RetVal:%d</def>
+		<def id="1081" type="string">Register RX buffer for Slave channel Start PIL;RXBuffer:0x%x;NrOfBytesPerWord:%d;NrOfWords:%d;Offset:%d</def>
+		<def id="1082" type="string">Register RX buffer for Slave channel Start PSL;ChannelObj:0x%x;RXBuffer:0x%x;NrOfBytesPerWord:%d;NrOfWords:%d;Offset:%d</def>
+		<def id="1083" type="string">Register RX buffer for Slave channel End PSL;ChannelObj:0x%x;RetVal:%d</def>
+		<def id="1084" type="string">Register RX buffer for Slave channel End PIL;RetVal:%d</def>
+		<def id="1085" type="string">Register TX buffer for Slave channel Start PIL;TXBuffer:0x%x;NrOfBytesPerWord:%d;NrOfWords:%d;Offset:%d</def>
+		<def id="1086" type="string">Register TX buffer for Slave channel Start PSL;ChannelObj:0x%x;TXBuffer:0x%x;NrOfBytesPerWord:%d;NrOfWords:%d;Offset:%d</def>
+		<def id="1087" type="string">Register TX buffer for Slave channel End PSL;ChannelObj:0x%x;RetVal:%d</def>
+		<def id="1088" type="string">Register TX buffer for Slave channel End PIL;RetVal:%d</def>
+		<def id="1089" type="string">Set notification for Slave channel Start PIL;ChanIdCookie:%d;TriggerVal:%d</def>
+		<def id="1090" type="string">Set notification for Slave channel Start PSL;TriggerVal:%d</def>
+		<def id="1091" type="string">Set notification for Slave channel End PSL;RetVal:%d</def>
+		<def id="1092" type="string">Set notification for Slave channel End PIL;ChanIdCookie:%d;RetVal:%d</def>
+		<def id="1093" type="string">StaticExtension operaton for MasterSlave channel Start PIL;IdToken:%d;FuncId:%d;arg1:%d;arg2:%d</def>
+		<def id="1094" type="string">StaticExtension operaton for MasterSlave channel End PIL;IdToken:%d;FuncId:%d;RetVal:%d</def>
+		<def id="1095" type="string">StaticExtension operaton for Master channel Start PIL;IdToken:%d;FuncId:%d;arg1:%d;arg2:%d</def>
+		<def id="1096" type="string">StaticExtension operaton for Master channel Start PSL;ChannelObj:0x%x;FuncId:%d;arg1:%d;arg2:%d</def>
+		<def id="1097" type="string">StaticExtension operaton for Master channel End PSL;ChannelObj:0x%x;FuncId:%d;RetVal:%d</def>
+		<def id="1098" type="string">StaticExtension operaton for Master channel End PIL;IdToken:%d;FuncId:%d;RetVal:%d</def>
+		<def id="1099" type="string">StaticExtension operaton for Slave channel Start PIL;IdToken:%d;FuncId:%d;arg1:%d;arg2:%d</def>
+		<def id="1100" type="string">StaticExtension operaton for Slave channel Start PSL;ChannelObj:0x%x;FuncId:%d;arg1:%d;arg2:%d</def>
+		<def id="1101" type="string">StaticExtension operaton for Slave channel End PSL;ChannelObj:0x%x;FuncId:%d;RetVal:%d</def>
+		<def id="1102" type="string">StaticExtension operaton for Slave channel End PSL;IdToken:%d;FuncId:%d;RetVal:%d</def>
+		
+		
+		<!-- PRINTF traces -->
+		<def id="2001" type="string">Printf;RThread ID:%u;Trace:%{ASCII}</def>
+		<def id="2002" type="string">Printf;RThread ID:%u;Trace:%{ASCII}</def>
+		<def id="2003" type="string">Printf;RThread ID:%u;Trace:%{ASCII}</def>
+		
+		
+	</data>
+	<locations>
+	</locations>
+	<component id="536937005" name="Symbian BTrace Hooks">		
+		
+		
+		<!-- SYMBIAN_KERNEL_THREAD_IDENTIFICATION traces -->
+		<group id="3" name="SYMBIAN_KERNEL_THREAD_IDENTIFICATION" prefix="Thread:">
+			<trace data-ref="1">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="2">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="3">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="4">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="5">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="6">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="7">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="8">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="9">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>						
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_CPU_USAGE traces -->
+		<group id="4" name="SYMBIAN_KERNEL_CPU_USAGE" prefix="Cpu:">
+			<trace data-ref="51">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="52">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="53">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="54">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="55">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="56">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="57">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_CLIENT_SERVER traces -->
+		<group id="6" name="SYMBIAN_KERNEL_CLIENT_SERVER" prefix="Client-Server:">
+			<trace data-ref="101">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="102">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="103">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="104">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="105">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="106">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="107">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_REQUESTS traces -->
+		<group id="7" name="SYMBIAN_KERNEL_REQUESTS" prefix="Requests:">
+			<trace data-ref="151">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_CHUNKS traces -->
+		<group id="8" name="SYMBIAN_KERNEL_CHUNKS" prefix="Chunks:">
+			<trace data-ref="201">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="202">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="203">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="204">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="205">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="206">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="207">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="208">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_CODE_SEGS traces -->
+		<group id="9" name="SYMBIAN_KERNEL_CODE_SEGS" prefix="CodeSegs:">
+			<trace data-ref="251">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="252">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="253">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="254">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="255">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="256">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="257">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_PAGING traces -->
+		<group id="10" name="SYMBIAN_KERNEL_PAGING" prefix="Paging:">
+			<trace data-ref="301">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="302">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="303">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="304">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="305">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="306">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="307">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="308">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="309">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="310">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="311">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="312">
+				<instance id="11" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="313">
+				<instance id="12" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="314">
+				<instance id="13" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="315">
+				<instance id="14" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="316">
+				<instance id="15" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="317">
+				<instance id="16" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="318">
+				<instance id="17" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="319">
+				<instance id="18" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="320">
+				<instance id="19" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="321">
+				<instance id="20" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="322">
+				<instance id="21" loc-ref="0" line="0"/>
+			</trace>																
+			<trace data-ref="323">
+				<instance id="22" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="324">
+				<instance id="23" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="325">
+				<instance id="24" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="326">
+				<instance id="25" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="327">
+				<instance id="26" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="328">
+				<instance id="27" loc-ref="0" line="0"/>
+			</trace>																						
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_THREAD_PRIORITY traces -->
+		<group id="11" name="SYMBIAN_KERNEL_THREAD_PRIORITY" prefix="Thread Priority:">
+			<trace data-ref="351">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="352">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="353">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_PAGING_MEDIA traces -->
+		<group id="12" name="SYMBIAN_KERNEL_PAGING_MEDIA" prefix="Paging Media:">
+			<trace data-ref="401">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="402">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="403">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="404">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="405">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="406">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="407">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="408">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="409">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="410">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="411">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="412">
+				<instance id="11" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="413">
+				<instance id="12" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="414">
+				<instance id="13" loc-ref="0" line="0"/>
+			</trace>									
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_KERNEL_MEMORY traces -->
+		<group id="13" name="SYMBIAN_KERNEL_KERNEL_MEMORY" prefix="Kernel Memory:">
+			<trace data-ref="451">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="452">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="453">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="454">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="455">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="456">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="457">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_HEAP traces -->
+		<group id="14" name="SYMBIAN_KERNEL_HEAP" prefix="Heap:">
+			<trace data-ref="501">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="502">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="503">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="504">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="505">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="506">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="507">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="508">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="509">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>												
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_META_TRACE traces -->
+		<group id="15" name="SYMBIAN_KERNEL_META_TRACE" prefix="Meta trace:">
+			<trace data-ref="551">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="552">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="553">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="554">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+		</group>	
+		
+		
+		<!-- SYMBIAN_KERNEL_RAM_ALLOCATOR traces -->
+		<group id="16" name="SYMBIAN_KERNEL_RAM_ALLOCATOR" prefix="RAM allocator:">
+			<trace data-ref="601">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="602">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="603">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="604">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="605">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="606">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="607">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="608">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="609">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="610">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="611">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="612">
+				<instance id="11" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="613">
+				<instance id="12" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="614">
+				<instance id="13" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="615">
+				<instance id="14" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="616">
+				<instance id="15" loc-ref="0" line="0"/>
+			</trace>									
+			<trace data-ref="617">
+				<instance id="16" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="618">
+				<instance id="17" loc-ref="0" line="0"/>
+			</trace>							
+		</group>		
+		
+		
+		<!-- SYMBIAN_KERNEL_FAST_MUTEX traces -->
+		<group id="17" name="SYMBIAN_KERNEL_FAST_MUTEX" prefix="Fast mutex:">
+			<trace data-ref="651">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="652">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="653">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="654">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="655">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>			
+		</group>	
+		
+		
+		<!-- SYMBIAN_KERNEL_PROFILING traces -->
+		<group id="18" name="SYMBIAN_KERNEL_PROFILING" prefix="Kernel profiling:">
+			<trace data-ref="701">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="702">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="703">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="704">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+		</group>	
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_RESOURCE_MANAGER traces -->
+		<group id="19" name="SYMBIAN_KERNEL_RESOURCE_MANAGER" prefix="Resource manager:">
+			<trace data-ref="751">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="752">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="753">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="754">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="755">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="756">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="757">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="758">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="759">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="760">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>		
+			<trace data-ref="761">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="762">
+				<instance id="11" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="763">
+				<instance id="12" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="764">
+				<instance id="13" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="765">
+				<instance id="14" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="766">
+				<instance id="15" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="767">
+				<instance id="16" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="768">
+				<instance id="17" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="769">
+				<instance id="18" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="770">
+				<instance id="19" loc-ref="0" line="0"/>
+			</trace>				
+			<trace data-ref="771">
+				<instance id="20" loc-ref="0" line="0"/>
+			</trace>		
+			<trace data-ref="772">
+				<instance id="21" loc-ref="0" line="0"/>
+			</trace>		
+			<trace data-ref="773">
+				<instance id="22" loc-ref="0" line="0"/>
+			</trace>		
+			<trace data-ref="774">
+				<instance id="23" loc-ref="0" line="0"/>
+			</trace>																																										
+		</group>			
+		
+		
+		
+		<!-- SYMBIAN_KERNEL_RESOURCE_MANAGER_US traces -->
+		<group id="20" name="SYMBIAN_KERNEL_RESOURCE_MANAGER_US" prefix="Resource manager US:">
+			<trace data-ref="801">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="802">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="803">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="804">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="805">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="806">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="807">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="808">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="809">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="810">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="811">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="812">
+				<instance id="11" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="813">
+				<instance id="12" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="814">
+				<instance id="13" loc-ref="0" line="0"/>
+			</trace>																																							
+		</group>			
+		
+		
+		<!-- SYMBIAN_KERNEL_RAW_EVENT traces -->
+		<group id="21" name="SYMBIAN_KERNEL_RAW_EVENT" prefix="Raw event:">
+			<trace data-ref="851">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="852">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="853">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="854">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="855">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="856">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="857">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="858">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>																					
+		</group>	
+		
+		
+		<!-- SYMBIAN_KERNEL_USB traces -->
+		<group id="22" name="SYMBIAN_KERNEL_USB" prefix="USB:">
+			<trace data-ref="901">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+		</group>						
+		
+		
+		<!-- SYMBIAN_KERNEL_SYNC traces -->
+		<group id="23" name="SYMBIAN_KERNEL_SYNC" prefix="Kernel sync:">
+			<trace data-ref="951">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="952">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="953">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="954">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="955">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="956">
+				<instance id="16" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="957">
+				<instance id="17" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="958">
+				<instance id="18" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="959">
+				<instance id="19" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="960">
+				<instance id="20" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="961">
+				<instance id="32" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="962">
+				<instance id="33" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="963">
+				<instance id="34" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="964">
+				<instance id="35" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="965">
+				<instance id="36" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="966">
+				<instance id="37" loc-ref="0" line="0"/>
+			</trace>									
+		</group>
+		
+
+		<!-- SYMBIAN_KERNEL_FLEXIBLE_MEMMODEL traces -->
+		<group id="24" name="SYMBIAN_KERNEL_FLEXIBLE_MEMMODEL" prefix="Flexible memmodel:">
+			<trace data-ref="1001">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1002">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1003">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1004">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1005">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1006">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1007">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1008">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1009">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1010">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1011">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>									
+		</group>
+		
+		
+		<!-- SYMBIAN_KERNEL_IIC traces -->
+		<group id="25" name="SYMBIAN_KERNEL_IIC" prefix="IIC:">
+			<trace data-ref="1051">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1052">
+				<instance id="1" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1053">
+				<instance id="2" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1054">
+				<instance id="3" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1055">
+				<instance id="4" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1056">
+				<instance id="5" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1057">
+				<instance id="6" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1058">
+				<instance id="7" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1059">
+				<instance id="8" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1060">
+				<instance id="9" loc-ref="0" line="0"/>
+			</trace>		
+			<trace data-ref="1061">
+				<instance id="10" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1062">
+				<instance id="11" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1063">
+				<instance id="12" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1064">
+				<instance id="13" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1065">
+				<instance id="14" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1066">
+				<instance id="15" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1067">
+				<instance id="16" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1068">
+				<instance id="17" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1069">
+				<instance id="18" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1070">
+				<instance id="19" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="1071">
+				<instance id="20" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1072">
+				<instance id="21" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1073">
+				<instance id="22" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1074">
+				<instance id="23" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1075">
+				<instance id="24" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1076">
+				<instance id="25" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1077">
+				<instance id="26" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1078">
+				<instance id="27" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1079">
+				<instance id="28" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1080">
+				<instance id="29" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="1081">
+				<instance id="30" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1082">
+				<instance id="31" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1083">
+				<instance id="32" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1084">
+				<instance id="33" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1085">
+				<instance id="34" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1086">
+				<instance id="35" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1087">
+				<instance id="36" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1088">
+				<instance id="37" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1089">
+				<instance id="38" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1090">
+				<instance id="39" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="1091">
+				<instance id="40" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1092">
+				<instance id="41" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1093">
+				<instance id="42" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1094">
+				<instance id="43" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1095">
+				<instance id="44" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1096">
+				<instance id="45" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1097">
+				<instance id="46" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1098">
+				<instance id="47" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1099">
+				<instance id="48" loc-ref="0" line="0"/>
+			</trace>
+			<trace data-ref="1100">
+				<instance id="49" loc-ref="0" line="0"/>
+			</trace>																																						
+			<trace data-ref="1101">
+				<instance id="50" loc-ref="0" line="0"/>
+			</trace>	
+			<trace data-ref="1102">
+				<instance id="51" loc-ref="0" line="0"/>
+			</trace>							
+		</group>				
+		
+		
+		<!-- PRINTF traces -->
+		<group id="0" name="TRACECORE_RDEBUG_PRINT" prefix="RDebug:">
+			<trace data-ref="2002">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		<group id="1" name="TRACECORE_KERN_PRINTF" prefix="Kern:">
+			<trace data-ref="2001">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		<group id="2" name="TRACECORE_PLATSEC_PRINTF" prefix="Platsec:">
+			<trace data-ref="2003">
+				<instance id="0" loc-ref="0" line="0"/>
+			</trace>
+		</group>
+		
+		
+	</component>
+</tracedictionary>

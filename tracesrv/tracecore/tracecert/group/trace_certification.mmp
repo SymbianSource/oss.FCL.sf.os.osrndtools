@@ -1,0 +1,33 @@
+// Copyright (c) 2010 Nokia Corporation and/or its subsidiary(-ies).
+// All rights reserved.
+// This component and the accompanying materials are made available
+// under the terms of "Eclipse Public License v1.0"
+// which accompanies this distribution, and is available
+// at the URL "http://www.eclipse.org/legal/epl-v10.html".
+//
+// Initial Contributors:
+// Nokia Corporation - initial contribution.
+//
+// Contributors:
+//
+// Description:
+//
+// TraceCertification
+// Kernel DLL containing functionality specifying if tracing is certified
+// This is stubbed out by always returning true
+
+#include        <kernel/kern_ext.mmh>
+
+target          trace_certification.dll
+targettype      KDLL
+linkas          trace_certification.dll
+exportlibrary   trace_certification.lib
+uid             0 0x20034B46
+capability      all
+
+userinclude     ../inc
+
+sourcepath      ../src
+source          trace_certification.cpp
+
+deffile         ../~/trace_certification.def

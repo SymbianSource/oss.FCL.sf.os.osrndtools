@@ -1,0 +1,22 @@
+// Copyright (c) 2006-2009 Nokia Corporation and/or its subsidiary(-ies).
+// All rights reserved.
+// This component and the accompanying materials are made available
+// under the terms of "Eclipse Public License v1.0"
+// which accompanies this distribution, and is available
+// at the URL "http://www.eclipse.org/legal/epl-v10.html".
+//
+// Initial Contributors:
+// Nokia Corporation - initial contribution.
+//
+// Contributors:
+//
+// Description:
+//
+
+#include "../tracedataparser/group/bld.inf"
+#include "../d_tracecore/group/bld.inf"
+#include "../d_traceonactivation/group/bld.inf"
+#include "../t_tracecore/group/bld.inf"
+#include "../t_tracecore_wdp/group/bld.inf"
+#include "../flush_page_cache/group/bld.inf"
+#include "../TEF/group/bld.inf"
