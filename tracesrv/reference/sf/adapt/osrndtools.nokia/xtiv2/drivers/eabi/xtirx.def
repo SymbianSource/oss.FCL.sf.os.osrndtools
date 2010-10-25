@@ -1,0 +1,6 @@
+EXPORTS
+	_ZN5XtiRx20SetReceiveBufferReadEv @ 1 NONAME
+	_ZN5XtiRx8RegisterEP4TDfcR5TDes8 @ 2 NONAME
+	_ZTI5XtiRx @ 3 NONAME ; #<TI>#
+	_ZTV5XtiRx @ 4 NONAME ; #<VT>#
+

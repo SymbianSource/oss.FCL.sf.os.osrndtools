@@ -1,0 +1,50 @@
+/*
+* Copyright (c) 2010 Nokia Corporation and/or its subsidiary(-ies).
+* All rights reserved.
+* This component and the accompanying materials are made available
+* under the terms of "Eclipse Public License v1.0"
+* which accompanies this distribution, and is available
+* at the URL "http://www.eclipse.org/legal/epl-v10.html".
+*
+* Initial Contributors:
+* Nokia Corporation - initial contribution.
+*
+* Contributors:
+*
+* Description:
+*
+*/
+
+
+FEATUREVARIANT
+
+#include        <rapu/variant.mmh>
+systeminclude   VariantIncludePath
+
+#include        "kernel/kern_ext.mmh"
+
+
+target          VariantTarget(xtitx,dll)
+targettype      kext
+linkas          xtitx.dll
+exportlibrary   xtitx.lib
+
+systeminclude   /epoc32/include/drivers
+OS_LAYER_SYSTEMINCLUDE
+
+userinclude     ../common/inc
+
+sourcepath      ../src
+SOURCE          xtitx.cpp
+
+library         karap.lib
+
+epocallowdlldata		   
+
+vendorid        VID_DEFAULT
+
+capability      all
+
+nostrictdef
+
+deffile         ../~/xtitx.def

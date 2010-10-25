@@ -1,0 +1,11 @@
+EXPORTS
+	_ZN5XtiTx10SetBitRateEj @ 1 NONAME
+	_ZN5XtiTx10StartWriteEhh @ 2 NONAME
+	_ZN5XtiTx10WriteData8Ehh @ 3 NONAME
+	_ZN5XtiTx11WriteData16Eht @ 4 NONAME
+	_ZN5XtiTx11WriteData32Ehm @ 5 NONAME
+	_ZN5XtiTx16SendDataRxAckMsgEv @ 6 NONAME
+	_ZN5XtiTx17SendDataLenAckMsgEv @ 7 NONAME
+	_ZN5XtiTx9StopWriteEh @ 8 NONAME
+	_ZN5XtiTx14IsTraceEnabledEv @ 9 NONAME
+
