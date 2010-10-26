@@ -821,7 +821,12 @@ final class TraceHeaderWriter {
 				currentParameterType = paramType;
 				if (sourceRule instanceof FillerParameterRule) {
 					currentParameterName = "0"; //$NON-NLS-1$
-					writeTemplate(HeaderTemplate.FIXED_PARAMETER_TEMPLATE);
+					if (lenghtVariableDefined == true) {
+						writeTemplate(HeaderTemplate.FIXED_PARAMETER_TEMPLATE);
+						writeTemplate(HeaderTemplate.INCREMENT_LENGTH);
+					} else {
+						writeTemplate(HeaderTemplate.FIXED_PARAMETER_TEMPLATE);
+					}
 				} else {
 					currentParameterIndex++;
 					currentParameterName = SymbianConstants.PARAMETER_DECLARATION_PREFIX

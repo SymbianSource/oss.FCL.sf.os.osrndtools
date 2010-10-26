@@ -50,7 +50,7 @@ public class MultipleMmpTest {
 	private static Pattern versionPattern = Pattern.compile("^.*(\\d+\\.\\d+\\.\\d+).*$"); //$NON-NLS-1$
 	private static Pattern oldversionPat = Pattern.compile("^(1\\..*)|(2\\.1.*)"); //$NON-NLS-1$
 	//old TC version should be up to 2.12.5 as new functionality was submitted to 2.12.6 (we hope)
-	private static Pattern sbsoldversionPat = Pattern.compile("^(1\\..*)|(2\\.[01]\\..*)|(2\\.1[0-2]\\.[0-3].*)"); //$NON-NLS-1$
+	private static Pattern sbsoldversionPat = Pattern.compile("^(1\\..*)|(2\\.[01]\\..*)|(2\\.1[0-4]\\.[0-9].*)"); //$NON-NLS-1$
 	private static String TCversion = ""; //$NON-NLS-1$
 	private static String SBSversion = ""; //$NON-NLS-1$
 	private static File compilerpath;
@@ -78,7 +78,7 @@ public class MultipleMmpTest {
 		compilerpath = new File (epocroot + "epoc32" + File.separator + "tools" + File.separator +"tracecompiler" + File.separator); //default value to remove warnings. //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
 		ProcessBuilder tc = new ProcessBuilder("java", "-classpath", compilerpath.getPath(), //$NON-NLS-1$//$NON-NLS-2$
-				"com.nokia.tracecompiler.TraceCompiler", "-v"); //$NON-NLS-1$//$NON-NLS-2$
+				"com.nokia.tracecompiler.TraceCompilerMain", "-v"); //$NON-NLS-1$//$NON-NLS-2$
 		System.out.println("compilerPath= " + compilerpath); //$NON-NLS-1$
 		tc.directory(compilerpath);
 		tc.redirectErrorStream(true);
@@ -184,9 +184,9 @@ public class MultipleMmpTest {
 		fixedidDefinitions = new File(epocroot+projectdir+"mmp_traces\\traces\\fixed_id.definitions"); //$NON-NLS-1$)
 		headers.put("_traces", Arrays.asList(tracesHeader1,tracesHeader2,tracesHeader3,tracesHeader4,ostTraceDefinitions,fixedidDefinitions)); //$NON-NLS-1$
 		
-		ostDict1     = new File(epocroot+dictpath+"mmp_traces1_0xe8576d96_Dictionary.xml"); //$NON-NLS-1$
+		ostDict1     = new File(epocroot+dictpath+"mmp_traces1_dot_0xe8576d96_Dictionary.xml"); //$NON-NLS-1$
 		ostDict2     = new File(epocroot+dictpath+"mmp_traces2_0xe8576d95_Dictionary.xml"); //$NON-NLS-1$	
-		autogenDict1 = new File(epocroot+autogenpath+"mmp_traces1_0xe8576d96_TraceDefinitions.h"); //$NON-NLS-1$	
+		autogenDict1 = new File(epocroot+autogenpath+"mmp_traces1_dot_0xe8576d96_TraceDefinitions.h"); //$NON-NLS-1$	
 		autogenDict2 = new File(epocroot+autogenpath+"mmp_traces2_0xe8576d95_TraceDefinitions.h"); //$NON-NLS-1$	
 		dicts.put("_traces", Arrays.asList(ostDict1, ostDict2, autogenDict1, autogenDict2)); //$NON-NLS-1$
 		
@@ -321,10 +321,10 @@ public class MultipleMmpTest {
 		source4 = new File (epocroot+projectdir+"mmp_traces_target_type\\src\\ExtraCppFile2.cpp"); //$NON-NLS-1$
 		sources.put("_traces_target_type", Arrays.asList(source1, source2, source3, source4));
 
-		ostDict1     = new File(epocroot+dictpath+"target11_exe_0xe8576d96_Dictionary.xml"); //$NON-NLS-1$
-		ostDict2     = new File(epocroot+dictpath+"target12_exe_0xe8576d95_Dictionary.xml"); //$NON-NLS-1$	
-		autogenDict1 = new File(epocroot+autogenpath+"target11_exe_0xe8576d96_TraceDefinitions.h"); //$NON-NLS-1$	
-		autogenDict2 = new File(epocroot+autogenpath+"target12_exe_0xe8576d95_TraceDefinitions.h"); //$NON-NLS-1$	
+		ostDict1     = new File(epocroot+dictpath+"mmp_traces_target_type1_0xe8576d96_Dictionary.xml"); //$NON-NLS-1$
+		ostDict2     = new File(epocroot+dictpath+"mmp_traces_target_type2_0xe8576d95_Dictionary.xml"); //$NON-NLS-1$	
+		autogenDict1 = new File(epocroot+autogenpath+"mmp_traces_target_type1_0xe8576d96_TraceDefinitions.h"); //$NON-NLS-1$	
+		autogenDict2 = new File(epocroot+autogenpath+"mmp_traces_target_type2_0xe8576d95_TraceDefinitions.h"); //$NON-NLS-1$	
 		dicts.put("_traces_target_type", Arrays.asList(ostDict1, ostDict2, autogenDict1, autogenDict2)); //$NON-NLS-1$	
 		
 		//==================================
@@ -362,12 +362,13 @@ public class MultipleMmpTest {
 
 		ostDict1     = new File(epocroot+dictpath+name + suffix + "_0xe8576d96_Dictionary.xml"); //$NON-NLS-1$
 		autogenDict1 = new File(epocroot+autogenpath+name + suffix + "_0xe8576d96_TraceDefinitions.h"); //$NON-NLS-1$
-		if (!oldBuilder) {
-			suffix = "_kext"; //$NON-NLS-1$
-			name = "target4";
-		} else {
+		suffix= "";
+		//if (!oldBuilder) {
+		//	suffix = "_kext"; //$NON-NLS-1$
+		//	name = "target4";
+	//	} else {
 			name = "mmp_traces_mixed2";
-		}
+	//	}
 		ostDict2     = new File(epocroot+dictpath+name + suffix + "_0xe8576d95_Dictionary.xml"); //$NON-NLS-1$
 		autogenDict2 = new File(epocroot+autogenpath+name + suffix + "_0xe8576d95_TraceDefinitions.h"); //$NON-NLS-1$	
 		dicts.put("_traces_mixed", Arrays.asList(ostDict1, ostDict2, autogenDict1, autogenDict2)); //$NON-NLS-1$	

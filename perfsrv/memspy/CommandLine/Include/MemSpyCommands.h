@@ -43,7 +43,7 @@ _LIT( KSWMTMessage, "System Wide Memory Tracking opetarion in progress" );
 _LIT( KHelpMessage, "=== MemSpy CommandLineInterpreter Help ===\r\n" );
 _LIT( KHelpOutputCommand, "Change output mode to trace: 'memspy output trace'\r\n" );
 _LIT( KHelpOutputToFileCommand, "Change output mode to trace: 'memspy output file'\r\n" );
-_LIT( KHelpHeapDumpCommand, "Heap dump: 'memspy heapdup <all | kernel | user heap filter >'\r\n" );
+_LIT( KHelpHeapDumpCommand, "Heap dump: 'memspy heapdump <all | kernel | user heap filter >'\r\n" );
 _LIT( KHelpSwmtCommand, "SWMT: 'memspy swmt <starttimer <value in seconds> | stop timer | dumpnow > <categories>'\r\n" );
 _LIT( KHelpKillServerCommand, "Kill server: 'memspy killserver'\r\n" );
 _LIT( KHelpCommand, "Press 'c' to continue" );

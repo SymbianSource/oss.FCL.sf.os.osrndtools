@@ -19,10 +19,6 @@
 #ifndef PI_PROFILER_CONFIG_H
 #define PI_PROFILER_CONFIG_H
 
-// NCP release process will move the PIProfiler flags as Carbon feature flags
-// where the product responsibles can choose the right settings for PI Profiler
-// compilation.
-
 	/*** NOTE!!! 
 	* 	Uncomment the following definition if compiling the Profiler by your own
 	***/

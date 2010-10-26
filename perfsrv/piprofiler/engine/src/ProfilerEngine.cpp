@@ -95,17 +95,20 @@ private:
  *
  */
 // --------------------------------------------------------------------------------------------
-CProfiler* CProfiler::NewLC(const TDesC& aSettingsFile)
+CProfiler* CProfiler::NewLC(const TDesC& aSettingsFile, TBool aBootMode)
     {
-	CProfiler* self = new(ELeave) CProfiler(aSettingsFile);
+	CProfiler* self = new(ELeave) CProfiler(aSettingsFile ,aBootMode);
 	CleanupStack::PushL(self);
 	self->ConstructL();
+	
+	LOGTEXT(_L("CProfiler::NewLC - done"));
 	return self;
     }
 
 // --------------------------------------------------------------------------------------------
-CProfiler::CProfiler(const TDesC& aSettingsFile) : 
-    iSettingsFileLocation(aSettingsFile)
+CProfiler::CProfiler(const TDesC& aSettingsFile, TBool aBootMode) : 
+    iSettingsFileLocation(aSettingsFile),
+    iBootMode(aBootMode)
 	{
 	// define property for Profiler Engine status, UI may read it for control purposes
 	if ( RProperty::Define(KEngineStatusPropertyCat, 
@@ -190,15 +193,18 @@ CProfiler::~CProfiler()
 
 	// close engine status property
 	iEngineStatus.Close();
-	if (RProperty::Delete(KEngineStatusPropertyCat, EProfilerEngineStatus) != KErrNotFound)
+	TInt ret = RProperty::Delete(KEngineStatusPropertyCat, EProfilerEngineStatus);
+	if ( ret != KErrNone)
 	    {
-	    LOGTEXT(_L("CProfiler::~CProfiler - cannot close status property"));
+	    LOGSTRING2("CProfiler::~CProfiler - cannot close status property %d", ret);
+
 	    }
     // close engine update property
     iUpdateStatus.Close();
-    if (RProperty::Delete(KEngineStatusPropertyCat, EProfilerErrorStatus) != KErrNotFound)
+    ret = RProperty::Delete(KEngineStatusPropertyCat, EProfilerErrorStatus); 
+    if (ret != KErrNone)
         {
-        LOGTEXT(_L("CProfiler::~CProfiler - cannot close update property"));
+        LOGSTRING2("CProfiler::~CProfiler - cannot close update property %d",ret);
         }
     
     // close server process
@@ -222,8 +228,17 @@ CProfiler::~CProfiler()
 void CProfiler::ConstructL()
     {
 	LOGTEXT(_L("CProfiler::ConstructL - Enter"));
-	TInt err(0);
+    TInt err(0);
 	TLex lex;
+
+	if(iBootMode)
+	    {
+        LOGSTRING("boot mode enabled");
+	    }
+	else
+	    {
+        LOGSTRING("normal mode enabled");
+	    }
 	
 	if ( iSettingsFileLocation.CompareF(KNullDesC) != 0 )
 	    {
@@ -236,15 +251,12 @@ void CProfiler::ConstructL()
             // there is another item in the list
             TPtrC filename = lex.MarkedToken();
             LOGSTRING2("filename %S", &filename);
-            lex.SkipSpace();
-            lex.Mark();
-            lex.SkipCharacters();
-            if(lex.TokenLength() != 0)
-                {
-                TPtrC boot = lex.MarkedToken();
-                LOGTEXT(_L("boot mode"));
-                }
-            }
+
+           }
+	    }
+	else
+	    {
+        LOGSTRING("CProfiler::ConstructL - Enter - settingsfilelocation null");
 	    }
 	
     // create new sampler stream instance
@@ -259,12 +271,13 @@ void CProfiler::ConstructL()
     iErrorChecker = CProfilerErrorChecker::NewL();
     iErrorChecker->SetObserver(this);
 
-	// create and initiate plug-in controller instances
-    iSamplerHandler = CSamplerController::NewL(*iUserStream);
-    iWriterHandler = CWriterController::NewL(*iUserStream);
-    
+    // create and initiate plug-in controller instances
+    iSamplerHandler = CSamplerController::NewL(*iUserStream, iBootMode);
+    LOGSTRING("CSamplerController started from ProfilerEngine");
+    iWriterHandler = CWriterController::NewL(*iUserStream, iBootMode);
+    LOGSTRING("CWriterController started from ProfilerEngine");
     iWriterHandler->InitialiseWriterListL();
-    
+    LOGSTRING("WriterList initialised started from ProfilerEngine");
     // set engine as an observer to sampler controller to get the notification of plugin load has ended
     iSamplerHandler->SetObserver(this);
     
@@ -297,6 +310,11 @@ void CProfiler::ConstructL()
 			User::Leave(err);
 		    }
 		else break;
+	    }
+
+	if(err != KErrNone) 
+	    {
+		User::Leave(err);
 	    }
 
 	// set settings file loading preferences
@@ -342,7 +360,7 @@ void CProfiler::HandleSamplerControllerReadyL()
 
         iSettingsFileLoaded = ETrue;
         }
-    
+    LOGSTRING("CProfiler::HandleSamplerControllerReadyL rendezvous");
     // notify engine's launcher(UI or PIProfilerLauncher) to continue launch
     RProcess::Rendezvous(KErrNone); 
     }
@@ -381,7 +399,7 @@ void CProfiler::HandleProfilerErrorChangeL(TInt aError)
 // ----------------------------------------------------------------------------
 void CProfiler::DoGetValueFromSettingsArray(CDesC8ArrayFlat* aLineArray, const TDesC8& aAttribute, TDes8& aValue)
     {
-    LOGTEXT(_L("CProfiler::DoGetValueFromSettingsFile()"));
+    LOGTEXT(_L("CProfiler::DoGetValueFromSettingsArray()"));
     _LIT8(KSettingItemSeparator, "=");
     
     // read a line of given array
@@ -404,7 +422,7 @@ void CProfiler::DoGetValueFromSettingsArray(CDesC8ArrayFlat* aLineArray, const T
 
 void CProfiler::DoGetValueFromSettingsArray(CDesC8ArrayFlat* aLineArray, const TDesC8& aAttribute, TInt& aValue)
     {
-    LOGTEXT(_L("CProfiler::DoGetValueFromSettingsFile()"));
+    LOGTEXT(_L("CProfiler::DoGetValueFromSettingsFile() TLex"));
     _LIT8(KSettingItemSeparator, "=");
     
     // read a line of given array
@@ -686,6 +704,7 @@ TInt CProfiler::LoadSettingsL(/*const TDesC& configFile*/)
 void CProfiler::UpdateSavedGeneralAttributes(CDesC8ArrayFlat* aSavedAttributes)
     {
     // get saved general settings
+    LOGSTRING("CProfiler::UpdateSavedGeneralAttributes");
     DoGetValueFromSettingsArray(aSavedAttributes, KGenericTraceOutput, iGeneralAttributes.iTraceOutput);
     DoGetValueFromSettingsArray(aSavedAttributes, KGenericTraceFilePrefix, iGeneralAttributes.iTraceFilePrefix);
     DoGetValueFromSettingsArray(aSavedAttributes, KGenericTraceFileSaveDrive, iGeneralAttributes.iSaveFileDrive);
@@ -896,10 +915,11 @@ void CProfiler::SaveSettingsL()
     // connect to file server
     err = fs.Connect();
     if( err != KErrNone )
-        {
+    {
         // failed to write settings to settings file
+        RDebug::Printf("FS connect failed");
         return;
-        }
+    }
     
     // create and set the private path
     fs.CreatePrivatePath(EDriveC);
@@ -908,10 +928,12 @@ void CProfiler::SaveSettingsL()
     // create the new settings file
     err = settingsFile.Replace(fs, iSettingsFileLocation, EFileWrite);
     if(err != KErrNone)
-        return;
+        {
+        RDebug::Printf("Settingsfile replace failed");
+        fs.Close();
+        return;     
+        }
     
-    CleanupClosePushL(settingsFile);  
-
     // write the header
     line.Copy(KPIProfilerSettingsHeader);
     line.Append(KNewLineSeparator);
@@ -996,7 +1018,7 @@ void CProfiler::SaveSettingsL()
     // call CSamplerController to write all sampler settings
     iSamplerHandler->ComposeAttributesToSettingsFileFormat(settingsFile, iDefaultSamplerAttributesArray);
     
-    CleanupStack::PopAndDestroy(); //settingsFile
+    settingsFile.Close();
     // close file
     fs.Close();
     }
@@ -1394,7 +1416,7 @@ MProfilerController* CPServer::NewL(TInt aPriority, MProfilerEngine& aEngine)
 	CleanupStack::PushL(self);
 	self->StartL(KProfilerName);
 	CleanupStack::Pop();
-	LOGTEXT(_L("CPSession::NewL - Exit"));
+	LOGTEXT(_L("CPServer::NewL - Exit "));
 	return self;
     }
 
@@ -1424,16 +1446,20 @@ CSession2* CPServer::NewSessionL(const TVersion&,const RMessage2&) const
  *
  */
 // --------------------------------------------------------------------------------------------
-static void RunEngineServerL(const TDesC& aSettingsFile)
+static void RunEngineServerL(const TDesC& aSettingsFile, TBool aBoot)
     {
-	RDebug::Print(_L("Profiler: RunEngineServerL() - Install active scheduler"));
+	LOGSTRING("Profiler: RunEngineServerL() - Install active scheduler");
 	CActiveScheduler* pS = new CActiveScheduler;
 	CActiveScheduler::Install(pS);
-	CProfiler* p = CProfiler::NewLC(aSettingsFile);
+	CProfiler* p = CProfiler::NewLC(aSettingsFile, aBoot);
+	
+	LOGSTRING("Profiler: RunEngineServerL() - Starting active scheduler");
 	CActiveScheduler::Start();
 	p->Finalise();
+	LOGSTRING("Profiler: RunEngineServerL() - profiler finalised");
 	CleanupStack::PopAndDestroy(p);
 	delete pS;
+	LOGSTRING("Profiler: RunEngineServerL() - done");
     }
 
 // --------------------------------------------------------------------------------------------
@@ -1477,35 +1503,74 @@ static TInt TestSettingsFile(const TDesC& configFile)
 // --------------------------------------------------------------------------------------------
 GLDEF_C TInt E32Main()
     {
+    LOGSTRING("Profiler: E32Main()");
     // parse command line arguments 
     TBuf<256> c;
     TInt err(KErrNone);
+    _LIT(KBootMeasurement,"*boot");
     
+    TBool myBoot(EFalse);
     // copy the full command line with arguments into a buffer
     User::CommandLine(c);
 
+    // parse command line for boot mode. filename boot
+    
+            
+    if (c.Match(KBootMeasurement) != KErrNotFound)
+       {
+       LOGTEXT(_L("ParseCommandAndExecute Found keyword boot"));
+       myBoot = ETrue;
+       }    
+    
+    TBuf<256> temp;
+    temp.Append(c);
+    TLex lex(temp);
+    lex.Mark();
+    lex.SkipCharacters();
+    
+    TPtrC token;
     TBuf<256> fileName;
-    fileName.Append(c); // only one settings param should be
-    LOGSTRING3("Filename is %S, response %d 1", &fileName, err);
-    err = TestSettingsFile(fileName);
-    if(err != KErrNone)
+    
+    if(lex.TokenLength() != 0)
         {
-        LOGSTRING3("Filename is %S, response %d 2", &fileName, err);
-        // settings file does not exist, copy null desc to file name
-        fileName.Copy(KNullDesC);
+        TPtrC token = lex.MarkedToken();
+        LOGSTRING2("E32 Main Token 1 %S",&token);
+        fileName.Append(token); // only one settings param should be
+        LOGSTRING3("Filename is #%S#, response %d 1", &fileName, err);
+        err = TestSettingsFile(fileName);
+        if(err != KErrNone)
+            {
+            LOGSTRING3("Filename is #%S#, response %d 2", &fileName, err);
+            // settings file does not exist, copy null desc to file name
+            fileName.Copy(KNullDesC);
+            }
+        }
+    else
+        {
+        LOGTEXT(_L("E32 Main Problem 1 in parsing command line"));
         }
 
-    LOGSTRING3("Filename is %S, response %d 3", &fileName, err);
-    
     // if no command line arguments found just start the profiler process
     __UHEAP_MARK;
     CTrapCleanup* cleanup = CTrapCleanup::New();
     TInt ret(KErrNoMemory);
+    err = KErrNoMemory;
     if( cleanup )
         {
-        TRAPD( ret, RunEngineServerL(fileName) );
-        RDebug::Print(_L("Profiler: E32Main() - ret %d"), ret);
-        delete cleanup;
+        TRAPD(err ,RunEngineServerL(fileName, myBoot));
+        LOGSTRING3("Profiler: E32Main() - ret %d err %d", ret,err);
+        if(err != KErrNone)
+            {
+            RDebug::Print(_L("if Profiler: E32Main() - ret %d err %d"), ret,err);
+            ret = err;
+            delete cleanup;
+            }
+        else
+            {
+            LOGSTRING3("else Profiler: E32Main() - ret %d err %d", ret,err);
+            ret = err;
+            delete cleanup;    
+            }
         } 
     __UHEAP_MARKEND;
 

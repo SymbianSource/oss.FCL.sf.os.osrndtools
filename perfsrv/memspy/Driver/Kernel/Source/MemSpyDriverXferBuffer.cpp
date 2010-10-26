@@ -41,9 +41,12 @@ DMemSpyDriverXferBuffer::~DMemSpyDriverXferBuffer()
 	{
 	TRACE( Kern::Printf("DMemSpyDriverXferBuffer::~DMemSpyDriverXferBuffer() - START - this: 0x%08x", this ));
 
-    NKern::ThreadEnterCS();
-    delete iBuffer;
-    NKern::ThreadLeaveCS();
+    if (iBuffer) 
+        {
+        NKern::ThreadEnterCS();
+        delete iBuffer;
+        NKern::ThreadLeaveCS();
+        }
 
     TRACE( Kern::Printf("DMemSpyDriverXferBuffer::~DMemSpyDriverXferBuffer() - END - this: 0x%08x", this ));
 	}

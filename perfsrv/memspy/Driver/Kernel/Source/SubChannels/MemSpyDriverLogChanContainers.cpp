@@ -742,9 +742,10 @@ TInt DMemSpyDriverLogChanContainers::GetPAndSInfo( DObject* aHandle, TMemSpyDriv
         const TBool isReady = pra.GetIsReady( *object );
         TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetPAndSInfo() - isReady: %d", isReady ));
 
+        TMemSpyDriverPAndSInfo params;
         if  ( isReady )
             {
-            TMemSpyDriverPAndSInfo params;
+            //TMemSpyDriverPAndSInfo params;
             //
             params.iType = pra.GetType( *object );
             params.iCategory = pra.GetCategory( *object );
@@ -754,7 +755,8 @@ TInt DMemSpyDriverLogChanContainers::GetPAndSInfo( DObject* aHandle, TMemSpyDriv
             params.iCreatorSID = pra.GetCreatorSID( *object );
             //
             TRACE( Kern::Printf("DMemSpyDriverLogChanContainers::GetPAndSInfo - writing back to client thread..."));
-            r = Kern::ThreadRawWrite( &ClientThread(), aInfo, &params, sizeof( TMemSpyDriverPAndSInfo ) );
+            //r = Kern::ThreadRawWrite( &ClientThread(), aInfo, &params, sizeof( TMemSpyDriverPAndSInfo ) );
+            r = KErrNone; //--
             }
         else
             {
@@ -762,6 +764,13 @@ TInt DMemSpyDriverLogChanContainers::GetPAndSInfo( DObject* aHandle, TMemSpyDriv
             }
 
         NKern::UnlockSystem();
+        //--
+        if( r == KErrNone )
+        	{
+			r = Kern::ThreadRawWrite( &ClientThread(), aInfo, &params, sizeof( TMemSpyDriverPAndSInfo ) );
+        	}
+        
+        //--
 		object->Close(NULL);
         }
 
@@ -870,9 +879,7 @@ TInt DMemSpyDriverLogChanContainers::GetCondVarSuspendedThreadInfo( TAny* aThrea
         {
         TRACE( Kern::Printf("DMemSpyDriverLogChanMisc::GetCondVarSuspThrInfo() - END - params read error: %d", r));
         return r;
-        }
-    
-    DMemSpyDriverOSAdaptionDThread& threadAdaption = OSAdaption().DThread();
+        }        
 
     NKern::ThreadEnterCS();
 

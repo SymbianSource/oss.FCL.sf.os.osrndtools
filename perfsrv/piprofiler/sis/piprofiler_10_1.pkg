@@ -1,0 +1,68 @@
+;
+; Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies). 
+; All rights reserved.
+; This component and the accompanying materials are made available
+; under the terms of "Eclipse Public License v1.0"
+; which accompanies this distribution, and is available
+; at the URL "http://www.eclipse.org/legal/epl-v10.html".
+;
+; Initial Contributors:
+; Nokia Corporation - initial contribution.
+;
+; Contributors:
+;
+; Description:  
+
+;Languages
+&EN
+; Localised vendor names
+%{"Nokia Corporation"}
+
+; Non-localised vendor name
+:"Nokia Corporation"
+
+;Header
+#{"PIProfiler"}, (0x2001E5AD), 2,3,1,TYPE=SA, RU
+
+;Supports Series 60 v 3.2
+[0x102752AE], 0, 0, 0, {"Series60ProductID"}
+;Supports Series 60 v 5.0
+[0x1028315F], 0, 0, 0, {"Series60ProductID"}
+;Supports Series 60 v 5.1
+[0x10283160], 0, 0, 0, {"Series60ProductID"}
+;Supports Series 60 v 5.2
+[0x20022E6D], 0, 0, 0, {"Series60ProductID"}
+;Supports Symbian^3
+[0x20022E6D], 0, 0, 0, {"Series60ProductID"}
+
+
+IF exists ("Z:\system\install\Series60v5.2.sis") 
+
+; engine
+"\epoc32\release\armv5\urel\PIProfilerEngine.exe"	- "!:\sys\bin\PIProfilerEngine.exe"
+
+; basic sampler plugins
+"\epoc32\release\armv5\urel\PIProfilerGenerals.dll"	-"!:\sys\bin\PIProfilerGenerals.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerGenerals.rsc"   -   "!:\Resource\Plugins\PIProfilerGenerals.RSC"
+"\epoc32\release\armv5\urel\PIProfilerGeneralsSampler.ldd"	-"!:\sys\bin\PIProfilerGeneralsSampler.ldd"
+"\epoc32\release\armv5\urel\PIProfilerBUP.dll"	-"!:\sys\bin\PIProfilerBUP.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerBUP.rsc"   -   "!:\Resource\Plugins\PIProfilerBUP.RSC"
+"\epoc32\RELEASE\armv5\urel\PIProfilerTouchEventAnim.dll"-"!:\sys\bin\PIProfilerTouchEventAnim.dll"
+
+; writer plugins
+"\epoc32\release\armv5\urel\piprofilerdebugwriter.dll"	-"!:\sys\bin\piprofilerdebugwriter.dll"
+"\epoc32\data\Z\Resource\plugins\piprofilerdebugwriter.rsc"   -   "!:\Resource\Plugins\piprofilerdebugwriter.rsc"
+"\epoc32\release\armv5\urel\piprofilerdiskwriter.dll"	-"!:\sys\bin\piprofilerdiskwriter.dll"
+"\epoc32\data\Z\Resource\plugins\piprofilerdiskwriter.rsc"   -   "!:\Resource\Plugins\piprofilerdiskwriter.rsc"
+
+; profiler exe
+"\epoc32\release\armv5\urel\PIProfiler.exe" -"!:\sys\bin\PIProfiler.exe"
+
+; UI
+"\epoc32\RELEASE\armv5\urel\PIProfilerUI.exe"-"!:\sys\bin\PIProfilerUI.exe"
+"\epoc32\data\z\Resource\apps\piprofilerui.rsc"-"!:\Resource\Apps\piprofilerui.rsc"
+"\epoc32\data\z\Resource\apps\piprofilerui.mif"-"!:\Resource\Apps\piprofilerui.mif"
+
+"\epoc32\data\z\PRIVATE\10003A3F\import\APPS\piprofilerui_reg.rsc"-"!:\private\10003a3f\import\apps\piprofilerui_reg.rsc"
+
+ENDIF

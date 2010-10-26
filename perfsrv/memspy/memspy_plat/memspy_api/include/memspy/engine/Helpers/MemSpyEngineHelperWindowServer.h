@@ -89,6 +89,7 @@ public: // API
     virtual void GetWindowGroupListL( RArray<TMemSpyEngineWindowGroupBasicInfo>& aWindowGroups ) = 0;
     virtual void GetWindowGroupDetailsL( TInt aWindowGroupId, TMemSpyEngineWindowGroupDetails& aWindowGroupDetails ) = 0;
     virtual void SwitchToL( TInt aWindowGroupId ) = 0;
+    virtual void EndTaskL( const TDesC& aProcessName ) = 0;
     };
 
 #endif

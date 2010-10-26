@@ -1,7 +1,7 @@
 ===============================================================================
 
-RELEASE NOTES - MEMSPY v2.2.2
-RELEASED 21th September 2010 
+RELEASE NOTES - MEMSPY v2.3.0
+RELEASED 19th October 2010 
 
 SUPPORTS S60 5.0+
 
@@ -28,12 +28,18 @@ Main Features:
 
 ===============================================================================
 
-What's New in v2.2.2
+What's New in v2.3.0
 ====================
-- Fix: SWMT crash when heap dumps without filter are enabled.
-- Fix: Memory leaks.
-- UI change: Results subview removed from SMWT view.
-- UI change: Wait dialog when opening KernelContainers and KernelObjects Avkon view.
+- New Feature: MemSpyUI sends the Exit command to processes.
+- UI change: Ecom view for Avkon
+- UI change: Window Groups for Avkon
+- UI change: Chunks view for Orbit&Avkon
+- UI change: Autorefresh of the Processes & Threads view for Avkon
+- UI change: RAM info, ROM info and System Config view for Avkon
+- UI change: Code segments view for Orbit&Avkon
+- Fix: SWMT Kernel handles category crases the application.
+- Fix: CLI to show help when only "memspy" command without parameters is used
+- RHybridHeap v2 support
 
 ===============================================================================
 
@@ -95,6 +101,13 @@ Known Issues:
 
 Version History:
 ================
+
+Version 2.2.2 - 21st September 2010
+-----------------------------------
+- Fix: SWMT crash when heap dumps without filter are enabled.
+- Fix: Memory leaks.
+- UI change: Results subview removed from SMWT view.
+- UI change: Wait dialog when opening KernelContainers and KernelObjects Avkon view.
 
 Version 2.2.1 - 7th September 2010
 ----------------------------------

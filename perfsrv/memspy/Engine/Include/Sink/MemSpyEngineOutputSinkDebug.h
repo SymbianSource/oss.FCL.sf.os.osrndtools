@@ -47,6 +47,7 @@ private: // From CMemSpyEngineOutputSink
     void DataStreamEndL();
     void DoOutputLineL( const TDesC& aLine );
     void DoOutputRawL( const TDesC8& aData );
+    void FlushL();
     };
 
 

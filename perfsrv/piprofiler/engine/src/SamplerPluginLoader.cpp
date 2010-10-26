@@ -30,9 +30,9 @@
 // EPOC two-phased constructor
 // ----------------------------------------------------------------------------
 //
-CSamplerPluginLoader* CSamplerPluginLoader::NewL()
+CSamplerPluginLoader* CSamplerPluginLoader::NewL(TBool aBootMode)
     {
-    CSamplerPluginLoader* self = new( ELeave ) CSamplerPluginLoader;
+    CSamplerPluginLoader* self = new( ELeave ) CSamplerPluginLoader(aBootMode);
     CleanupStack::PushL( self );
     self->ConstructL( );
     CleanupStack::Pop( self );
@@ -47,9 +47,11 @@ CSamplerPluginLoader* CSamplerPluginLoader::NewL()
 // might leave.
 // ----------------------------------------------------------------------------
 //
-CSamplerPluginLoader::CSamplerPluginLoader() : CActive( EPriorityStandard )
+CSamplerPluginLoader::CSamplerPluginLoader(TBool aBootMode) :
+        CActive( EPriorityStandard )
     {
     LOGSTRING( "CSamplerPluginLoader()::CSamplerPluginLoader()" );
+    iBootMode = aBootMode;
     }
 
 
@@ -82,6 +84,10 @@ CSamplerPluginLoader::~CSamplerPluginLoader()
     AbortAsyncLoad();
 
     Cancel();
+    if ( iPluginArray )
+        {
+        iPluginArray = NULL;
+        }
     
     // reset ECOM implementation info array
     iImplInfoArray.ResetAndDestroy();   // This is needed
@@ -109,7 +115,45 @@ void CSamplerPluginLoader::LoadAsyncL(CArrayPtrFlat<CSamplerPluginInterface>* aP
     CompleteOwnRequest();
     }
     
+// ----------------------------------------------------------------------------
+// CSamplerPluginLoader::LoadRlibraryL
+// ----------------------------------------------------------------------------
+//
+void CSamplerPluginLoader::LoadRlibraryL(CArrayPtrFlat<CSamplerPluginInterface>* aPluginArray)
+    {
+    LOGSTRING("CSamplerPluginLoader rlibrary loading");
+                // Load dll
+    iPluginArray = aPluginArray;
+    RLibrary aLib;
+    TInt ret = aLib.Load(_L("PIProfilerGenerals.dll"),_L("c:\\sys\\bin"));
 
+    LOGSTRING2("RLibrary load returns %d", ret);
+    User::LeaveIfError(ret);
+    const TInt KNewLOrdinal = 2;
+    TLibraryFunction NewL =aLib.Lookup(KNewLOrdinal);
+
+    if(!NewL)
+        {
+        RDebug::Printf("library.lookup returns null");    
+        }
+    else
+        {
+        LOGSTRING2("library.lookup returns 0x%x", NewL);
+        //CGeneralsPlugin* mydll=(CGeneralsPlugin*)NewL();
+        CSamplerPluginInterface* mydll=(CSamplerPluginInterface*)NewL();
+        //Generals plugin loaded, samplers enabled.
+        CleanupStack::PushL( mydll );
+        //InsertPluginInOrderL( mydll, aPluginArray);
+        CleanupStack::Pop(mydll);
+        // call engine to finalize the startup
+        //TRAPD(result, iObserver->HandleSamplerControllerReadyL(););
+        NotifyProgress();
+
+        //Begin CActive asynchronous loop.
+        CompleteOwnRequest();
+        }
+    LOGSTRING("RLibrary and plugins loaded");
+    }
 // ----------------------------------------------------------------------------
 // CSamplerPluginLoader::LoadSyncL
 // ----------------------------------------------------------------------------
@@ -170,6 +214,7 @@ void CSamplerPluginLoader::AbortAsyncLoad()
 //
 void CSamplerPluginLoader::RunL()
     {
+    LOGSTRING("CSamplerPluginLoader::RunL");
     iRunLDebugCount++;
     LoadNextPluginL();
 
@@ -364,16 +409,22 @@ void CSamplerPluginLoader::LoadNextPluginL()
         TInt error(KErrNone);
         // Create plugin. Trap leave for debugging purposes.
         TRAP( error, plugin = &CreatePluginInstanceL( *info ); );
-
-        if( error == KErrNone )
+        if (plugin != NULL)
             {
-            // Plugin ownership is transfered to iPluginArray
-            InsertPluginInOrderL( plugin, iPluginArray );
+            if( error == KErrNone )
+                {
+                // Plugin ownership is transfered to iPluginArray
+                InsertPluginInOrderL( plugin, iPluginArray );
+                }
+            else
+                {
+                // Error note is displayed even if plugin is not loaded
+                LOGSTRING2("CSamplerPluginLoader::LoadNextPluginL() - plugin load failed, error %d", error);
+                }
             }
         else
             {
-            // Error note is displayed even if plugin is not loaded
-            LOGSTRING2("CSamplerPluginLoader::LoadNextPluginL() - plugin load failed, error %d", error);
+                delete plugin;
             }
         // Wait for next round
         break;
@@ -394,19 +445,21 @@ CSamplerPluginInterface& CSamplerPluginLoader::CreatePluginInstanceL(
     const TUid implUid = aImpInfo.ImplementationUid();
 
     CSamplerPluginInterface* plugin = CSamplerPluginInterface::NewL( implUid , (TAny*)&aImpInfo.DisplayName() );
-    CleanupStack::PushL ( plugin );
-
-    // Parse plugin's order number from opaque_data:
-    TInt orderNumber(0);
-    const TInt orderErr = ParseOrderNumber( aImpInfo.OpaqueData(), orderNumber );
-
-    if  ( orderErr == KErrNone && orderNumber >= 0 )
+    if(plugin != NULL)
         {
-        	plugin->iOrder = orderNumber;
-        }
-    CleanupStack::Pop( plugin ); // CSamplerController is now responsible for this memory.
+        CleanupStack::PushL ( plugin );
 
-    return *plugin;
+        // Parse plugin's order number from opaque_data:
+        TInt orderNumber(0);
+        const TInt orderErr = ParseOrderNumber( aImpInfo.OpaqueData(), orderNumber );
+
+        if  ( orderErr == KErrNone && orderNumber >= 0 )
+            {
+                plugin->iOrder = orderNumber;
+            }
+        CleanupStack::Pop( plugin ); // CSamplerController is now responsible for this memory.
+        }
+        return *plugin;
     }
 
 // ----------------------------------------------------------------------------
@@ -432,6 +485,7 @@ void CSamplerPluginLoader::SortPluginsL(
         {
         aPlugins->AppendL( plugins[i] );
         }
+    plugins.Close();
     }
 
 

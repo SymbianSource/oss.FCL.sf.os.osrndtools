@@ -734,6 +734,16 @@ TUint CMemSpyEngineChunkEntry::OwnerId() const
     return iInfo->iOwnerId;
     }
 
+TMemSpyDriverChunkType CMemSpyEngineChunkEntry::Type() const
+	{
+	return iInfo->iType;
+	}
+
+TInt CMemSpyEngineChunkEntry::Attributes() const
+	{
+	return iInfo->iAttributes;
+	}
+
 
 EXPORT_C void CMemSpyEngineChunkEntry::OwnerName( TDes& aDes ) const
     {

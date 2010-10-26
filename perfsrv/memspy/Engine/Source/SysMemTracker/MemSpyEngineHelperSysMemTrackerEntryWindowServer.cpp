@@ -162,7 +162,7 @@ void CMemSpyEngineHelperSysMemTrackerEntryWindowServer::UpdateCycleStatistics( C
 
 
 
-CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup::CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup( TUint8 aAttribs, const TMemSpyEngineWindowGroupDetails aCurrent, TMemSpyWindowServerEvent aEvent )
+CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup::CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup( TUint8 aAttribs, const TMemSpyEngineWindowGroupDetails& aCurrent, TMemSpyWindowServerEvent aEvent )
 :   CMemSpyEngineHelperSysMemTrackerCycleChange( aAttribs ),
     iCurrentWindowGroupDetails( aCurrent ),
     iEvent( aEvent )
@@ -181,7 +181,7 @@ void CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup::ConstructL()
     }
 
 
-CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup* CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup::NewLC( TUint8 aAttribs, const TMemSpyEngineWindowGroupDetails aCurrent, TMemSpyWindowServerEvent aEvent )
+CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup* CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup::NewLC( TUint8 aAttribs, const TMemSpyEngineWindowGroupDetails& aCurrent, TMemSpyWindowServerEvent aEvent )
     {
     CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup* self = new(ELeave) CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup( aAttribs, aCurrent, aEvent );
     CleanupStack::PushL( self );

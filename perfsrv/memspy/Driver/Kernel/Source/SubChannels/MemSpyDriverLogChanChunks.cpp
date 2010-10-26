@@ -113,8 +113,7 @@ TInt DMemSpyDriverLogChanChunks::GetChunkHandles( TMemSpyDriverInternalChunkHand
 
 	const TInt maxCount = params.iMaxCount;
 	TRACE( Kern::Printf("DMemSpyDriverLogChanChunks::GetChunkHandles() - START - id: %d,  maxCount: %d, type: %d", params.iId, maxCount, params.iType));
-
-    DMemSpyDriverOSAdaptionDChunk& chunkAdaption = OSAdaption().DChunk();
+    
     DMemSpyDriverOSAdaptionDThread& threadAdaption = OSAdaption().DThread();
     DMemSpyDriverOSAdaptionDProcess& processAdaption = OSAdaption().DProcess();
 

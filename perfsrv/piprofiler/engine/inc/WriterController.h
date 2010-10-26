@@ -47,10 +47,10 @@ class CWriterController : public CBase, MWriterPluginLoadObserver
 	{
 	
 public:
-	static CWriterController* NewL(CProfilerSampleStream& aStream);
+	static CWriterController* NewL(CProfilerSampleStream& aStream, TBool aBootMode);
 	void ConstructL();
 	
-	CWriterController(CProfilerSampleStream& aStream);
+	CWriterController(CProfilerSampleStream& aStream, TBool aBootMode);
     ~CWriterController();
 	
 	/** 
@@ -109,6 +109,10 @@ public:
     TUid iSelectedPluginUid;
     
     CProfilerSampleStream& iStream;
+private:
+    TBool                       iBootMode;
+    RLibrary*                   iLibrary;
+    CWriterPluginInterface*     iPlug;
 };
 
 	

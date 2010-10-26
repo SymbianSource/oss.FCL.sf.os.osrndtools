@@ -33,6 +33,10 @@
 #include <memspy/engine/memspyecomdata.h>
 // Window groups
 #include <memspy/engine/memspyenginehelperwindowserver.h>
+// Chunks
+#include <memspy/engine/memspychunkdata.h>
+// Code Segments
+#include <memspy/engine/memspycodesegmentdata.h>
 
 // IMPLEMENTATION
 
@@ -110,6 +114,7 @@ EXPORT_C void RMemSpySession::GetProcessesL(RArray<CMemSpyApiProcess*> &aProcess
 	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetProcessCount, TIpcArgs(&count)));
 	
 	TInt requestedCount = count();
+
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyProcessData));
 	TPtr8 bufferPtr(buffer->Des());
 	
@@ -117,7 +122,7 @@ EXPORT_C void RMemSpySession::GetProcessesL(RArray<CMemSpyApiProcess*> &aProcess
 	aProcesses.Reset();
 	
 	TInt receivedCount = Min(count(), requestedCount);
-	for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyProcessData))
+	for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyProcessData))
 		{
 		TPckgBuf<TMemSpyProcessData> data;
 		data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyProcessData));
@@ -136,7 +141,7 @@ EXPORT_C TProcessId RMemSpySession::GetProcessIdByNameL(const TDesC& aProcessNam
 	return procId();
 	}
 
-EXPORT_C TInt RMemSpySession::ProcessSystemPermanentOrCritical( TProcessId aId, TBool aValue )
+EXPORT_C TInt RMemSpySession::ProcessSystemPermanentOrCritical( TProcessId aId, TBool& aValue )
 	{
 	TPckgBuf<TProcessId> arg1( aId );
 	TPckgBuf<TBool> arg2( aValue );
@@ -148,6 +153,17 @@ EXPORT_C TInt RMemSpySession::ProcessSystemPermanentOrCritical( TProcessId aId, 
 	
 	return error;
 	}
+
+EXPORT_C void RMemSpySession::NotifyEvent(TRequestStatus &aStatus)
+    {
+    SendReceive(EMemSpyClientServerOpNotifyEvent | KMemSpyOpFlagsAsyncOperation,
+            TIpcArgs(), aStatus);
+    }
+
+EXPORT_C void RMemSpySession::CancelEventNotificationL()
+    {
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpCancelEventNotification));
+    }
 
 EXPORT_C TInt RMemSpySession::EndProcessL( TProcessId aId, TMemSpyEndType aType )
 	{
@@ -179,6 +195,7 @@ EXPORT_C void RMemSpySession::GetThreadsL(TProcessId aProcessId, RArray<CMemSpyA
 	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetThreadCount, TIpcArgs(&count, &pid)));
 	
 	TInt requestedCount = count();
+
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyThreadData));
 	TPtr8 bufferPtr(buffer->Des());
 	
@@ -186,7 +203,7 @@ EXPORT_C void RMemSpySession::GetThreadsL(TProcessId aProcessId, RArray<CMemSpyA
 	aThreads.Reset();
 	
 	TInt receivedCount = Min(count(), requestedCount);
-	for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyThreadData))
+	for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyThreadData))
 		{
 		TPckgBuf<TMemSpyThreadData> data;
 		data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyThreadData));
@@ -318,6 +335,7 @@ EXPORT_C void RMemSpySession::GetKernelObjectsL( RArray<CMemSpyApiKernelObject*>
 	User::LeaveIfError(SendReceive( EMemSpyClientServerOpGetKernelObjectCount, TIpcArgs(&count) ));
 	
 	TInt requestedCount = count();
+
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyKernelObjectData));
 	TPtr8 bufferPtr(buffer->Des());
 		
@@ -326,7 +344,9 @@ EXPORT_C void RMemSpySession::GetKernelObjectsL( RArray<CMemSpyApiKernelObject*>
 	
 	aKernelObjects.Reset();
 	
-	for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyKernelObjectData))
+	TInt receivedCount = Min(count(), requestedCount);
+
+	for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyKernelObjectData))
 		{
 		TPckgBuf<TMemSpyKernelObjectData> data;
 		data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyKernelObjectData));
@@ -350,6 +370,7 @@ EXPORT_C void RMemSpySession::GetKernelObjectItemsL( RArray<CMemSpyApiKernelObje
 	User::LeaveIfError(SendReceive( EMemSpyClientServerOpGetKernelObjectItemCount, TIpcArgs(&count, &type) ));
 
 	TInt requestedCount = count();
+	
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyDriverHandleInfoGeneric));
 	TPtr8 bufferPtr(buffer->Des());
 	
@@ -357,8 +378,10 @@ EXPORT_C void RMemSpySession::GetKernelObjectItemsL( RArray<CMemSpyApiKernelObje
 	User::LeaveIfError(SendReceive( EMemSpyClientServerOpGetKernelObjectItems, args ));
 	
 	aKernelObjectItems.Reset();
+
+	TInt receivedCount = Min(count(), requestedCount);	
 	
-	for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyDriverHandleInfoGeneric))
+	for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyDriverHandleInfoGeneric))
 		{
 		TPckgBuf<TMemSpyDriverHandleInfoGeneric> data;
 		data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyDriverHandleInfoGeneric));
@@ -380,6 +403,7 @@ EXPORT_C void RMemSpySession::GetMemoryTrackingCyclesL(RArray<CMemSpyApiMemoryTr
 	User::LeaveIfError(SendReceive( EMemSpyClientServerOpGetMemoryTrackingCycleCount, TIpcArgs(&count) ));
 	
 	TInt requestedCount = count();
+
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyMemoryTrackingCycleData));
 	TPtr8 bufferPtr(buffer->Des());
 		
@@ -388,7 +412,9 @@ EXPORT_C void RMemSpySession::GetMemoryTrackingCyclesL(RArray<CMemSpyApiMemoryTr
 	
 	aCycles.Reset();
 	
-	for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyMemoryTrackingCycleData))
+	TInt receivedCount = Min(count(), requestedCount);
+
+	for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyMemoryTrackingCycleData))
 		{
 		TPckgBuf<TMemSpyMemoryTrackingCycleData> data;
 		data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyMemoryTrackingCycleData));
@@ -408,9 +434,7 @@ EXPORT_C void RMemSpySession::OutputAllContainerContents()
 //Heap specific operations
 
 EXPORT_C CMemSpyApiHeap* RMemSpySession::GetHeapL()
-	{
-	CMemSpyApiHeap* aHeap;
-	
+	{	
 	HBufC8* buffer = HBufC8::NewLC( sizeof(TMemSpyHeapData) );
 	TPtr8 bufferPtr(buffer->Des());
 	TIpcArgs args( &bufferPtr );
@@ -419,11 +443,11 @@ EXPORT_C CMemSpyApiHeap* RMemSpySession::GetHeapL()
 	
 	TPckgBuf<TMemSpyHeapData> data;
 	data.Copy(bufferPtr.Ptr(), sizeof(TMemSpyHeapData));		
-	aHeap = CMemSpyApiHeap::NewL( data() );
+	CMemSpyApiHeap* heap = CMemSpyApiHeap::NewL( data() );
 	
 	CleanupStack::PopAndDestroy(buffer);
 		
-	return aHeap;
+	return heap;
 	}
 
 EXPORT_C CMemSpyApiHeap* RMemSpySession::GetHeap()
@@ -441,6 +465,7 @@ EXPORT_C void RMemSpySession::GetEComCategoriesL(RArray<CMemSpyApiEComCategory*>
     User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetEComCategoryCount, TIpcArgs(&count)));
     
     TInt requestedCount = count();
+ 
     HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyEComCategoryData));
     TPtr8 bufferPtr(buffer->Des());
     
@@ -448,7 +473,7 @@ EXPORT_C void RMemSpySession::GetEComCategoriesL(RArray<CMemSpyApiEComCategory*>
     aCategories.Reset();
     
     TInt receivedCount = Min(count(), requestedCount);
-    for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyEComCategoryData))
+    for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyEComCategoryData))
         {
         TPckgBuf<TMemSpyEComCategoryData> data;
         data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyEComCategoryData));
@@ -465,6 +490,7 @@ EXPORT_C void RMemSpySession::GetEComInterfacesL(TUid aCategory, RArray<CMemSpyA
     User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetEComInterfaceCount, TIpcArgs(&count, &category)));
     
     TInt requestedCount = count();
+
     HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyEComInterfaceData));
     TPtr8 bufferPtr(buffer->Des());
     
@@ -472,7 +498,7 @@ EXPORT_C void RMemSpySession::GetEComInterfacesL(TUid aCategory, RArray<CMemSpyA
     aInterfaces.Reset();
     
     TInt receivedCount = Min(count(), requestedCount);
-    for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyEComInterfaceData))
+    for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyEComInterfaceData))
         {
         TPckgBuf<TMemSpyEComInterfaceData> data;
         data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyEComInterfaceData));
@@ -489,6 +515,7 @@ EXPORT_C void RMemSpySession::GetEComImplementationsL(TUid aInterface, RArray<CM
     User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetEComImplementationCount, TIpcArgs(&count, &interface)));
     
     TInt requestedCount = count();
+
     HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyEComImplementationData));
     TPtr8 bufferPtr(buffer->Des());
     
@@ -496,7 +523,7 @@ EXPORT_C void RMemSpySession::GetEComImplementationsL(TUid aInterface, RArray<CM
     aImplementations.Reset();
     
     TInt receivedCount = Min(count(), requestedCount);
-    for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyEComImplementationData))
+    for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyEComImplementationData))
         {
         TPckgBuf<TMemSpyEComImplementationData> data;
         data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyEComImplementationData));
@@ -512,6 +539,7 @@ EXPORT_C void RMemSpySession::GetWindowGroupsL(RArray<CMemSpyApiWindowGroup*> &a
     User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetWindowGroupCount, TIpcArgs(&count)));
     
     TInt requestedCount = count();
+
     HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyEngineWindowGroupDetails));
     TPtr8 bufferPtr(buffer->Des());
     
@@ -519,7 +547,7 @@ EXPORT_C void RMemSpySession::GetWindowGroupsL(RArray<CMemSpyApiWindowGroup*> &a
     aGroups.Reset();
     
     TInt receivedCount = Min(count(), requestedCount);
-    for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyEngineWindowGroupDetails))
+    for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyEngineWindowGroupDetails))
         {
         TPckgBuf<TMemSpyEngineWindowGroupDetails> data;
         data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyEngineWindowGroupDetails));
@@ -528,6 +556,13 @@ EXPORT_C void RMemSpySession::GetWindowGroupsL(RArray<CMemSpyApiWindowGroup*> &a
     CleanupStack::Pop(aGroups.Count());
     CleanupStack::PopAndDestroy(buffer);
     }
+
+EXPORT_C void RMemSpySession::SwitchToWindowGroupL( TInt aId )
+	{
+    TPckgBuf<TInt> id( aId );
+    TIpcArgs args(&id);
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpSwitchToWindowGroup, args));
+	}
 
 EXPORT_C void RMemSpySession::DumpKernelHeap()
 	{
@@ -889,6 +924,10 @@ EXPORT_C void RMemSpySession::GetServersL(RArray<CMemSpyApiServer*> &aServers)
     User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetServerCount, TIpcArgs(&count)));
     
     TInt requestedCount = count();
+    
+    if( requestedCount < 0 )
+    	requestedCount = 0;
+    	
     HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyServerData));
     TPtr8 bufferPtr(buffer->Des());
     
@@ -913,6 +952,7 @@ EXPORT_C void RMemSpySession::GetServersL(RArray<CMemSpyApiServer*> &aServers, T
 	User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetServerCount, TIpcArgs(&count)));
 	    	
 	TInt requestedCount = count();
+
 	HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyServerData));
 	TPtr8 bufferPtr(buffer->Des());
 	    
@@ -920,7 +960,7 @@ EXPORT_C void RMemSpySession::GetServersL(RArray<CMemSpyApiServer*> &aServers, T
 	aServers.Reset();
 	    
 	TInt receivedCount = Min(count(), requestedCount);
-	for(TInt i=0, offset = 0; i<requestedCount; i++, offset+=sizeof(TMemSpyServerData))
+	for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyServerData))
 		{
 		TPckgBuf<TMemSpyServerData> data;
 		data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyServerData));
@@ -935,5 +975,90 @@ EXPORT_C void RMemSpySession::ServerListOutputGenericL( TBool aDetailed )
 	TPckgBuf<TBool> detailed( aDetailed );
 	TIpcArgs args( &detailed );
 	User::LeaveIfError( SendReceive( EMemSpyClientServerOpServerListOutputGeneric, args ) );
+	}
+
+// Chunks
+
+EXPORT_C void RMemSpySession::GetChunksL(RArray<CMemSpyApiChunk*> &aChunks, TSortType aSortType)
+    {
+    TPckgBuf<TInt> count;
+    TPckgBuf<TSortType> sort( aSortType );
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetChunksCount, TIpcArgs(&count)));
+            
+    TInt requestedCount = count();
+
+    HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyChunkData));
+    TPtr8 bufferPtr(buffer->Des());
+        
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetSortedChunks, TIpcArgs(&count, &bufferPtr, &sort)));
+    aChunks.Reset();
+        
+    TInt receivedCount = Min(count(), requestedCount);
+    for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyChunkData))
+        {
+        TPckgBuf<TMemSpyChunkData> data;
+        data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyChunkData));
+        aChunks.AppendL(CMemSpyApiChunk::NewLC(data()));
+        }
+    CleanupStack::Pop(aChunks.Count());
+    CleanupStack::PopAndDestroy(buffer);    
+    }
+
+EXPORT_C void RMemSpySession::ChunkListOutputL()
+	{
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpChunkListOutput));
+	}
+
+// RAM info
+EXPORT_C void RMemSpySession::IsAknIconCacheConfigurable( TBool& aValue )
+	{
+	TPckgBuf<TBool> arg( aValue );
+	TIpcArgs args( &arg );
+			
+	User::LeaveIfError(SendReceive( EMemSpyClientServerOpIsAknIconCacheConfigurable, args ));
+		
+	aValue = arg();
+	}
+
+EXPORT_C void RMemSpySession::SetAknIconCacheStatusL( TBool aEnabled, TInt64& aValue )
+	{
+	TPckgBuf<TBool> arg1( aEnabled );
+	TPckgBuf<TInt64> arg2( aValue );
+	TIpcArgs args( &arg1, &arg2 );
+	
+	User::LeaveIfError(SendReceive( EMemSpyClientServerOpSetAknIconCacheStatus, args ));
+	
+	aValue=arg2();
+	}
+
+// Code Segments
+EXPORT_C void RMemSpySession::GetCodeSegmentsL(RArray<CMemSpyApiCodeSegment*> &aCodeSegments, TSortType aSortType)
+	{
+    TPckgBuf<TInt> count;
+    TPckgBuf<TSortType> sort( aSortType );
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetCodeSegmentsCount, TIpcArgs(&count)));
+            
+    TInt requestedCount = count();
+
+    HBufC8* buffer = HBufC8::NewLC(requestedCount * sizeof(TMemSpyCodeSegmentData));
+    TPtr8 bufferPtr(buffer->Des());
+        
+    User::LeaveIfError(SendReceive(EMemSpyClientServerOpGetSortedCodeSegments, TIpcArgs(&count, &bufferPtr, &sort)));
+    aCodeSegments.Reset();
+        
+    TInt receivedCount = Min(count(), requestedCount);
+    for(TInt i=0, offset = 0; i<receivedCount; i++, offset+=sizeof(TMemSpyCodeSegmentData))
+        {
+        TPckgBuf<TMemSpyCodeSegmentData> data;
+        data.Copy(bufferPtr.Ptr()+offset, sizeof(TMemSpyCodeSegmentData));
+        aCodeSegments.AppendL(CMemSpyApiCodeSegment::NewLC(data()));
+        }
+    CleanupStack::Pop(aCodeSegments.Count());
+    CleanupStack::PopAndDestroy(buffer);	
+	}
+
+EXPORT_C void RMemSpySession::CodeSegmentsListOutputL()
+	{
+	User::LeaveIfError(SendReceive(EMemSpyClientServerOpCodeSegmentsOutput));
 	}
 

@@ -40,8 +40,10 @@ const TInt KProfilerMaxLibrariesAmount = 1024;
 const TInt KProfilerTotalMemorySamplePeriod = 100;
 
 // flags
+//#ifndef __SMP__
 #define MEM_EVENT_HANDLER
 //#define MEM_EVENT_HANDLER_LIBRARY_EVENTS
+//#endif
 
 /*
  *	
@@ -61,21 +63,20 @@ public:
 		EProcessingData,
 		ENothingToProcess
 	};
-#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
+
 	enum ESampleType
 	{
 	    ESampleChunks,
 	    ESampleThreads,
 	    ESampleLibraries
 	};
-#endif
 
 	DMemSamplerImpl();
 	~DMemSamplerImpl();
 
 	TInt	CreateFirstSample();
-	TInt	SampleImpl();
-	TBool	SampleNeeded();
+	TInt	SampleImpl(TUint32 sampleNum);
+	TBool	SampleNeeded(TUint32 sampleNum);
 	void	Reset();
 	TInt	ProcessChunks();
 	TInt    ProcessThreads();
@@ -104,7 +105,7 @@ public:
 
 	DChunk*		heapChunksToSample[KProfilerMaxChunksAmount];
 	DChunk*		heapChunkNamesToReport[KProfilerMaxChunksAmount];
-	TInt		iCount;
+	TUint32		iCount;
 	TInt		iChunkCount;
 	TInt		iNewChunkCount;
 	TBuf8<0x50> name;
@@ -112,6 +113,11 @@ public:
 	DThread*	threadNamesToReport[KProfilerMaxThreadsAmount];
 	TInt		iThreadCount;
 	TInt		iNewThreadCount;
+	
+	TInt        iHandledThreads;
+	TInt        iHandledChunks;
+	TInt        iHandledLibs;
+	
 #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
 	DLibrary*   librariesToSample[KProfilerMaxLibrariesAmount];
 	DLibrary*   libraryNamesToReport[KProfilerMaxLibrariesAmount];
@@ -123,26 +129,21 @@ public:
 	TInt		iChunksProcessing;
     TInt        iThreadsProcessing;
 	TInt		iMemSamplingPeriod;
-	TInt		iMemSamplingPeriodDiv2;
-	TInt        iMemSamplingPeriodDiv3;
+	//TInt		iMemSamplingPeriodDiv2;
+	//TInt        iMemSamplingPeriodDiv3;
 	
-#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
+
 	ESampleType iSampleType;
-#else
-	TBool		iSampleThreads;
-#endif	
-	
+
 	TBool       iTimeToSample;
-	
 	TBool 		iTotalMemoryOk;
 	TBool		iTotalMemoryNameOk;
 
 	TUint8		sample[KSampleBufferSize];
 	TPtr8		sampleDescriptor;
-	
-	// test
+	TInt        iThreadsHandled;
+	TInt        iChunksHandled;
 #ifdef MEM_EVENT_HANDLER
-//	DMemoryEventHandler*   iEventHandler;
 	TBool      iChunksGathered;
 	TBool      iThreadsGathered;
 #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
@@ -159,7 +160,7 @@ public:
 	DProfilerMemSampler(struct TProfilerGppSamplerData*, TInt id);
 	~DProfilerMemSampler();
 
-	void	Sample();
+	void	Sample(TAny* aPtr);
 	TInt	Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset);
 	TInt	PostSample();
 	TBool	PostSampleNeeded();
@@ -171,6 +172,7 @@ private:
 	DMemSamplerImpl			           memSamplerImpl;
 	struct TProfilerGppSamplerData*    gppSamplerData;
 	TBool                              sampleNeeded;
+    TUint32                         iSyncOffset;
 };
 
 /*
@@ -185,18 +187,18 @@ DProfilerMemSampler<BufferSize>::DProfilerMemSampler(struct TProfilerGppSamplerD
     {
     LOGSTRING2("DProfilerMemSampler<%d>::CProfilerMemSampler",BufferSize);
 	this->gppSamplerData = gppSamplerDataIn;
+#ifndef MEM_EVENT_HANDLER
 	this->iSamplingPeriod = 3000;	// set default setting
+#endif
+    iSyncOffset = 0;
     }
 
 template <int BufferSize>
 TInt DProfilerMemSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset)
     {
-//#ifdef MEM_EVENT_HANDLER
-//    Kern::Printf("DProfilerMemSampler<%d>::Reset - calling superclass reset",BufferSize);
-    
-//#endif
+    iSyncOffset = aSyncOffset;
     // check if reset called in stop (by driver)
-    if(aSyncOffset != 999999)
+    if(iSyncOffset != KStateSamplingEnding)
         {
         DProfilerGenericSampler<BufferSize>::Reset(aStream);
         memSamplerImpl.Reset();
@@ -213,17 +215,15 @@ TInt DProfilerMemSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
         if(iEventHandler)
             {
             // stop previous sampling if still running
-//            Kern::Printf("Stopping DMemoryEventHandler");
             iEventHandler->Stop();
-            iEventHandler->Close();
-            iEventHandler = NULL;
             }
-    
-//        Kern::Printf("Initiating DMemoryEventHandler");
-        iEventHandler = new DMemoryEventHandler(this->iSampleBuffer);
+        else
+            {
+            iEventHandler = new DMemoryEventHandler(this->iSampleBuffer, this->gppSamplerData);
+            }
+        
         if(iEventHandler)
             {
-//            Kern::Printf("Creating DMemoryEventHandler");
             TInt err(iEventHandler->Create());
             if(err != KErrNone)
                 {
@@ -239,23 +239,23 @@ TInt DProfilerMemSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
     
         // set first chunk&thread memory lookup at the 5 ms, should be enough
 #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
-        this->memSamplerImpl.iMemSamplingPeriod = 45;
+        this->memSamplerImpl.iMemSamplingPeriod = 10;
 #else
         this->memSamplerImpl.iMemSamplingPeriod = 10;
 #endif
-        
-#else
+
+#else   // ifdef mem event handler
         this->memSamplerImpl.iMemSamplingPeriod = this->iSamplingPeriod;
 #endif
-        this->memSamplerImpl.iMemSamplingPeriodDiv2 = (TInt)(this->memSamplerImpl.iMemSamplingPeriod / 2);
-#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
-        this->memSamplerImpl.iMemSamplingPeriodDiv3 = (TInt)(this->memSamplerImpl.iMemSamplingPeriod / 3);
-#endif
+//        this->memSamplerImpl.iMemSamplingPeriodDiv2 = (TInt)(this->memSamplerImpl.iMemSamplingPeriod / 2);
+//#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
+//        this->memSamplerImpl.iMemSamplingPeriodDiv3 = (TInt)(this->memSamplerImpl.iMemSamplingPeriod / 3);
+//#endif
 	
         LOGSTRING3("CProfilerMemSampler<%d>::Reset - set mem sampling period to %d",
                                 BufferSize,this->memSamplerImpl.iMemSamplingPeriod);
         }
-	else
+	else   // iSyncOffset == KStateSamplingEnding
         {
         LOGSTRING2("DProfilerMemSampler<%d>::Reset - reset in stop", BufferSize);
 #ifdef MEM_EVENT_HANDLER
@@ -263,10 +263,8 @@ TInt DProfilerMemSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
         if(iEventHandler)
             {
             // stop previous sampling if still running
-//            Kern::Printf("Stopping DMemoryEventHandler");
+            LOGSTRING("Stopping DMemoryEventHandler");
             iEventHandler->Stop();
-            iEventHandler->Close();
-            iEventHandler = NULL;
             }
 #endif
         return KErrNone;    // return if reset called in stop
@@ -276,6 +274,9 @@ TInt DProfilerMemSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
 	TInt length(memSamplerImpl.CreateFirstSample());
 	this->iSampleBuffer->AddSample(memSamplerImpl.sample,length);
 	
+    TUint8 memSamplerId(4);    // mem sampler id
+    this->iSampleBuffer->AddSample(&memSamplerId,1);
+    this->iSampleBuffer->AddSample((TUint8*)&(gppSamplerData->sampleNumber),4);
 	this->sampleNeeded = false;
 	LOGSTRING("DProfilerMemSampler::Reset - exit");
 	return KErrNone;
@@ -299,25 +300,47 @@ TInt DProfilerMemSampler<BufferSize>::PostSample()
 #endif
         // disable interrupts for checking the kernel containers (EChunk, EThread)
 //        TInt interruptLevel(NKern::DisableInterrupts(0));
-        
         // first collect chunk data
-        TInt length(this->memSamplerImpl.SampleImpl());
+        TInt length(this->memSamplerImpl.SampleImpl(this->gppSamplerData->sampleNumber));
+        LOGSTRING2("DProfilerMemSampler<>::PostSample - in post sample, clock %d", this->memSamplerImpl.iCount );
         if(length != 0)
             {
             // then, encode the sample to the buffer until no further data available
             while(length > 0)
                 {
-                this->iSampleBuffer->AddSample(memSamplerImpl.sample,length);
-                length = this->memSamplerImpl.SampleImpl();
+                TInt ret =this->iSampleBuffer->AddSample(memSamplerImpl.sample,length);
+                if (ret != 0)
+                            {
+                            Kern::Printf(("DProfilerMemSampler<>::PostSample() - add to sample buffer failed, loosing data, error = %d"),ret);                            }
+                length = this->memSamplerImpl.SampleImpl(this->gppSamplerData->sampleNumber);
+                LOGSTRING("DProfilerMemSampler<>::PostSample - in post sample again");
                 
                 // indicate that the whole MEM sample ends by having a 0x00 in the end
                 if(length == 0)
                     {
-                    TUint8 number(0);
+                    TUint8 endMark(0);
                     LOGSTRING("MEM sampler PostSample - all samples generated!");
                     
-                    this->iSampleBuffer->AddSample(&number,1);
+                    this->iSampleBuffer->AddSample(&endMark,1);
                     LOGSTRING2("MEM sampler PostSample - end mark added, time: %d", gppSamplerData->sampleNumber);
+                    
+                    if (memSamplerImpl.iThreadsGathered && !memSamplerImpl.iChunksGathered)
+                        {
+                        LOGSTRING("MEM sampler PostSample - creating timestamp for chunks!");
+                        // add start marker for chunks
+                        TUint8 memSamplerId(4);    // mem sampler id
+                        this->iSampleBuffer->AddSample(&memSamplerId,1);
+                        this->iSampleBuffer->AddSample((TUint8*)&(gppSamplerData->sampleNumber),4);
+                        }
+#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
+                    if (memSamplerImpl.iThreadsGathered && memSamplerImpl.iChunksGathered)
+                        {
+                        // add start marker for chunks
+                        TUint8 memSamplerId(4);    // mem sampler id
+                        this->iSampleBuffer->AddSample(&memSamplerId,1);
+                        this->iSampleBuffer->AddSample((TUint8*)&(gppSamplerData->sampleNumber),4);
+                        }
+#endif
                     }
                 } 
             }
@@ -332,13 +355,17 @@ TInt DProfilerMemSampler<BufferSize>::PostSample()
     if(memSamplerImpl.iThreadsGathered && memSamplerImpl.iChunksGathered)
 #endif
         {
-        // start memory event tracking after checking the current memory status
-        if(!iEventHandler->Tracking())
+        if(iSyncOffset != KStateSamplingEnding)
             {
-            iEventHandler->Start();
-//            Kern::Printf("DProfilerMemSampler<%d>::PostSample - memory event handler started",BufferSize);
+            // start memory event tracking after checking the current memory status
+            if(!iEventHandler->Tracking())
+                {
+                LOGSTRING2("MEM sampler PostSample - Starting event handler timestamp : %x", gppSamplerData->sampleNumber);
+                memSamplerImpl.iTimeToSample = false;
+                iEventHandler->Start();
+                LOGSTRING2("DProfilerMemSampler<%d>::PostSample - memory event handler started",BufferSize);
+                }
             }
-        
         }
 #endif
     
@@ -346,6 +373,8 @@ TInt DProfilerMemSampler<BufferSize>::PostSample()
     
     // finally perform superclass postsample
 	TInt i(this->DProfilerGenericSampler<BufferSize>::PostSample());
+    // notify event handler
+    //iEventHandler->SampleHandled();
 	return i;
     }
 
@@ -354,57 +383,54 @@ TBool DProfilerMemSampler<BufferSize>::PostSampleNeeded()
     {
 	LOGSTRING3("DProfilerMemSampler<%d>::PostSampleNeeded - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
 
-	TUint32 status(this->iSampleBuffer->iBufferStatus);
-
-	if(status == DProfilerSampleBuffer::BufferCopyAsap || status == DProfilerSampleBuffer::BufferFull || this->sampleNeeded == true)
-	    {
-		return true;
-	    }
-	
-	return false;
+	TUint32 status(this->iSampleBuffer->GetBufferStatus());
+    if(iEventHandler)
+        {
+        if(iEventHandler->Tracking())
+            {
+            this->sampleNeeded = iEventHandler->SampleNeeded();
+            }
+        }
+    if(status == DProfilerSampleBuffer::BufferCopyAsap || status == DProfilerSampleBuffer::BufferFull || this->sampleNeeded == true)
+        {
+        return true;
+        }
+    
+    return false;
     }
 
 template <int BufferSize>
-void DProfilerMemSampler<BufferSize>::Sample()
+void DProfilerMemSampler<BufferSize>::Sample(TAny* aPtr)
     {
-    LOGSTRING2("DProfilerMemSampler<%d>::Sample",BufferSize);	
-
-    // check if sample is needed, i.e. the sampling interval is met
-	if(memSamplerImpl.SampleNeeded()) 
-	    {
-        // set the flag for post sampling
-		this->sampleNeeded = true;
-
-		// start the MEM sample with the sample time
-		TUint8 number(4);    // mem sampler id
-		this->iSampleBuffer->AddSample(&number,1);
-		this->iSampleBuffer->AddSample((TUint8*)&(gppSamplerData->sampleNumber),4);
-
-		// leave the rest of the processing for PostSample()
-	    }	
-	
-#ifdef MEM_EVENT_HANDLER
-	// call this to increase the time stamp
-	else if(iEventHandler->SampleNeeded())
-	    {
-        // set the flag for post sampling
-        this->sampleNeeded = true;
-	    }
-	
-//	// check if time stamp is divibable with 
-//	if((memSamplerImpl.iCount % KProfilerTotalMemorySamplePeriod) == 0 && 
-//	        memSamplerImpl.iCount > 0)
+    LOGSTRING3("DProfilerMemSampler<%d>::Sample, time %d",BufferSize, this->memSamplerImpl.iCount);	
+    if(iEventHandler)
+        {
+        if(!iEventHandler->Tracking())
+            {
+            // check if sample is needed, i.e. the sampling interval is met
+            if(memSamplerImpl.SampleNeeded(gppSamplerData->sampleNumber)) 
+                {
+                // set the flag for post sampling
+                this->sampleNeeded = true;
+                /*
+                LOGSTRING2("timestamp : 0x%04x",  gppSamplerData->sampleNumber);
+                // start the MEM sample with the sample time
+                TUint8 memSamplerId(4);    // mem sampler id
+                this->iSampleBuffer->AddSample(&memSamplerId,1);
+                this->iSampleBuffer->AddSample((TUint8*)&(gppSamplerData->sampleNumber),4);
+                */
+                // leave the rest of the processing for PostSample()
+                }	
+            }
+//#ifdef MEM_EVENT_HANDLER
+//	// call this to increase the time stamp
+//	if(iEventHandler->SampleNeeded())
 //	    {
-//        // sample total memory once per 100 ms 
-//        memSamplerImpl.EncodeTotalMemory();
-//
-//        // add end mark
-//        TUint8 number(0);
-//        this->iSampleBuffer->AddSample(&number,1);
+//        // set the flag for post sampling
+//        this->sampleNeeded = true;
 //	    }
-#endif
-	
-	LOGSTRING2("CProfilerMemSampler<%d>::Sample",BufferSize);
+//#endif
+        }
 	return;
     }
 
@@ -417,7 +443,7 @@ DProfilerMemSampler<BufferSize>::~DProfilerMemSampler()
      if(iEventHandler)
          {
          // stop previous sampling if still running
-//         Kern::Printf("Stopping DMemoryEventHandler");
+         LOGSTRING("Stopping DMemoryEventHandler");
          iEventHandler->Stop();
          iEventHandler->Close();
          iEventHandler = NULL;

@@ -1,6 +1,13 @@
 NOTE: JRE1.5 is needed to run TraceCompiler.
 
-TraceCompiler 2.3.0
+TraceCompiler 2.3.2
+
+
+New stuff in 2.3.2
+	- Defect fix : ou1cimx1#570981 - NCP_RAT: Symbian pmd cannot be created
+	
+New stuff in 2.3.1
+	- Defect fix : ou1cimx1yyy483407 Major - Tracing doesn't work when using %hhx parameters in the same trace with a string
 
 New stuff in 2.3.0
 	- TraceCompiler refactored for Symbian Foundation.

@@ -40,6 +40,10 @@ CMemSpyEngineOutputList::~CMemSpyEngineOutputList()
     delete iFormatBuffer;
     iItems.ResetAndDestroy();
     iItems.Close();
+    if (iSink)
+        {
+        TRAP_IGNORE(iSink->FlushL());
+        }
     }
 
 
@@ -151,6 +155,10 @@ void CMemSpyEngineOutputList::PrintL( CMemSpyEngineOutputSink& aSink )
         }
     }
 
+void CMemSpyEngineOutputList::FlushL() 
+    {
+    iSink->FlushL();
+    }
 
 CMemSpyEngineOutputListItem& CMemSpyEngineOutputList::Item( TInt aPos )
     {

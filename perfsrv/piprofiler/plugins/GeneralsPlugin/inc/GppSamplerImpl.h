@@ -96,6 +96,7 @@ private:
 	TInt 		iIsaEnd;
 	TUint32     iMask;
 	TUint32     iCpuSelector;
+	TInt        iPrevTS;   // previous sample's timestamp
 };
 
 struct TProfilerGppSamplerData
@@ -118,13 +119,13 @@ public:
 	~DProfilerGppSampler();
 
 	struct TProfilerGppSamplerData* GetExportData();
-	void	Sample();
+	void	Sample(TAny* aPtr);
 	TInt	Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset);
 	TInt 	GetPeriod();
 	
 private:
-	DGppSamplerImpl gppSamplerImpl;
-	struct TProfilerGppSamplerData exportData;
+	DGppSamplerImpl iGppSamplerImpl;
+	struct TProfilerGppSamplerData iExportData;
 #ifdef __SMP__
 	TInt   iCpuNumber;
 #endif
@@ -140,97 +141,91 @@ template <int BufferSize>
 DProfilerGppSampler<BufferSize>::DProfilerGppSampler() :
 	DProfilerGenericSampler<BufferSize>(PROFILER_GPP_SAMPLER_ID) 
     {
-	LOGSTRING2("CProfilerGppSampler<%d>::CProfilerGppSampler",BufferSize);
+	LOGSTRING2("DProfilerGppSampler<%d>::CProfilerGppSampler",BufferSize);
     }
 #else
 template <int BufferSize>
 DProfilerGppSampler<BufferSize>::DProfilerGppSampler(TInt aCpuNumber) :
     DProfilerGenericSampler<BufferSize>(PROFILER_GPP_SAMPLER_ID+(aCpuNumber*20)), iCpuNumber(aCpuNumber) 
     {
-    LOGSTRING2("CProfilerGppSampler<%d>::CProfilerGppSampler",BufferSize);
+    LOGSTRING3("DProfilerGppSampler<%d>::DProfilerGppSampler, cpu %d",BufferSize, iCpuNumber);
     }
 #endif
 
 template <int BufferSize>
 DProfilerGppSampler<BufferSize>::~DProfilerGppSampler()
     {
-	LOGSTRING2("CProfilerGppSampler<%d>::~CProfilerGppSampler",BufferSize);		
+	LOGSTRING2("DProfilerGppSampler<%d>::~CProfilerGppSampler",BufferSize);		
     }
 
 template <int BufferSize>
 TInt DProfilerGppSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset)
         {
-	LOGSTRING2("CProfilerGppSampler<%d>::Reset - calling superclass reset",BufferSize);
+	LOGSTRING2("DProfilerGppSampler<%d>::Reset - calling superclass reset",BufferSize);
 	DProfilerGenericSampler<BufferSize>::Reset(aStream, 0);
-	LOGSTRING2("CProfilerGppSampler<%d>::Reset - called superclass reset",BufferSize);
+	LOGSTRING2("DProfilerGppSampler<%d>::Reset - called superclass reset",BufferSize);
 
-	this->gppSamplerImpl.Reset();
+	iGppSamplerImpl.Reset();
 	
 #ifdef __SMP__
-	this->gppSamplerImpl.iCpuNumber = this->iCpuNumber;
+	iGppSamplerImpl.iCpuNumber = iCpuNumber;
 	
 	// set common start time for all CPU samplers
-	this->gppSamplerImpl.iStartTime = aSyncOffset;
+	iGppSamplerImpl.iStartTime = aSyncOffset;
 #endif
-	this->gppSamplerImpl.iGppSamplingPeriod = this->iSamplingPeriod;
-	this->gppSamplerImpl.iSampleCount = 0;
-	this->exportData.sampleNumber = 0;
-	this->exportData.lastPcValue = 0;
-    this->exportData.samplingPeriod = this->gppSamplerImpl.iGppSamplingPeriod;
+	iGppSamplerImpl.iGppSamplingPeriod = DProfilerGenericSampler<BufferSize>::iSamplingPeriod;
+	iGppSamplerImpl.iSampleCount = 0;
+	iExportData.sampleNumber = 0;
+	iExportData.lastPcValue = 0;
+    iExportData.samplingPeriod = iGppSamplerImpl.iGppSamplingPeriod;
 
-	TInt length = gppSamplerImpl.CreateFirstSample();
-	LOGSTRING3("CProfilerGPPSampler<%d>::Reset - got first sample, size %d",BufferSize,length);	
+	TInt length = iGppSamplerImpl.CreateFirstSample();
+
+	LOGSTRING3("DProfilerGPPSampler<%d>::Reset - got first sample, size %d",BufferSize,length);
 	
-	this->iSampleBuffer->AddSample(gppSamplerImpl.tempBuf,length);
+	//DProfilerGenericSampler<BufferSize>::iSampleBuffer->AddSample(iGppSamplerImpl.tempBuf,length);
+	this->iSampleBuffer->AddSample(iGppSamplerImpl.tempBuf,length);
 
 	// check if sampling period > 1 ms
 	// NOTE: feature supported in Performance Investigator 2.01 and above
-	if(this->gppSamplerImpl.iGppSamplingPeriod > 1)
+	if(iGppSamplerImpl.iGppSamplingPeriod > 1)
 	    {
         // For Address/Thread (GPP) version 2.01 or above, the first word is the sampling period in milliseconds
-        TUint8* w = gppSamplerImpl.tempBuf;
+        TUint8* w(iGppSamplerImpl.tempBuf);
         
-        (*w++) = (this->gppSamplerImpl.iGppSamplingPeriod >> 24) & 0xFF;
-        (*w++) = (this->gppSamplerImpl.iGppSamplingPeriod >> 16) & 0xFF;
-        (*w++) = (this->gppSamplerImpl.iGppSamplingPeriod >>  8) & 0xFF;
-        (*w++) = (this->gppSamplerImpl.iGppSamplingPeriod) & 0xFF;
+        (*w++) = (iGppSamplerImpl.iGppSamplingPeriod >> 24) & 0xFF;
+        (*w++) = (iGppSamplerImpl.iGppSamplingPeriod >> 16) & 0xFF;
+        (*w++) = (iGppSamplerImpl.iGppSamplingPeriod >>  8) & 0xFF;
+        (*w++) = (iGppSamplerImpl.iGppSamplingPeriod) & 0xFF;
         
-        this->iSampleBuffer->AddSample(gppSamplerImpl.tempBuf,4);
+        //DProfilerGenericSampler<BufferSize>::iSampleBuffer->AddSample(iGppSamplerImpl.tempBuf,4);
+        this->iSampleBuffer->AddSample(iGppSamplerImpl.tempBuf,4);
 	    }
 	
-	LOGSTRING2("CProfilerGPPSampler<%d>::Reset finished",BufferSize);
+	LOGSTRING2("DProfilerGPPSampler<%d>::Reset finished",BufferSize);
 	return KErrNone;
     }
 
 template <int BufferSize>
-void DProfilerGppSampler<BufferSize>::Sample()
+void DProfilerGppSampler<BufferSize>::Sample(TAny* aPtr)
     {
-	LOGSTRING2("CProfilerGppSampler<%d>::Sample",BufferSize);
-//	if(this->gppSamplerImpl.iSampleCount % 1000 == 0) 
-//	    {
-//#ifdef __SMP__
-//	    if(this->iCpuNumber == 0)  // print sample tick only from CPU 0 context
-//	        {
-//#endif
-//	        Kern::Printf(("PIPROF SAMPLE TICK, #%d"),exportData.sampleNumber);
-//#ifdef __SMP__
-//	        }
-//#endif
-//	    }
-	
-	TInt length(gppSamplerImpl.SampleImpl());
+    LOGSTRING2("DProfilerGppSampler<%d>::Sample",BufferSize);
 
-    this->gppSamplerImpl.iSampleCount++;
-	this->exportData.sampleNumber += this->gppSamplerImpl.iGppSamplingPeriod;
-	this->exportData.lastPcValue = gppSamplerImpl.iLastPc;
+	TInt length(iGppSamplerImpl.SampleImpl());
+
+    iGppSamplerImpl.iSampleCount++;
+	iExportData.sampleNumber += iGppSamplerImpl.iGppSamplingPeriod;
+	iExportData.lastPcValue = iGppSamplerImpl.iLastPc;
 
 	if(length > 0)
         {
-        this->iSampleBuffer->AddSample(gppSamplerImpl.tempBuf,length);
+	    TInt ret(this->iSampleBuffer->AddSample(iGppSamplerImpl.tempBuf,length));
+        if (ret != 0)
+            {
+            Kern::Printf(("DProfilerGppSampler<%d>::Sample() - add to sample buffer failed, loosing data, error = %d"),BufferSize,ret);
+            }
         }
-
-	LOGSTRING3("CProfilerGppSampler<%d>::Sample - length %d",BufferSize,length);
-
+	LOGSTRING3("DProfilerGppSampler<%d>::Sample - length %d",BufferSize,length);
 	return;
     }
 
@@ -238,14 +233,14 @@ void DProfilerGppSampler<BufferSize>::Sample()
 template <int BufferSize>
 struct TProfilerGppSamplerData* DProfilerGppSampler<BufferSize>::GetExportData()
     {
-	LOGSTRING2("CProfilerGppSampler<%d>::GetExportData",BufferSize);
-	return &(this->exportData);	
+	LOGSTRING2("DProfilerGppSampler<%d>::GetExportData",BufferSize);
+	return &(iExportData);	
     }
 
 template <int BufferSize>
 TInt DProfilerGppSampler<BufferSize>::GetPeriod()
     {
-	return this->gppSamplerImpl.iGppSamplingPeriod;
+	return iGppSamplerImpl.iGppSamplingPeriod;
     }
 
 #endif

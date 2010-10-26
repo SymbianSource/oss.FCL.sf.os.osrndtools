@@ -68,7 +68,7 @@ class CProfilerButtonListener;
 class CSamplerPluginInterface;
 
 class CBupPlugin : public CSamplerPluginInterface
-{
+    {
 public:	
 	static CBupPlugin* NewL(const TUid aImplementationUid, TAny* aInitParams);
 			~CBupPlugin();
@@ -110,8 +110,7 @@ private:
     CArrayFixFlat<TSamplerAttributes>* iSamplerAttributes;
 public:
 	TUint32* 				iSampleTime;
-};
-
+    };
 
 /*
 *
@@ -126,63 +125,27 @@ class CWsClient : public CActive
 		CWsScreenDevice* iScreen;
 		RWsSession iWs;
 	public:
-		void ConstructL();
+		void ConstructL(CBupPlugin* aSampler);
 		// destruct
 		~CWsClient();
 		// main window
 		virtual void ConstructMainWindowL();
-		// terminate cleanly
 		void Exit();
 		// active object protocol
 		void IssueRequest(); // request an event
 		void DoCancel(); // cancel the request
-		virtual TInt RunError(TInt aError) = 0;
 		virtual void RunL() = 0; // handle completed request
 		virtual void HandleKeyEventL (TKeyEvent& aKeyEvent) = 0;
-
+		virtual void HandleEvent(TInt c) = 0;
 		RWindowGroup Group() {return iGroup;};
-
+		CBupPlugin* GetSampler();
     private:
-		RWindowGroup    iGroup;
-		CWindowGc*      iGc;
-		friend class    CWindow; // needs to get at session
-		RProperty       iProperty;
-
+		RWindowGroup                    iGroup;
+		CWindowGc*                      iGc;
+		friend class                    CWindow; // needs to get at session
+		RProperty                       iProperty;
+	    CBupPlugin*                     iSampler;
 	};
-
-
-
-class CWindow;
-
-class CProfilerButtonListener : public CWsClient 
-{
-public:
-	static 	CProfilerButtonListener* NewL(CBupPlugin* aSamplerm);
-			~CProfilerButtonListener();
-private:
-			CProfilerButtonListener(CBupPlugin* aSampler);
-
-	
-public:
-	void 	ConstructMainWindowL();
-	void 	HandleKeyEventL (TKeyEvent& aKeyEvent);
-	void 	RunL();
-	TInt    RunError(TInt aError);
-	TInt 	StartL();
-	TInt	Stop();
-	
-private:
-	TUint8							iSample[8];
-
-	CBupPlugin*						iSampler;
-	RProfilerTouchEventAnim*			iAnim;
-	RAnimDll*						iAnimDll;
-	CWindow* 						iMainWindow;	// main window
-
-	TInt	 						iSampleStartTime;
-};
-
-
 
 /*
 *
@@ -191,21 +154,51 @@ private:
 */
 class CWindow : public CBase
 	{
-	protected:
-		RWindow iWindow; 	// window server window
-		TRect iRect; 		// rectangle re owning window
-	public:
-		CWindow(CWsClient* aClient);
-		void ConstructL (const TRect& aRect, CWindow* aParent=0);
-		~CWindow();
-		// access
-		RWindow& Window(); // our own window
-		CWindowGc* SystemGc(); // system graphics context
-
-		CWsClient* Client() {return iClient;};
-	private:
-		CWsClient* iClient; // client including session and group
+protected:
+    RWindow iWindow; 	// window server window
+    TRect iRect; 		// rectangle re owning window
+public:
+    CWindow(CWsClient* aClient);
+    void ConstructL (const TRect& aRect, CWindow* aParent=0);
+    ~CWindow();
+    // access
+    RWindow& Window(); // our own window
+    CWindowGc* SystemGc(); // system graphics context
+    // empty drawing functions
+    virtual void Draw(const TRect& aRect) = 0;
+    virtual void HandlePointerEvent (TPointerEvent& aPointerEvent) = 0;
+    
+    CWsClient* Client() {return iClient;};
+private:
+    CWsClient*      iClient; // client including session and group
 	};
 
+class CMainWindow : public CWindow
+    {
+public:
+    CMainWindow (CWsClient* aClient);
+    void Draw (const TRect& aRect);
+    ~CMainWindow ();
+    void HandlePointerEvent (TPointerEvent& aPointerEvent);
+    void ConstructL (const TRect& aRect, CWindow* aParent=0);
+    };
+
+class CProfilerButtonListener : public CWsClient 
+    {
+public:
+    CProfilerButtonListener();
+    void    ConstructMainWindowL();
+    ~CProfilerButtonListener();
+    void    RunL();
+    void    DoCancel();
+    void    HandleKeyEventL (TKeyEvent& aKeyEvent);
+    void    HandleEvent(TInt c);
+private:
+    CMainWindow*     iMainWindow;    // main window
+    TInt             iSampleStartTime;
+    TUint8                          iSample[8];
+    RProfilerTouchEventAnim*        iAnim;
+    RAnimDll*                       iAnimDll;    
+    };
 
 #endif

@@ -69,6 +69,7 @@ private: // Internal methods
     void ParseSWMTParametersL( const CDesCArray& aParameters, TInt& aCategories, TDes& aFilter );
     TInt FindBatchFile( TDes &aFileName );
     TInt FindFile( TDes &aFileName, const TDesC &aDirPath );
+    void PrintHelp();
 
 private: // Console write methods
     void RedrawInputPrompt();

@@ -98,7 +98,8 @@ public:
     virtual void DataStreamBeginL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite ) = 0;
     virtual void DataStreamBeginL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseTimeStamp ) = 0;
     virtual void DataStreamEndL() = 0;
-
+    virtual void FlushL() = 0;
+    
 public:
     virtual void ProcessSuspendedL( TProcessId aId );
     virtual void ProcessResumed( TProcessId aId );

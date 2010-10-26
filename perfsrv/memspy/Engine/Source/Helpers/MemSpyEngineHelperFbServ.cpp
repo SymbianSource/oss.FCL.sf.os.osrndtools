@@ -437,65 +437,67 @@ void CMemSpyEngineHelperFbServ::ReadCObjectConInfoL( TAny* aCellAddress, RArray<
     delete con;
 
     // We should have the valid CObjectCon data now.
-    RDesReadStream stream( *cellData );
-    CleanupClosePushL( stream );
+    if( cellData )
+    	{
+		RDesReadStream stream( *cellData );
+		CleanupClosePushL( stream );
     
-    // Read vtable
-    const TUint32 vTable = stream.ReadUint32L();
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - actual vTable: 0x%08x", vTable ));
-    if  ( vTable != KExpectedObjectConVTable )
-        {
-        User::Leave( KErrNotFound );
-        }
+		// Read vtable
+		const TUint32 vTable = stream.ReadUint32L();
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - actual vTable: 0x%08x", vTable ));
+		if  ( vTable != KExpectedObjectConVTable )
+			{
+			User::Leave( KErrNotFound );
+			}
 
-    const TInt uniqueId = stream.ReadInt32L();
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - uniqueId: %d", uniqueId ));
+		const TInt uniqueId = stream.ReadInt32L();
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - uniqueId: %d", uniqueId ));
 
-    aCount = stream.ReadInt32L();
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - aCount: %d", aCount ));
+		aCount = stream.ReadInt32L();
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - aCount: %d", aCount ));
 
-    aAllocated = stream.ReadInt32L();
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - aAllocated: %d", aAllocated ));
+		aAllocated = stream.ReadInt32L();
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - aAllocated: %d", aAllocated ));
 
-    // This is actually CObject's iObject, i.e. CObject** iObjects.
-    TAny* pObjects = reinterpret_cast< TAny*>( stream.ReadUint32L() );
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - pObjects: 0x%08x", pObjects ));
+		// This is actually CObject's iObject, i.e. CObject** iObjects.
+		TAny* pObjects = reinterpret_cast< TAny*>( stream.ReadUint32L() );
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - pObjects: 0x%08x", pObjects ));
 
-    CleanupStack::PopAndDestroy( 2, cellData ); // cellData & stream
-
-    // Now fetch the cell containing the CObject pointers...
-    err = iEngine.Driver().WalkHeapGetCellInfo( pObjects, cellType, cellLength, cellNestingLevel, cellAllocationNumber, cellHeaderSize, cellPayloadAddress );
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - array of CObject* cell fetch err: %d, cellAddress: 0x%08x, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, aCellAddress, cellLength, cellAllocationNumber, cellType));
-    User::LeaveIfError( err );
-
-    const TInt expectedSize = ( aAllocated * sizeof(CObject*) ) + cellHeaderSize;
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - expectedSize: %d, actual size: %d", expectedSize, cellLength ));
-    if  ( cellLength < expectedSize )
-        {
-        User::Leave( KErrUnderflow );
-        }
+    	CleanupStack::PopAndDestroy( 2, cellData ); // cellData & stream
     
-    // Get the data
-    cellData = HBufC8::NewLC( cellLength );
-    TPtr8 pData( cellData->Des() );
-    err = iEngine.Driver().WalkHeapReadCellData( pObjects, pData, cellLength );
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - reading cell data returned error: %d", err));
-    User::LeaveIfError( err );
+		// Now fetch the cell containing the CObject pointers...
+		err = iEngine.Driver().WalkHeapGetCellInfo( pObjects, cellType, cellLength, cellNestingLevel, cellAllocationNumber, cellHeaderSize, cellPayloadAddress );
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - array of CObject* cell fetch err: %d, cellAddress: 0x%08x, cellLength: %d, cellAllocationNumber: %d, cellType: %d", err, aCellAddress, cellLength, cellAllocationNumber, cellType));
+		User::LeaveIfError( err );
 
-    // Open stream
-    stream.Open( *cellData );
-    CleanupClosePushL( stream );
+		const TInt expectedSize = ( aAllocated * sizeof(CObject*) ) + cellHeaderSize;
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - expectedSize: %d, actual size: %d", expectedSize, cellLength ));
+		if  ( cellLength < expectedSize )
+			{
+			User::Leave( KErrUnderflow );
+			}
+    
+		// Get the data
+		cellData = HBufC8::NewLC( cellLength );
+		TPtr8 pData( cellData->Des() );
+		err = iEngine.Driver().WalkHeapReadCellData( pObjects, pData, cellLength );
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - reading cell data returned error: %d", err));
+		User::LeaveIfError( err );
 
-    // Extract array of pointers
-    for( TInt i=0; i<aCount; i++ )
-        {
-        TAny* objectAddress = reinterpret_cast< TAny*>( stream.ReadUint32L() );
-        TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - object[%04d]: 0x%08x", i, objectAddress ));
-        aContainerObjects.AppendL( objectAddress );
-        }
-    CleanupStack::PopAndDestroy( 2, cellData ); // cellData & stream
+		// Open stream
+		stream.Open( *cellData );
+		CleanupClosePushL( stream );
 
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - END" ));
+		// Extract array of pointers
+		for( TInt i=0; i<aCount; i++ )
+			{
+			TAny* objectAddress = reinterpret_cast< TAny*>( stream.ReadUint32L() );
+			TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - object[%04d]: 0x%08x", i, objectAddress ));
+			aContainerObjects.AppendL( objectAddress );
+			}		
+	    CleanupStack::PopAndDestroy( 2, cellData ); // cellData & stream
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::ReadCObjectConInfoL() - END" ));		
+    	}
     }
 
 
@@ -773,33 +775,36 @@ CMemSpyEngineHelperFbServ::CBitmapObject* CMemSpyEngineHelperFbServ::GetBitmapOb
         User::Leave( KErrNotFound );
         }
 
-    RDesReadStream stream( *cellData );
-    CleanupClosePushL( stream );
-    
-    // Read vtable
-    const TUint32 vTable = stream.ReadUint32L();
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - actual vTable: 0x%08x", vTable ));
-    TBool isROMAddress = EFalse;
-    err = User::IsRomAddress( isROMAddress, (TAny*) vTable );
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - vtable (0x%08x) is in ROM: %d (error: %d)", vTable, isROMAddress, err));
-    User::LeaveIfError( err );
+    if( cellData )
+    	{
+		RDesReadStream stream( *cellData );
+		CleanupClosePushL( stream );
+    	    
+		// Read vtable
+		const TUint32 vTable = stream.ReadUint32L();
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - actual vTable: 0x%08x", vTable ));
+		TBool isROMAddress = EFalse;
+		err = User::IsRomAddress( isROMAddress, (TAny*) vTable );
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - vtable (0x%08x) is in ROM: %d (error: %d)", vTable, isROMAddress, err));
+		User::LeaveIfError( err );
 
-    // Skip CObject members
-    (void) stream.ReadL( sizeof( CObject ) ); // skip this much
-    object->iThisPointer = reinterpret_cast< CBitmapObject* >( cellPayloadAddress );;
-    object->iTop = reinterpret_cast< CBase* >( stream.ReadUint32L() );
-    object->iAddressPointer = reinterpret_cast< CBitwiseBitmap* >( stream.ReadUint32L() );
-    object->iHandle = stream.ReadInt32L();
-    object->iCleanBitmap = reinterpret_cast< CBitmapObject* >( stream.ReadUint32L() );
+		// Skip CObject members
+		(void) stream.ReadL( sizeof( CObject ) ); // skip this much
+		object->iThisPointer = reinterpret_cast< CBitmapObject* >( cellPayloadAddress );;
+		object->iTop = reinterpret_cast< CBase* >( stream.ReadUint32L() );
+		object->iAddressPointer = reinterpret_cast< CBitwiseBitmap* >( stream.ReadUint32L() );
+		object->iHandle = stream.ReadInt32L();
+		object->iCleanBitmap = reinterpret_cast< CBitmapObject* >( stream.ReadUint32L() );
 
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iThisPointer:    0x%08x", object->iThisPointer ));
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iTop:            0x%08x", object->iTop ));
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iAddressPointer: 0x%08x", object->iAddressPointer ));
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iHandle:         0x%08x", object->iHandle ));
-    TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iCleanBitmap:    0x%08x", object->iCleanBitmap ));
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iThisPointer:    0x%08x", object->iThisPointer ));
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iTop:            0x%08x", object->iTop ));
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iAddressPointer: 0x%08x", object->iAddressPointer ));
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iHandle:         0x%08x", object->iHandle ));
+		TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - object->iCleanBitmap:    0x%08x", object->iCleanBitmap ));
     
-    // Clean up - don't need this data anymore. Real data is in another cell
-    CleanupStack::PopAndDestroy( 2, cellData );  // stream & cellData
+		// Clean up - don't need this data anymore. Real data is in another cell
+    	CleanupStack::PopAndDestroy( 2, cellData );  // stream & cellData
+    	}
 
     TRACE( RDebug::Printf("CMemSpyEngineHelperFbServ::GetBitmapObjectLC() - END - aCellAddress: 0x%08x", aCellAddress ));
     return object;

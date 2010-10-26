@@ -54,7 +54,8 @@ enum TMemSpyEnginePanic
     EMemSpyEnginePanicTrackerNull3 = 9,
     EMemSpyEnginePanicTrackerNull4 = 10,
     EMemSpyEnginePanicSinkFileEntireFileBufferNull = 11,
-    EMemSpyEnginePanicSinkFileWorkingFileBufferIsNull = 11,
+    EMemSpyEnginePanicSinkFileWorkingFileBufferIsNull = 12,
+    EMemSpyEnginePanicUnsupportedHeapType = 13,
     };
 
 

@@ -158,7 +158,7 @@ class CProfiler : public CBase, private MProfilerEngine,
 {
 	public:
 		
-		static CProfiler*	NewLC(const TDesC& aSettingsFile);
+		static CProfiler*	NewLC(const TDesC& aSettingsFile, TBool aBootMode=EFalse);
 
 		/**
 		 * Method for control commands, i.e. start, stop and exit 
@@ -199,7 +199,7 @@ class CProfiler : public CBase, private MProfilerEngine,
 	    void  HandleError(TInt aErr);
 	    static TBool CheckLocationSanity(RFs& fs, const TDesC8& aLocation);
 private:
-							CProfiler(const TDesC& aSettingsFile);
+							CProfiler(const TDesC& aSettingsFile, TBool aBootmode);
 							~CProfiler();
 		void				ConstructL();
 		TInt 				LoadSettingsL(/*const TDesC& configFile*/);		
@@ -251,6 +251,7 @@ private:
         TBool                           iSettingsFileLoaded;
         CProfilerErrorChecker*          iErrorChecker;
         CProfilerTimer*                 iTimer;
+        TBool                           iBootMode;
 };
 
 #include <piprofiler/ProfilerGenericClassesUsr.h>

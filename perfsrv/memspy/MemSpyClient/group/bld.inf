@@ -28,6 +28,8 @@ PRJ_EXPORTS
 ../inc/memspymemorytrackingcycledata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspymemorytrackingcycledata.h)
 ../inc/memspyserverdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspyserverdata.h)
 ../inc/memspyecomdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspyecomdata.h)
+../inc/memspychunkdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspychunkdata.h)
+../inc/memspycodesegmentdata.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/engine/memspycodesegmentdata.h)
 
 ../inc/memspyapiprocess.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiprocess.h)
 ../inc/memspyapikernelobject.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapikernelobject.h)
@@ -37,6 +39,8 @@ PRJ_EXPORTS
 ../inc/memspyapithreadinfoitem.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapithreadinfoitem.h)
 ../inc/memspyapimemorytrackingcycle.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapimemorytrackingcycle.h)
 ../inc/memspyapiserver.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiserver.h)
+../inc/memspyapichunk.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapichunk.h)
+../inc/memspyapicodesegment.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapicodesegment.h)
 ../inc/memspyapiecom.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiecom.h)
 ../inc/memspyapiwindowgroup.h OS_LAYER_PLATFORM_EXPORT_PATH(memspy/api/memspyapiwindowgroup.h)
 

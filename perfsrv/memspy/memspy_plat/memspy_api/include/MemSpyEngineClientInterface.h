@@ -361,12 +361,20 @@ enum TMemSpyClientServerOp
     //Servers methods
 	EMemSpyClientServerOpGetServerCount,
 	
-	EMemSpyClientServerOpGetServers,
+	EMemSpyClientServerOpGetServers,	
 	
 	EMemSpyClientServerOpGetSortedServers,
 	
 	EMemSpyClientServerOpServerListOutputGeneric,
 	
+	//Chunks methods
+	EMemSpyClientServerOpGetChunksCount,
+	
+	EMemSpyClientServerOpGetSortedChunks,	
+	
+	EMemSpyClientServerOpChunkListOutput,
+		
+	//ECom methods	
 	EMemSpyClientServerOpGetEComCategoryCount,
 	    
 	EMemSpyClientServerOpGetEComCategories,
@@ -383,6 +391,25 @@ enum TMemSpyClientServerOp
 	    
 	EMemSpyClientServerOpGetWindowGroups,
 	
+	EMemSpyClientServerOpSwitchToWindowGroup,
+	
+	//RAM info
+	EMemSpyClientServerOpIsAknIconCacheConfigurable,
+	
+	EMemSpyClientServerOpSetAknIconCacheStatus,
+	
+	//Code Segments
+	EMemSpyClientServerOpGetCodeSegmentsCount,
+	
+	EMemSpyClientServerOpGetSortedCodeSegments,
+	
+	EMemSpyClientServerOpCodeSegmentsOutput,
+	
+	//Others
+	EMemSpyClientServerOpNotifyEvent,
+	
+	EMemSpyClientServerOpCancelEventNotification,
+	
 	EMemSpyClientServerOpMarkerUiLast,		
 	
 	/**
@@ -396,7 +423,8 @@ enum TMemSpyEndType
 	{
 	ETerminate,
 	EKill,
-	EPanic
+	EPanic,
+	EExit
 	};
 
 

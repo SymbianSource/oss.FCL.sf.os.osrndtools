@@ -50,7 +50,7 @@ const TUid KSamplerPriPluginUid = { 0x2001E574 };
  * 
  */
  
-CGeneralsPlugin* CGeneralsPlugin::NewL(const TUid aImplementationUid, TAny* /*aInitParams*/)
+EXPORT_C CGeneralsPlugin* CGeneralsPlugin::NewL(const TUid aImplementationUid, TAny* /*aInitParams*/)
     {
 	LOGTEXT(_L("CGeneralsPlugin::NewL() - entry"));
     CGeneralsPlugin* self = new (ELeave) CGeneralsPlugin();
@@ -555,22 +555,22 @@ TInt CGeneralsPlugin::ResetAndActivateL(CProfilerSampleStream& aStream)
 	
 TInt CGeneralsPlugin::StopSampling() 
     {
-    // RDebug::Print(_L("CGeneralsPlugin::StopSampling() - Stopping sampler LDD"));
-	iGeneralsSampler.StopSampling();
-	// RDebug::Print(_L("CGeneralsPlugin::StopSampling() - Sampler LDD stopped"));
-	
-	// check if bufferhandler has died
-	if(iBufferHandler)
+		LOGSTRING("CGeneralsPlugin::StopSampling() - Stopping sampler LDD");
+		iGeneralsSampler.StopSampling();
+		LOGSTRING("CGeneralsPlugin::StopSampling() - Sampler LDD stopped");
+		
+		// check if bufferhandler has died
+		if(iBufferHandler)
 		{
-		// RDebug::Print(_L("CGeneralsPlugin::StopSampling() - Canceling the buffer handler"));
-		iBufferHandler->Cancel();
-		delete iBufferHandler;
-		iBufferHandler = NULL;
+		LOGSTRING("CGeneralsPlugin::StopSampling() - Canceling the buffer handler");
+			iBufferHandler->Cancel();
+			delete iBufferHandler;
+			iBufferHandler = NULL;
 		}	
-	// set enabled
-    iEnabled = EFalse;
-    // RDebug::Print(_L("CGeneralsPlugin::StopSampling() - exit"));
-	return KErrNone;
+		// set enabled
+		iEnabled = EFalse;
+		LOGSTRING("CGeneralsPlugin::StopSampling() - exit");
+		return KErrNone;
     }
 
 

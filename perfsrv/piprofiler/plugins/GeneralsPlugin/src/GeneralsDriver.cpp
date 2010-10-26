@@ -23,6 +23,7 @@
 #include <kern_priv.h>
 #include <platform.h>
 #include <arm.h>
+#include <kernel/kpower.h>
 
 #ifdef __SMP__
 #include <assp/naviengine/naviengine.h> 
@@ -51,36 +52,24 @@ extern void UsrModLr(TUint32*);
 static _LIT_SECURITY_POLICY_PASS(KAllowAllPolicy);
 static _LIT_SECURITY_POLICY_FAIL( KDenyAllPolicy );
 
-#define SEPARATE_DFC_QUEUE
 // CONSTANTS
-
 //_LIT(DProfilerThread,"DProfilerThread");
-//const TInt KDProfilerThreadPriority = 27;
+const TInt KDSamplerThreadPriority = 27;
 
-#ifdef SEPARATE_DFC_QUEUE
 const TInt KGeneralsDriverThreadPriority = 24;
 _LIT(KGeneralsDriverThread, "PIGeneralsDriver");
 
-#endif
-
 // global Dfc Que
-//TDynamicDfcQue* gDfcQ;
+TDynamicDfcQue* gDfcQ;
 
-//#ifdef __SMP__
-//
-//enum  TNaviEngineAsspInterruptIdExtension
-//{
-//    KIntProfilerBase = 99      //  Sampling profiler interrupt base. 
-//    //  Each CPU is assigned a sampling interrupt from this base
-//    //  CPU-0's sampling interrupt is KIntIdSamplingBase + 0
-//    //  CPU-n's sampling interrupt is KIntIdSamplingBase + n
-//};
-//#endif
+#ifdef __SMP__
+static TSpinLock PiSpinLock = TSpinLock(TSpinLock::EOrderGenericIrqLow2);
+#endif
 
 /*
  *
  *
- *	Class DGfcProfilerFactory definition
+ *	Class DGeneralsProfilerFactory definition
  *
  *
  */
@@ -100,11 +89,12 @@ class DGeneralsProfilerFactory : public DLogicalDevice
 /*
  *
  *
- *	Class DGfcDriver definition
+ *	Class DGeneralsDriver definition
  *
  *
  */
 class DPluginDriver;
+class DSamplerPowerHandler;
 
 class DGeneralsDriver : public DPluginDriver
 {
@@ -112,20 +102,22 @@ class DGeneralsDriver : public DPluginDriver
 public:
 	DGeneralsDriver();
 	~DGeneralsDriver();
-
+    TInt                    StartSampling(TInt aRate, TInt aInterruptNumber);
+    TInt                    StopSampling();
 private:
-	TInt					NewStart(TInt aRate);
+    TInt                    isExecuted;
+    TInt                    NewStart(TInt aRate);
+    void                    IncrementSampleNeededState(TInt aId);
+    void                    DecrementSampleNeededState();
 	static void				NewDoProfilerProfile(TAny*);
 	static void				NewDoDfc(TAny*);
 	
 	// called by each core
-	static void				Sample(TAny*);
+	static void				Sample(TAny* aPtr);
 
 	TInt					GetSampleTime(TUint32* time);
 	//TInt					Test(TUint32 testCase); 
 
-	TInt					StartSampling();
-	TInt                    StopSampling();
 
 	void					InitialiseSamplerList(); 
 
@@ -169,7 +161,7 @@ private:
 #endif
 	DProfilerGfcSampler<10000> 	gfcSampler;
 	DProfilerIttSampler<10000> 	ittSampler;
-	DProfilerMemSampler<40000> 	memSampler;
+	DProfilerMemSampler<10000> 	memSampler;
 	DProfilerPriSampler<10000> 	priSampler;
 #ifdef __SMP__
 //    DProfilerPriSampler<10000>  priSampler2;
@@ -183,13 +175,46 @@ private:
     static const TInt           KSamplerAmount = 8;
 #endif
 	DProfilerSamplerBase*		iSamplers[KSamplerAmount];
+    TUint                       iInterruptCounter[KMaxCpus];
     TInt                        iMaxCpus;
     TUint32                     iStartTime; 
-	
-#ifdef SEPARATE_DFC_QUEUE
-	TDynamicDfcQue*             iDfcQ;
-#endif
+    TInt8                       postSampleNeeded;
+    DSamplerPowerHandler*       iPowerHandler;
+    
+    /* using the HAL machine UID we determine the platform Bridge/Naviengine */
+      enum TPlatform
+          {
+          /* Bridge Platform STE500*/
+          EBridge,
+          /* Naviengine Platform NE1_TB */
+          ENaviengine,
+          /* Not recognised platform */
+          ENotRecognised,
+          /* Spare */
+          ESpare
+          };
+      TPlatform iPlatform;
+
+public:
+    TUint8 iStarted;
+    TUint8 iOff;
+    TInt iRate;
+    TInt iIntNo; // Interrupt Number
 };
+/*
+ * PowerHandler
+ */
+class DSamplerPowerHandler : public DPowerHandler
+    {
+public: // from DPowerHandler
+    void PowerUp();
+    void PowerDown(TPowerState);
+public:
+    DSamplerPowerHandler(DGeneralsDriver* aChannel);
+public:
+    DGeneralsDriver* iChannel;
+    };
+
 
 /*
  *
@@ -219,14 +244,21 @@ DGeneralsProfilerFactory::DGeneralsProfilerFactory()
 
 DGeneralsProfilerFactory::~DGeneralsProfilerFactory()
     {
-//    if (gDfcQ)
-//        {
-//        gDfcQ->Destroy();
-//        }
+    if (gDfcQ)
+        {
+        gDfcQ->Destroy();
+        }
     }
 
 TInt DGeneralsProfilerFactory::Install()
     {
+    // Allocate a kernel thread to run the DFC 
+    TInt r = Kern::DynamicDfcQCreate(gDfcQ, KDSamplerThreadPriority, KGeneralsDriverThread);
+    if (r != KErrNone)
+        {
+        return r;
+        }
+
     return(SetName(&KPluginSamplerName));
     }
 
@@ -275,6 +307,7 @@ DGeneralsDriver::DGeneralsDriver() :
 	sampleRunning = 0;
 	iSyncOffset = 0;
 	iStartTime = 0;
+	postSampleNeeded = 0;
 	InitialiseSamplerList();
     }
 
@@ -306,6 +339,11 @@ void DGeneralsDriver::InitialiseSamplerList()
 #ifdef __SMP__
     // get the number of cpus
     iMaxCpus = NKern::NumberOfCpus();
+    for(TInt nCpu(0); nCpu < iMaxCpus; nCpu++)
+        {
+        iInterruptCounter[nCpu] = 0;
+        }
+
 #else
     iMaxCpus = 0;
 #endif
@@ -315,14 +353,14 @@ void DGeneralsDriver::InitialiseSamplerList()
 	TInt r(iSampleStartTimeProp.Attach(KGppPropertyCat, EGppPropertySyncSampleNumber));
     if (r!=KErrNone)
         {
-        LOGSTRING2("DGeneralsDriver::InitialiseSamplerList() - error in attaching counter property, error %d", r);
+        Kern::Printf("DGeneralsDriver::InitialiseSamplerList() - error in attaching counter property, error %d", r);
         }
     LOGSTRING("DGeneralsDriver::InitialiseSamplerList() - defining properties");
     r = iSampleStartTimeProp.Define(RProperty::EInt, KAllowAllPolicy, KDenyAllPolicy, 0, NULL);
     if (r!=KErrNone)
         {
-        LOGSTRING2("DGeneralsDriver::InitialiseSamplerList() - error in defining counter property, error %d", r);
-        }	
+        Kern::Printf("DGeneralsDriver::InitialiseSamplerList() - error in defining counter property, error %d", r);
+        }
 	}
 
 
@@ -341,7 +379,7 @@ DProfilerSamplerBase* DGeneralsDriver::GetSamplerForId(TInt samplerIdToGet)
 TInt DGeneralsDriver::DoCreate(TInt aUnit, const TDesC8* anInfo, const TVersion& aVer)
     {
     TUint8 err(KErrNone);
-    
+    LOGSTRING("DGeneralsDriver::DoCreate()");
     if (!Kern::QueryVersionSupported(TVersion(1,0,1),aVer))
 	   	return KErrNotSupported;
     
@@ -361,13 +399,20 @@ TInt DGeneralsDriver::DoCreate(TInt aUnit, const TDesC8* anInfo, const TVersion&
         //Require Power Management and All Files to use this driver
         // Not ideal, but better than nothing
         if(!Kern::CurrentThreadHasCapability(ECapabilityPowerMgmt,__PLATSEC_DIAGNOSTIC_STRING("Checked by GeneralsDriver.ldd")))
+            {
+            Kern::Printf("DGeneralsDriver::CurrentThreadHasCapability - denied");
             return KErrPermissionDenied;
+            }
         if(!Kern::CurrentThreadHasCapability(ECapabilityAllFiles,__PLATSEC_DIAGNOSTIC_STRING("Checked by GeneralsDriver.ldd")))
-            return KErrPermissionDenied;  
+            {
+                Kern::Printf("DGeneralsDriver::CurrentThreadHasCapability - denied");
+                return KErrPermissionDenied;
+            }
         
         SSecurityInfo secureInfo = clientProcess->iS;
         if (secureInfo.iSecureId != KProfilerExeSecurUid)
             {
+            Kern::Printf("DGeneralsDriver::security - denied");
             return KErrPermissionDenied;
             }
         }
@@ -378,22 +423,20 @@ TInt DGeneralsDriver::DoCreate(TInt aUnit, const TDesC8* anInfo, const TVersion&
 	iTimer.Cancel();
 	iNewDfc.Cancel();
 
-	Kern::SetThreadPriority(24);
+	Kern::SetThreadPriority(KGeneralsDriverThreadPriority);
 
-#ifdef SEPARATE_DFC_QUEUE
-	err = Kern::DynamicDfcQCreate(iDfcQ, KGeneralsDriverThreadPriority, TBuf8<32>( KGeneralsDriverThread ));
-	if (KErrNone == err)
+    SetDfcQ(gDfcQ);
+    iNewDfc.SetDfcQ(iDfcQ);
+    iMsgQ.Receive();
+	
+	// create the power handler
+    iPowerHandler = new DSamplerPowerHandler(this);
+    if (!iPowerHandler)
         {
-        SetDfcQ(iDfcQ);
-        iNewDfc.SetDfcQ(iDfcQ);
-        iMsgQ.Receive();
-        return err;
+        Kern::Printf("DGeneralsDriver::DoCreate() : new DSamplerPowerHandler(this) failed");
+        return KErrNoMemory;
         }
-#else
-	SetDfcQ(Kern::DfcQue0());
-	iNewDfc.SetDfcQ(iDfcQ);
-	iMsgQ.Receive();
-#endif
+    iPowerHandler->Add();
 	return err;
     }
 
@@ -402,11 +445,6 @@ DGeneralsDriver::~DGeneralsDriver()
 	if (iState!=EStopped)
 	    iTimer.Cancel();
 	iNewDfc.Cancel();
-	
-#ifdef SEPARATE_DFC_QUEUE
-	if(iDfcQ)
-	    iDfcQ->Destroy();
-#endif
 	
 	iSampleStartTimeProp.Close();
 	Kern::SafeClose((DObject*&)iClient,NULL);
@@ -450,48 +488,39 @@ TInt DGeneralsDriver::NewStart(TInt aDelay)
 	
 #ifdef __SMP__
     /*
-     * Bind and enable the sampling interupts associated with each core. 
+     * Bind and enable the sampling interrupts 
      */
     TInt err(0);
-    
-    TUint32 flags = NKern::EIrqBind_Count;
+    TUint32 flags(NKern::EIrqBind_Count);
+    TInt noofCpu(NKern::NumberOfCpus());
 
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase - 32=%d", KIntProfilerBase -32 );
-    err = NKern::InterruptBind( KIntProfilerBase - 32 , DGeneralsDriver::Sample, this, flags, 0);
-    if(err < 0)
-        Kern::Printf(" InterruptBind KIntProfilerBase - 32 ret = %d", err );
-    
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase + 1 - 32=%d", KIntProfilerBase + 1-32 );
-    err = NKern::InterruptBind( KIntProfilerBase + 1 - 32 , DGeneralsDriver::Sample, this, flags, 0);
-    if(err < 0)
-        Kern::Printf(" InterruptBind KIntProfilerBase + 1 - 32 ret = %d", err );
-
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase + 2 - 32=%d", KIntProfilerBase + 2 - 32 );
-    err = NKern::InterruptBind(KIntProfilerBase + 2 - 32 , DGeneralsDriver::Sample, this, flags, 0);
-    if(err < 0)
-        Kern::Printf(" InterruptBind KIntProfilerBase + 2 - 32 ret = %d", err );
-
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase + 3 - 32=%d", KIntProfilerBase + 3 - 32 );
-    err = NKern::InterruptBind(KIntProfilerBase + 3 - 32 , DGeneralsDriver::Sample, this, flags, 0);
-    if(err < 0)
-        Kern::Printf(" InterruptBind KIntProfilerBase + 3 - 32 ret = %d", err );
-
-
-    err = NKern::InterruptEnable(KIntProfilerBase - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptEnable KIntProfilerBase - 32 ret = %d", err );
-    
-    err = NKern::InterruptEnable(KIntProfilerBase + 1 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptEnable KIntProfilerBase + 1 - 32 ret = %d", err );
-
-    err = NKern::InterruptEnable(KIntProfilerBase + 2 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptEnable KIntProfilerBase + 2 - 32 ret = %d", err );
-
-    err = NKern::InterruptEnable(KIntProfilerBase + 3 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptEnable KIntProfilerBase + 3 - 32 ret = %d", err );
+    //Binding to the interrupt(s)
+    for( TInt nCpu(0); nCpu < noofCpu; nCpu++ )
+        {
+        LOGSTRING3(" > Interrupt::InterruptBind %d + %d - 32", iIntNo, nCpu );
+        err = NKern::InterruptBind( (iIntNo + nCpu - 32) , DGeneralsDriver::Sample, this, flags, 0);
+        if(err < 0)
+            {
+            Kern::Printf(" InterruptBind %d + %d - 32 Error = 0x%x", iIntNo, nCpu, err );
+            return err;
+            }
+        }
+     
+    //Enabling Interrupt(s)
+    for( TInt nCpu(0); nCpu < noofCpu; nCpu++ )
+        {
+        LOGSTRING3(" > NKern::InterruptEnable %d + %d - 32", iIntNo, nCpu );
+        err = NKern::InterruptEnable(iIntNo + nCpu - 32);
+        if(err < 0)
+            {
+            Kern::Printf(" InterruptEnable %d + %d - 32 ret = 0x%x", iIntNo, nCpu, err );
+            return err;
+            }
+        
+        /* For Bridge we enable one single interrupt for CPU 1 */
+       if(iPlatform == EBridge)
+           break;
+        }
         
 #endif
 	
@@ -502,6 +531,33 @@ TInt DGeneralsDriver::NewStart(TInt aDelay)
 	return KErrNone;
     }
 
+void DGeneralsDriver::IncrementSampleNeededState(TInt aId)
+    {
+    LOGSTRING2("DGeneralsDriver::IncrementSampleNeededState() - incrementing sample needed state, caller id: %d", (aId+1));
+#ifdef __SMP__
+    TInt intState(0);
+    intState = __SPIN_LOCK_IRQSAVE(PiSpinLock);
+#endif
+    postSampleNeeded++;
+#ifdef __SMP__
+    __SPIN_UNLOCK_IRQRESTORE(PiSpinLock, intState);
+#endif
+    }
+
+void DGeneralsDriver::DecrementSampleNeededState()
+    {
+    LOGSTRING("DGeneralsDriver::DecrementSampleNeededState() - decrementing sample needed state");
+#ifdef __SMP__
+    TInt intState(0);
+    intState = __SPIN_LOCK_IRQSAVE(PiSpinLock);
+#endif
+    postSampleNeeded--;
+#ifdef __SMP__
+    __SPIN_UNLOCK_IRQRESTORE(PiSpinLock, intState);
+#endif
+    }
+
+
 /*
  *	This function is run in each interrupt
  */
@@ -510,83 +566,147 @@ TInt DGeneralsDriver::NewStart(TInt aDelay)
 void DGeneralsDriver::NewDoProfilerProfile(TAny* aPtr)
     {
     LOGSTRING("DGeneralsDriver::NewDoProfilerProfile - entry");
-    
+    DGeneralsDriver& d=*(DGeneralsDriver*)aPtr;
 #ifdef __SMP__      
     TInt currCpu(NKern::CurrentCpu());
 #endif
-    TInt8 postSampleNeeded(0);
-    DGeneralsDriver& d=*(DGeneralsDriver*)aPtr;
 
-	if (d.iState == ERunning && d.sampleRunning == 0)
-	    {
-        // start timer again
-		d.iTimer.Again(d.iPeriod);
-		d.sampleRunning++;
-        
+    if(!d.iOff)
+        {
+        if (d.iState == ERunning && d.sampleRunning == 0)
+            {
+            // start timer again
+            d.iTimer.Again(d.iPeriod);
+            d.sampleRunning++;
+
 #ifdef __SMP__      
-        // print out the sample tick
-        if(d.gppSampler.GetExportData()->sampleNumber% 1000 == 0) 
-            {
-            Kern::Printf(("PIPROF SAMPLE TICK, #%d"), d.gppSampler.GetExportData()->sampleNumber);
-            }
-        // call the actual CPU sampling function for CPU 0 (in NaviEngine), later may be on any of the CPUs
-        Sample(aPtr);
-        
-        // post-sampling for NTimer interrupted CPU
-        postSampleNeeded += d.iSamplers[currCpu]->PostSampleNeeded();
-        
-        /* 
-        This is the master sampler from the watchdog timer, so 
-        send interrupts to the other CPUs
-        */
-        TScheduler *theSched = TScheduler::Ptr();
-        GicDistributor* gicDist = (GicDistributor* )theSched->i_GicDistAddr;
+            // print out the sample tick
+            if(d.gppSampler.GetExportData()->sampleNumber% 1000 == 0) 
+                {
+                Kern::Printf(("PIPROF SAMPLE TICK, #%d"), d.gppSampler.GetExportData()->sampleNumber);
+                }
             
-        for( TInt nCpu(0); nCpu < d.iMaxCpus; nCpu++ )
-            {
-            if( nCpu != currCpu )
+            // call the actual CPU sampling function for CPU 0 (in NaviEngine), later may be on any of the CPUs
+            Sample(aPtr);
+            
+            /* 
+            This is the master sampler from the watchdog timer, so 
+            send interrupts to the other CPU(s)
+            */
+            TScheduler *theSched = TScheduler::Ptr();
+//            GicDistributor* gicDist = (GicDistributor* )theSched->i_GicDistAddr;
+            GicDistributor* gicDist = (GicDistributor* )(theSched->iSX.iGicDistAddr);
+            
+            // post-sampling for NTimer interrupted CPU
+            //d.postSampleNeeded += d.iSamplers[currCpu]->PostSampleNeeded();
+            
+            if (d.iPlatform == EBridge)
                 {
-                gicDist->iSoftIrq = ( 0x10000 << nCpu ) | (KIntProfilerBase + nCpu);
+                /* The Interrupt ID is hardcoded for Bridge to be 108/117, using SPI on ARM GIC
+                 * Programming the GIC Distributor Set-Pending Register to raise an interrupt
+                 * Programming the GIC Distributor Target Register to set an interrupt in CPU 1
+                 */
+            
+                /* Interrupt Processor Targets Registers (ICDIPTRn)
+                 * target register  ICDIPTR number, M, is given by M = N DIV 4
+                 * so M is 27 for N = 108/117
+                 * NTimer interrupt is always defaulted to CPU 0 so we have to interrupt CPU 1
+                 * setting 0bxxxxxx1x CPU interface 1
+                 */
+//                gicDist->iTarget[27] |= 0x00000002; 
+//                gicDist->iTarget[27] &= 0xFE;
+                gicDist->iTarget[29] |= 0x00000200; 
+                gicDist->iTarget[29] &= 0xFFFFFEFF;
+
+                /* Interrupt Set-Pending Registers (ICDISPRn) 
+                 * the corresponding ICDISPR number, M, is given by M = N DIV 32
+                 * M = 3 for N being 108/117
+                 * the bit number of the required Set-pending bit in this register is N MOD 32
+                 * which in this case is 12
+                 */ 
+//                gicDist->iPendingSet[3] = 1<<((12));  // N = 108
+                gicDist->iPendingSet[3] = 1<<((21));    // N = 117
+
+                arm_dsb();
+                
                 }
-            // post-sampling for CPUs with specifically generated interrupts
-            postSampleNeeded += d.iSamplers[nCpu]->PostSampleNeeded();
-            }
-        arm_dsb();
+            else if (d.iPlatform == ENaviengine) //naviengine platform
+                {
+                for( TInt nCpu(0); nCpu < NKern::NumberOfCpus(); nCpu++ )
+                    {
+                    if( nCpu != currCpu )
+                        {
+                        //Kern::Printf(("DProfile::TimerSampleIsr() > iSoftIrq: to cpu%d, 0x%08X"), nCpu, ( 0x10000 << nCpu ) | (d.iIntNo + nCpu));
+                        gicDist->iSoftIrq = ( 0x10000 << nCpu ) | (d.iIntNo + nCpu);
+                        }
+                    // post-sampling for CPUs with specifically generated interrupts
+                    //d.postSampleNeeded += d.iSamplers[nCpu]->PostSampleNeeded();
+                    }
+                arm_dsb();
+               
+                }
+            else
+                {
+                Kern::Printf("DGeneralsDriver::NewDoProfilerProfile - SMP Platform not recognised " ); 
+                }
+
 #endif  
-        // then sample the rest of non-cpu samplers
-        for(TInt i(d.iMaxCpus);i<KSamplerAmount;i++)
-            {
-            if(d.iSamplers[i]->iEnabled)
+            // then sample the rest of non-cpu samplers
+            for(TInt i(0);i<KSamplerAmount;i++)
                 {
-                d.iSamplers[i]->Sample();
-                postSampleNeeded += d.iSamplers[i]->PostSampleNeeded();
+                if(d.iSamplers[i]->iEnabled)
+                    {
+                    d.iSamplers[i]->Sample(aPtr);
+                    if(d.iSamplers[i]->PostSampleNeeded())
+                        {
+                        d.IncrementSampleNeededState(i);
+                        }
+                    }
                 }
-            }
-			
-		if(postSampleNeeded > 0 && d.doingDfc == 0)
-		    {
-			d.doingDfc++;
-			d.iNewDfc.Add();
 
-			d.sampleRunning--;
-			return;
+//            // check if post sampling is needed for samplers
+//            for(TInt i(0);i<KSamplerAmount;i++)
+//                {
+//                if(d.iSamplers[i]->iEnabled)
+//                    {
+//                    if(d.iSamplers[i]->PostSampleNeeded())
+//                        {
+//                        d.IncrementSampleNeededState(i);
+//                        }
+//                    }
+//                }
+
+            if(d.postSampleNeeded > 0 && d.doingDfc == 0)
+            //if(d.postSampleNeeded > 0)
+                {
+                LOGSTRING2("DGeneralsDriver::NewDoProfilerProfile - postSampleNeeded count %d ", d.postSampleNeeded );
+                d.doingDfc++;
+                d.iNewDfc.Add();
+        
+                d.sampleRunning--;
+        
+                return;
+                }
+            d.sampleRunning--;
+            }   // if (d.iState == ERunning && d.sampleRunning == 0)
+        else if (d.iState == EStopping && d.sampleRunning == 0)
+            {
+            // add a dfc for this final time
+            d.iNewDfc.Add();
+            LOGSTRING("DGeneralsDriver::NewDoProfilerProfile - sampling added to dfc queue");
             }
-		d.sampleRunning--;
-        }
-	else if (d.iState == EStopping && d.sampleRunning == 0)
-	    {
-		// add a dfc for this final time
-		d.iNewDfc.Add();
-        Kern::Printf("DGeneralsDriver::Sample - sampling added to dfc queue");
-        }
-	else
-	    {
-		// the previous sample has not finished,
-		Kern::Printf("DGeneralsDriver::NewDoProfilerProfile - Profiler Sampler Error - interrupted before finished sampling!!");
-        }
+        else
+            {
+            // the previous sample has not finished,
+            Kern::Printf("DGeneralsDriver::NewDoProfilerProfile - Profiler Sampler Error - interrupted before finished sampling!!");
+            }
         LOGSTRING("DGeneralsDriver::NewDoProfilerProfile - exit");
-    }
-
+        } // iOff
+    else
+        {
+        Kern::Printf("DGeneralsDriver::iOff");
+        }
+}
 
 
 void DGeneralsDriver::Sample(TAny* aPtr)
@@ -596,17 +716,14 @@ void DGeneralsDriver::Sample(TAny* aPtr)
 #ifdef __SMP__
     DGeneralsDriver& d=*(DGeneralsDriver*)aPtr;
 
-//    TInt currCpu(NKern::CurrentCpu());
+    TInt currCpu(NKern::CurrentCpu());
+    ++d.iInterruptCounter[currCpu];
 
-    // sample the current cpu load
-//    if(d.iSamplers[currCpu]->iEnabled)
-//        {
-        d.iSamplers[NKern::CurrentCpu()]->Sample();
-//        postSampleNeeded += d.iSamplers[currCpu]->PostSampleNeeded();
-//        }
+    d.iSamplers[currCpu]->Sample(aPtr);
 #endif
     LOGSTRING("DGeneralsDriver::Sample - exit");
     }
+
 /*
  *	This function is run when any of the samplers
  *	requires post sampling
@@ -625,7 +742,10 @@ void DGeneralsDriver::NewDoDfc(TAny* pointer)
 			    {
 				if(d.iSamplers[i]->PostSampleNeeded())
 				    {
-					d.iSamplers[i]->PostSample();
+                    LOGSTRING3("DGeneralsDriver::NewDoDfc iSamplers[%d] PostSampleNeeded count %d", i, d.postSampleNeeded);
+                    d.iSamplers[i]->PostSample();
+                    d.DecrementSampleNeededState();
+                    LOGSTRING3("DGeneralsDriver::NewDoDfc iSamplers[%d] PostSampleNeeded count %d", i, d.postSampleNeeded);
                     }
                 }
             }
@@ -634,6 +754,7 @@ void DGeneralsDriver::NewDoDfc(TAny* pointer)
 
 	else if(d.iState == EStopping)
 	    {
+        LOGSTRING("DGeneralsDriver::NewDoDfc state Stopping()");
 		// for all enabled samplers,
 		// perform end sampling
 		TBool releaseBuffer(false);
@@ -641,18 +762,23 @@ void DGeneralsDriver::NewDoDfc(TAny* pointer)
 		    {
 			if(d.iSamplers[i]->iEnabled)
 			    {
-				LOGSTRING("DGeneralsDriver::NewDoDfc() - ending");
+                LOGSTRING("DGeneralsDriver::NewDoDfc() - ending");
+                if(d.iSamplers[i]->PostSampleNeeded())
+                    {
+                    LOGSTRING2("DGeneralsDriver::NewDoDfc iSamplers[%d] PostSampleNeeded still", i);
+                    d.iSamplers[i]->PostSample();
+                    }
 				// perform end sampling for all samplers
 				// stream mode samplers may be pending, if they
 				// are still waiting for another client buffer
 				if(d.iSamplers[i]->EndSampling() == KErrNotReady) 
 				    {
-					LOGSTRING("DGeneralsDriver::NewDoDfc() - stream data pending");
+                    LOGSTRING("DGeneralsDriver::NewDoDfc() - stream data pending");
 					releaseBuffer = true;
                     }
 				else 
 				    {
-					LOGSTRING("DGeneralsDriver::NewDoDfc() - no data pending");
+                    LOGSTRING("DGeneralsDriver::NewDoDfc() - no data pending");
 					releaseBuffer = true;
                     }		
                 }
@@ -661,7 +787,7 @@ void DGeneralsDriver::NewDoDfc(TAny* pointer)
 		// At the end, once all the samplers are gone through, the buffer should be released
 		if (true == releaseBuffer) 
 		    {
-			LOGSTRING("DGeneralsDriver::NewDoDfc() - release the buffer");
+            LOGSTRING("DGeneralsDriver::NewDoDfc() - release the buffer");
 			d.iSampleStream.ReleaseIfPending();	
             }
 		
@@ -670,6 +796,7 @@ void DGeneralsDriver::NewDoDfc(TAny* pointer)
 		    {
 			// sampling has ended
 			Kern::RequestComplete(d.iClient,d.iEndRequestStatus,KErrNone);
+			LOGSTRING("DGeneralsDriver::NewDoDfc() - request complete, stopped");
             }
         }
     }
@@ -746,8 +873,10 @@ void DGeneralsDriver::HandleMsg(TMessageBase* aMsg)
 			break;
 
 		case RPluginSampler::EStartSampling:
-			LOGSTRING("DGeneralsDriver::HandleMsg - EStartSampling");
-			r = StartSampling();
+		    LOGSTRING("DGeneralsDriver::HandleMsg - EStartSampling");
+			iStarted = (TUint8)ETrue;
+			r=StartSampling(m.Int0(),m.Int1());
+			//r = StartSampling();
 			break;
 
 		case RPluginSampler::EGetSampleTime:
@@ -770,7 +899,7 @@ void DGeneralsDriver::HandleMsg(TMessageBase* aMsg)
 		 //	Requests are handled here
 
 		case ~RPluginSampler::EStopAndWaitForEnd:
-			LOGSTRING("DGeneralsDriver::HandleMsg - EStopAndWaitForEnd");
+            LOGSTRING("DGeneralsDriver::HandleMsg - EStopAndWaitForEnd");
 			iEndRequestStatus = reinterpret_cast<TRequestStatus*>(m.Ptr0());
 			r = StopSampling();
 #ifdef __SMP__
@@ -785,7 +914,7 @@ void DGeneralsDriver::HandleMsg(TMessageBase* aMsg)
 			break;
 
 		default:
-			LOGSTRING2("DGeneralsDriver::HandleMsg - ERROR, unknown command %d",id);
+			Kern::Printf("DGeneralsDriver::HandleMsg - ERROR, unknown command %d",id);
 			r = KErrNotSupported;
 			break;
         }
@@ -798,44 +927,30 @@ void DGeneralsDriver::HandleMsg(TMessageBase* aMsg)
 inline void DGeneralsDriver::UnbindInterrupts()
     {
     TInt err(0);
-
-    // disable interrupts when sampling stops, enabled again on start
-    err = NKern::InterruptDisable(KIntProfilerBase - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptDisable KIntProfilerBase - 32 ret = %d", err );
-    
-    err = NKern::InterruptDisable(KIntProfilerBase + 1 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptDisable KIntProfilerBase + 1 - 32 ret = %d", err );
-
-    err = NKern::InterruptDisable(KIntProfilerBase + 2 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptDisable KIntProfilerBase + 2 - 32 ret = %d", err );
-
-    err = NKern::InterruptDisable(KIntProfilerBase + 3 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptDisable KIntProfilerBase + 3 - 32 ret = %d", err );
-    
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase - 32=%d", KIntProfilerBase -32 );
-    err = NKern::InterruptUnbind( KIntProfilerBase - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptUnbind KIntProfilerBase - 32 ret = %d", err );
-    
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase + 1 - 32=%d", KIntProfilerBase + 1-32 );
-    err = NKern::InterruptUnbind( KIntProfilerBase + 1 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptUnbind KIntProfilerBase + 1 - 32 ret = %d", err );
-
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase + 2 - 32=%d", KIntProfilerBase + 2 - 32 );
-    err = NKern::InterruptUnbind(KIntProfilerBase + 2 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptUnbind KIntProfilerBase + 2 - 32 ret = %d", err );
-
-//    Kern::Printf(" > Interrupt::InterruptBind KIntProfilerBase + 3 - 32=%d", KIntProfilerBase + 3 - 32 );
-    err = NKern::InterruptUnbind(KIntProfilerBase + 3 - 32);
-    if(err < 0)
-        Kern::Printf(" InterruptUnbind KIntProfilerBase + 3 - 32 ret = %d", err );
-
+        /*
+         * Disable and unbind the sampling interrupts associated with each core. 
+         */
+        TInt noofCpu(NKern::NumberOfCpus());
+        //Disabling Interrupt(s)
+        for( TInt nCpu(0); nCpu < noofCpu; nCpu++ )
+            {
+            err = NKern::InterruptDisable(iIntNo + nCpu - 32);
+            if(err < 0)
+                {
+                Kern::Printf(" Interrupt Disable iIntNo + %d - 32 ret = %d", nCpu, err );
+                }
+            }
+        
+        //UnBinding to the interrupt(s)
+        for( TInt nCpu(0); nCpu < noofCpu; nCpu++ )
+            {
+            LOGSTRING3(" > Interrupt::InterruptUnBind + %d -32 =%d", nCpu, iIntNo + nCpu -32 );
+            err = NKern::InterruptUnbind( (iIntNo + nCpu - 32) );
+            if(err < 0)
+                {
+                Kern::Printf(" InterruptUnBind iIntNo + %d - 32 Error = %d", nCpu, err );
+                }
+            }
     }
 #endif
 
@@ -865,12 +980,12 @@ inline TInt DGeneralsDriver::ProcessStreamReadRequest(TBapBuf* aBuf,TRequestStat
 				// in that case, the request should be completed already
 				if(iSamplers[i]->EndSampling() == KErrNotReady) 
 				    {
-					LOGSTRING("DGeneralsDriver::ProcessStreamReadRequest - still data pending");
-					releaseBuffer = true;
+                    LOGSTRING("DGeneralsDriver::ProcessStreamReadRequest - still data pending");
+					releaseBuffer = false;
                     }
 				else 
 				    {
-					LOGSTRING("DGeneralsDriver::ProcessStreamReadRequest - no data pending");
+                    LOGSTRING("DGeneralsDriver::ProcessStreamReadRequest - no data pending");
 					releaseBuffer = true;
                     }
                 }
@@ -878,7 +993,7 @@ inline TInt DGeneralsDriver::ProcessStreamReadRequest(TBapBuf* aBuf,TRequestStat
 		// At the end, once all the samplers are gone through, the buffer should be released
 		if (true == releaseBuffer) 
 		    {
-			LOGSTRING("DGeneralsDriver::ProcessStreamReadRequest - all data copied, release the buffer");
+            LOGSTRING("DGeneralsDriver::ProcessStreamReadRequest - all data copied, release the buffer");
 			iSampleStream.ReleaseIfPending();
 		    }
         }
@@ -903,10 +1018,10 @@ inline TInt DGeneralsDriver::MarkTraceActive(TInt samplerIdToActivate)
 	if( samplerIdToActivate == PROFILER_GPP_SAMPLER_ID )
 	    {
 	    for(TInt cpu(0);cpu<cpus;cpu++)
-	         {
-	         Kern::Printf("DGeneralsDriver::MarkTraceActive - activating CPU %d",cpu);
-	         iSamplers[cpu]->SetEnabledFlag(true);
-	         }
+            {
+            LOGSTRING2("DGeneralsDriver::MarkTraceActive - activating CPU %d",cpu);
+            iSamplers[cpu]->SetEnabledFlag(true);
+            }
 	    return KErrNone;
 	    }
 #endif
@@ -919,7 +1034,7 @@ inline TInt DGeneralsDriver::MarkTraceActive(TInt samplerIdToActivate)
             }
         }
 
-	LOGSTRING2("DGeneralsDriver::MarkTraceActive - %d not supported",samplerIdToActivate);
+	Kern::Printf("DGeneralsDriver::MarkTraceActive - %d not supported",samplerIdToActivate);
 	return KErrNotSupported;
 	}
 
@@ -948,7 +1063,7 @@ inline TInt DGeneralsDriver::MarkTraceInactive(TInt samplerIdToDisable)
             }
         }
 
-	LOGSTRING2("DGeneralsDriver::MarkTraceInactive - %d not supported",samplerIdToDisable);
+	Kern::Printf("DGeneralsDriver::MarkTraceInactive - %d not supported",samplerIdToDisable);
 	return KErrNotSupported;
 	}
 
@@ -1077,7 +1192,7 @@ inline TInt DGeneralsDriver::SetSamplingPeriod(TInt samplerId,TInt settings)
  *	only if sampling is not running
  */
  
-TInt DGeneralsDriver::StartSampling()
+TInt DGeneralsDriver::StartSampling(TInt aRate, TInt aInterruptNumber)
 	{
 	LOGSTRING("DGeneralsDriver::StartSampling");
 
@@ -1086,6 +1201,7 @@ TInt DGeneralsDriver::StartSampling()
 		// reset iSampleStartTimeProp property value
 		iSampleStartTime = NKern::TickCount();	// get the system tick value for sync purposes 
 #ifdef __SMP__
+		TInt err;
 		iStartTime = (iSampleStartTime & 0xfffffff0);
 #endif
 		TInt r(iSampleStartTimeProp.Set(iSampleStartTime));
@@ -1099,15 +1215,55 @@ TInt DGeneralsDriver::StartSampling()
 				{
 				// reset with stream option
 #ifndef __SMP__
-                Kern::Printf(("DGeneralsDriver::StartSampling - stream reset for generals driver, sync offset %d"), 0);
+				LOGSTRING2(("DGeneralsDriver::StartSampling - stream reset for generals driver, sync offset %d"), 0);
 				iSamplers[i]->Reset(&iSampleStream, 0);
 #else
-                Kern::Printf(("DGeneralsDriver::StartSampling - stream reset for generals driver, start time %d"), iStartTime);
+				LOGSTRING2(("DGeneralsDriver::StartSampling - stream reset for generals driver, start time %d"), iStartTime);
                 iSamplers[i]->Reset(&iSampleStream, iStartTime);
 #endif
 				}
 			}
-
+#ifdef __SMP__
+		iRate = aRate;
+		iIntNo = aInterruptNumber;
+		// use HAL to understand the underlying hardware
+        // not so elegant but used for two SMP pltaforms Bridge and Naviengine
+        TVariantInfoV01 info;
+        TPckg<TVariantInfoV01> infoPckg(info);
+        err = Kern::HalFunction(EHalGroupVariant, EVariantHalVariantInfo, (TAny*)&infoPckg, NULL);
+        
+        if(err != KErrNone)
+            {
+            Kern::Printf("Error in reading HAL Entry EVariantHalVariantInfo %r ", err);
+            }
+        if (info.iMachineUniqueId.iData[0] == KBridgeMachineUID)
+            {
+            iPlatform = EBridge;
+            LOGSTRING("DGeneralsDriver::StartSampling() - Bridge HW");
+            }
+        else if (info.iMachineUniqueId.iData[0] == KNaviengineMachineUID)
+            {
+            iPlatform = ENaviengine;
+            LOGSTRING("DGeneralsDriver::StartSampling() - NaviEngine HW");
+            }
+        else
+            {
+            Kern::Printf("DGeneralsDriver::StartSampling() - Unknown HW, 0x%x", info.iMachineUniqueId.iData[0]);
+            }
+        
+        //users are restricted to use the default Interrupt Number for Bridge
+        if ((iPlatform == EBridge) && (aInterruptNumber != KValueZero) && (aInterruptNumber != KBridgeProfilerInterruptId) )
+            {
+            Kern::Printf("Invalid Interrupt Number for Bridge used %d interrupt...Please use %d Interrupt Number", iIntNo, KBridgeProfilerInterruptId);
+            return KErrNotSupported;
+            }
+        if (aInterruptNumber == KValueZero)
+                iIntNo = KDefaultInterruptNumber;
+            
+            if (iPlatform == EBridge)   
+                /* By default for Bridge we are using KBridgeProfilerInterruptId */
+                iIntNo = KBridgeProfilerInterruptId;
+#endif		
 		NewStart(gppSampler.GetPeriod());
 		return KErrNone;
 		}
@@ -1124,7 +1280,8 @@ TInt DGeneralsDriver::StartSampling()
  
 TInt DGeneralsDriver::StopSampling()
     {
-    LOGSTRING("DGeneralsDriver::StopSampling");
+    LOGSTRING2("DGeneralsDriver::StopSampling - iState %", iState);
+    TInt noofCpu(NKern::NumberOfCpus());
 
     if(iState == ERunning)
         {
@@ -1132,13 +1289,25 @@ TInt DGeneralsDriver::StopSampling()
         // reset all enabled samplers
         for(TInt i(0);i<KSamplerAmount;i++)
             {
-            // do the reset only for memory sampler
-            if(iSamplers[i]->iEnabled && iSamplers[i]->iSamplerId == 4)
+            // do the reset only for memory and itt samplers
+            if(iSamplers[i]->iEnabled && 
+                    (iSamplers[i]->iSamplerId == PROFILER_ITT_SAMPLER_ID || 
+                            iSamplers[i]->iSamplerId == PROFILER_MEM_SAMPLER_ID ))
                 {
                 // reset with stream option
-                LOGTEXT(("DGeneralsDriver::StopSampling - stream reset for samplers"));
-                iSamplers[i]->Reset(&iSampleStream, 999999);
+                LOGSTRING(("DGeneralsDriver::StopSampling - stream reset for samplers"));
+                iSamplers[i]->Reset(&iSampleStream, KStateSamplingEnding);
                 }
+            }
+        LOGSTRING2("\nDGeneralsDriver::StopSampling - Number of times the Timer counter expired on CPU 0 = %d ", iInterruptCounter[0]);
+        
+        for(TInt nCpu(1); nCpu < noofCpu; nCpu++)
+            {
+            Kern::Printf( "\n Number of times we interrupted CPU[%d] = %d and Number of Missed CPU interrupts = %d", nCpu, iInterruptCounter[nCpu],(iInterruptCounter[0] - iInterruptCounter[nCpu]));  
+            Kern::Printf( "\n Number of times CPU sampler[0] accessed: %d", gppSampler.GetExportData()->sampleNumber);
+#ifdef __SMP__
+            Kern::Printf( "\n Number of times CPU sampler[1] accessed: %d", gppSampler2.GetExportData()->sampleNumber);
+#endif
             }
 
         return KErrNone;
@@ -1149,4 +1318,31 @@ TInt DGeneralsDriver::StopSampling()
         }
     }
 
+DSamplerPowerHandler::DSamplerPowerHandler(DGeneralsDriver* aChannel)
+    :   DPowerHandler(KPluginSamplerName), 
+        iChannel(aChannel)
+        {
+        LOGSTRING("DSamplerPowerHandler::DSamplerPowerHandler\n");
+        }
+        
+void DSamplerPowerHandler::PowerUp()
+    {
+    LOGSTRING("DSamplerPowerHandler::PowerUp()1\n");
+    iChannel->iOff = (TUint8)EFalse;
+    if (iChannel->iStarted)
+        {
+        LOGSTRING("DSamplerPowerHandler::PowerUp()2\n");
+        iChannel->StartSampling(iChannel->iRate, iChannel->iIntNo);
+        }
+    PowerUpDone();
+    }
+    
+void DSamplerPowerHandler::PowerDown(TPowerState)
+    {
+    LOGSTRING("DSamplerPowerHandler::PowerDown()\n");
+    iChannel->iOff = (TUint8)ETrue;
+    //iChannel->iState = EStopped;
+    iChannel->StopSampling();
+    PowerDownDone();
+    }
 

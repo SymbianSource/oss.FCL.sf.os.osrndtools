@@ -44,7 +44,7 @@ public:
 	DProfilerGfcSampler(struct TProfilerGppSamplerData* );
 	~DProfilerGfcSampler();
 
-	void	Sample();
+	void	Sample(TAny* aPtr);
 	TInt	Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset);
 private:
 	struct TProfilerGppSamplerData* gppSamplerData;
@@ -101,7 +101,7 @@ TInt DProfilerGfcSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
 }
 
 template <int BufferSize>
-void DProfilerGfcSampler<BufferSize>::Sample()
+void DProfilerGfcSampler<BufferSize>::Sample(TAny* aPtr)
 {
 	LOGSTRING2("CProfilerGfcSampler<%d>::Sample",BufferSize);	
 

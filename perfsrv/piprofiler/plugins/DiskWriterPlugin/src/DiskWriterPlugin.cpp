@@ -41,7 +41,7 @@ enum TEnginePropertyKeys
  */
 
 //  Member Functions
-CDiskWriterPlugin* CDiskWriterPlugin::NewL(const TUid /*aImplementationUid*/, TAny* /*aInitParams*/)
+EXPORT_C CDiskWriterPlugin* CDiskWriterPlugin::NewL(const TUid /*aImplementationUid*/, TAny* /*aInitParams*/)
     {
 	LOGTEXT(_L("CDiskWriterPlugin::NewL() - entry"));
 	CDiskWriterPlugin* self = new (ELeave) CDiskWriterPlugin(KDiskWriterPluginUid);

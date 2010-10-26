@@ -1,0 +1,95 @@
+;
+; Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies). 
+; All rights reserved.
+; This component and the accompanying materials are made available
+; under the terms of "Eclipse Public License v1.0"
+; which accompanies this distribution, and is available
+; at the URL "http://www.eclipse.org/legal/epl-v10.html".
+;
+; Initial Contributors:
+; Nokia Corporation - initial contribution.
+;
+; Contributors:
+; 
+; Description:
+;
+
+; PI Profiler Settings File
+
+; general settings
+[general]
+version=2.00.0
+; "output_type=file_system" writes *.dat file to external memory
+; "output_type=debug_output" writes *.dat file to debug port
+
+output_type=file_system	; output to file system (file_system) or debug output (debug_output)
+file_prefix=PIProfilerTest_#
+save_file_location=C:\data\
+
+; cpu load sampler
+[gpp] 
+enabled=true
+sampling_period_ms=1
+
+; function call capture
+[gfc]
+enabled=true
+
+; dynamic binary support
+[itt]
+enabled=true
+
+; memory usage capture
+[mem]
+enabled=true
+sampling_period_ms=3000
+
+; thread priority capture
+[pri]
+enabled=true
+sampling_period_ms=3000
+
+; hardware interrupt capture
+[irq]
+enabled=false
+
+; software interrupt capture
+[swi]
+enabled=false
+
+; ARM11 performance counter capture
+[pec]
+enabled=false
+perfcounter1=0 ; ARM11 perf. counter1
+perfcounter2=7 ; ARM11 perf. counter1
+
+; L2 and interconnect performance counter capture
+[l2i]
+enabled=false
+intercperfcounter1=0 ; interconnect perf. counter1
+intercperfcounter2=1 ; interconnect perf. counter2
+l2perfcounter1=11 ; L2 cache perf. counter1
+l2perfcounter2=13 ; L2 cache perf. counter2
+l2perfcounter3=11 ; L2 cache perf. counter3
+l2perfcounter4=13 ; L2 cache perf. counter4
+
+; button and touch screen event capture
+[bup]
+enabled=true
+
+; power usage capture
+[pwr]
+enabled=true
+
+; gpu
+[gpu]
+enabled=false
+
+; native os task capture support
+[nos]
+enabled=false
+hidden=true
+task_address=0x81FE68
+addr_space_start=0xC6000000
+addr_space_end=0xC6FFFFFFF
+end

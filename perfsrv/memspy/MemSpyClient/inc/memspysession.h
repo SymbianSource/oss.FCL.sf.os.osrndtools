@@ -52,6 +52,10 @@
 
 #include <memspy/api/memspyapiwindowgroup.h>
 
+#include <memspy/api/memspyapichunk.h>
+
+#include <memspy/api/memspyapicodesegment.h>
+
 // Constants
 const TInt KMemSpyVersion           = 2;
 
@@ -64,7 +68,13 @@ enum TSortType
 	ESortProcByHeapUsage,
 	ESortProcByStackUsage,
 	ESortServByName,
-	ESortServBySessionCount
+	ESortServBySessionCount,
+	ESortChunkByName,
+	ESortChunkBySize,
+	ESortCodeSegByName,
+	ESortCodeSegBySize,
+	ESortCodeSegByTotalDataSize,
+	ESortCodeSegByUid
 	};
 
 enum TMemSpyOutputType
@@ -167,7 +177,7 @@ public:	//API
     
     IMPORT_C void GetThreadsL(TProcessId aProcessId, RArray<CMemSpyApiThread*> &aThreads, TSortType aSortType = ESortProcById);
     
-    IMPORT_C TInt ProcessSystemPermanentOrCritical( TProcessId aId, TBool aValue ); //aValue -> return value
+    IMPORT_C TInt ProcessSystemPermanentOrCritical( TProcessId aId, TBool& aValue ); //aValue -> return value
     
     IMPORT_C void SetThreadPriorityL(TThreadId aId, TInt aPriority);
     
@@ -176,6 +186,10 @@ public:	//API
     IMPORT_C TInt SwitchToProcess( TProcessId aId, TBool aBrought  );
     
     IMPORT_C void GetProcessIdByThreadId( TProcessId& aPID, TThreadId aTID );
+    
+    IMPORT_C void NotifyEvent(TRequestStatus &aStatus);
+
+    IMPORT_C void CancelEventNotificationL();
     
     //SWMT operations
     
@@ -261,6 +275,11 @@ public:	//API
 	
 	IMPORT_C void DumpKernelHeap();
 	
+	//Chunks
+	IMPORT_C  void GetChunksL(RArray<CMemSpyApiChunk*> &aChunks, TSortType aSortType);
+	
+	IMPORT_C void ChunkListOutputL();
+	
 	// Servers
 	IMPORT_C void GetServersL(RArray<CMemSpyApiServer*> &aServers);
 	
@@ -278,6 +297,18 @@ public:	//API
 	
 	// Window Groups
 	IMPORT_C void GetWindowGroupsL(RArray<CMemSpyApiWindowGroup*> &aGroups);
+	
+	IMPORT_C void SwitchToWindowGroupL( TInt aId );
+	
+	// RAM info
+	IMPORT_C void IsAknIconCacheConfigurable( TBool& aValue ); 
+	
+	IMPORT_C void SetAknIconCacheStatusL( TBool aEnabled, TInt64& aValue );
+	
+	//CodeSegments
+	IMPORT_C void GetCodeSegmentsL( RArray<CMemSpyApiCodeSegment*> &aCodeSegments, TSortType aSortType) ;
+	
+	IMPORT_C void CodeSegmentsListOutputL();
 	
 private:
     TInt StartServer();       

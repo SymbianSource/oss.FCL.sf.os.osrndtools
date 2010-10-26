@@ -303,10 +303,11 @@ inline TInt RProfiler::GetSamplerAttributes(CArrayFixFlat<TSamplerAttributes>& a
            }
         
         p.RSessionBase::Close();
-        
+        delete buffer;
+        buffer = NULL;
         if(r != KErrNone)
             {
-            LOGSTRING2("Profiler responded with an error - code %d !!",r);        
+            LOGSTRING2("Profiler responded with an error - code %d !!",r);
             return r;
             }
         else

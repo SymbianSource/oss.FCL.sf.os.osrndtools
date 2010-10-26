@@ -48,10 +48,10 @@ class CSamplerController : public CBase, MSamplerPluginLoadObserver
 	{
 	
 public:
-	static CSamplerController* NewL(CProfilerSampleStream& aStream);
+	static CSamplerController* NewL(CProfilerSampleStream& aStream, TBool aBootMode);
 	void ConstructL();
 	
-	CSamplerController(CProfilerSampleStream& aStream);
+	CSamplerController(CProfilerSampleStream& aStream, TBool aBootMode);
 	~CSamplerController();
 	
 	/** 
@@ -130,6 +130,9 @@ public:
 
 private:
 	MSamplerControllerObserver* iObserver;
+	TBool                       iScBootMode;
+	RLibrary*                   iLibrary;
+	CSamplerPluginInterface*                iPlug;
 };
 
 /**

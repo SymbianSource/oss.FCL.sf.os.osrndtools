@@ -20,15 +20,13 @@
 
 //#define PWR_SAMPLER_BACKLIGHT
 
-//#include "PIProfilerConfigInternal.h"
-
 // system definitions
 #include <w32std.h>
 #include <e32std.h>
 
 #include <e32property.h>
-#include <HWRMPower.h>
-#include <HWRMLight.h>
+#include <hwrmpower.h>
+#include <hwrmlight.h>
 
 // user definitions
 #include <piprofiler/SamplerPluginInterface.h>
@@ -107,11 +105,7 @@ public:
     TUint32*                iSampleTime;
 };
 
-#ifdef PWR_SAMPLER_BACKLIGHT
 class CProfilerPowerListener : public CBase, public MHWRMBatteryPowerObserver, public MHWRMLightObserver
-#else
-class CProfilerPowerListener : public CBase, public MHWRMBatteryPowerObserver
-#endif
 {
 public:
     static  CProfilerPowerListener* NewL(CPwrPlugin* aSampler);
@@ -128,10 +122,8 @@ public:
 
     // From MHWRMBatteryPowerObserver
     virtual void PowerMeasurement(TInt aErr, CHWRMPower::TBatteryPowerMeasurementData& aMeasurement);
-#ifdef PWR_SAMPLER_BACKLIGHT
     // From MHWRMLightObserver
     virtual void LightStatusChanged(TInt aTarget, CHWRMLight::TLightStatus aStatus);
-#endif
 
 private:
     void    Sample();
@@ -144,11 +136,7 @@ public:
 
 private:
 
-#ifdef PWR_SAMPLER_BACKLIGHT
     TUint8                  iSample[13];
-#else
-    TUint8                  iSample[12];
-#endif
 
     TUint16                 iNominalCapa;
     TUint16                 iVoltage;
@@ -157,10 +145,8 @@ private:
     CPwrPlugin*             iSampler;
     CHWRMPower*             iPowerAPI;
 
-#ifdef PWR_SAMPLER_BACKLIGHT
     CHWRMLight*             iLightAPI;
     CHWRMLight::TLightStatus iBackLightStatus;
-#endif
 };
 
 #endif

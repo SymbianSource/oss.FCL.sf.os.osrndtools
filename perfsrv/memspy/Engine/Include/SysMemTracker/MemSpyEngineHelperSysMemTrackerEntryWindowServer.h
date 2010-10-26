@@ -83,11 +83,11 @@ public:
         EMemSpyWindowServerEventFocusLost
         };
 public:
-    static CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup* NewLC( TUint8 aAttribs, const TMemSpyEngineWindowGroupDetails aCurrent, TMemSpyWindowServerEvent aEvent = EMemSpyWindowServerEventNoEvent );
+    static CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup* NewLC( TUint8 aAttribs, const TMemSpyEngineWindowGroupDetails& aCurrent, TMemSpyWindowServerEvent aEvent = EMemSpyWindowServerEventNoEvent );
     ~CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup();
 
 private:
-    CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup( TUint8 aAttrib, const TMemSpyEngineWindowGroupDetails aCurrent, TMemSpyWindowServerEvent aEvent );
+    CMemSpyEngineHelperSysMemTrackerCycleChangeWindowGroup( TUint8 aAttrib, const TMemSpyEngineWindowGroupDetails& aCurrent, TMemSpyWindowServerEvent aEvent );
     void ConstructL();
 
 public: // From CMemSpyEngineHelperSysMemTrackerCycleChange

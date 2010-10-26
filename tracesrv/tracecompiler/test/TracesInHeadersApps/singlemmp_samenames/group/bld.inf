@@ -15,5 +15,7 @@
 *
 */
 
+PRJ_TESTEXPORTS
+
 #include "../dll/group/bld.inf"
 #include "../console/group/bld.inf"

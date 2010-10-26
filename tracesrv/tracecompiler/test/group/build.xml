@@ -74,6 +74,7 @@
 	<delete dir="${epoc.root}epoc32/build/testdata/MultipleMmpTestCases"/>
 	<delete dir="${epoc.root}epoc32/build/testdata/MultipleCppTraceErrorApp"/>
 	<delete dir="${epoc.root}epoc32/build/testdata/TracesInHeadersApps"/>
+	<delete dir="${testdata.dir}/SourceEngineTest"/>
 </target>
 
 <target name="build" depends="clean">
@@ -99,8 +100,20 @@
     	<copy todir="${epoc.root}testdata/TracesInHeadersApps">
 		<fileset dir="TracesInHeadersApps"/>
 	</copy>
+
+    	<copy todir="${epoc.root}testdata/SourceEngineTest">
+		<fileset dir="SourceEngineTest"/>
+	</copy>
+
+
 	<javac  classpath="${classpath}" srcdir="${src.dir}" destdir="${build.dir}" debug="false" target="1.5" >
 	</javac>
+    <!--build pure junit tests from the standard path -->
+    <javac  classpath="${classpath}" srcdir="../${src.dir}" destdir="${build.dir}" debug="false" target="1.5" >
+        <include name="**/*Test.java"/>
+        <include name="**/Mock*.java"/>
+	</javac>
+    
 </target>
 
 <target name="run" depends="build" description="run the junit tests">
@@ -114,7 +127,7 @@
    		<fileset dir="../jar" includes="*.jar"/>
  	</path>
 	
-	<junit printsummary="yes" haltonfailure="yes">		
+	<junit printsummary="yes" haltonfailure="no" haltonerror="no">		
 	 	<classpath path="${toString:lib.path.ref}"/>
 	 	<formatter type="plain"/>
 	
@@ -124,6 +137,10 @@
 	 		<fileset dir="${src.dir}">
 	      		<include name="*.java"/>
 	      		<exclude name="ErrorLogsTestBase.java"/>
+	 		</fileset>
+            <fileset dir="../src/com.nokia.tracecompiler/src">
+	      		<include name="**/*Test.java"/>
+                <exclude name="**/Mock*.java"/>
 	 		</fileset>
 	 	</batchtest>	
 	</junit>
@@ -156,7 +173,7 @@
 	
 	<echo>${toString:lib.path.ref}</echo> 
 	
-	<junit printsummary="yes" haltonfailure="yes">		
+	<junit printsummary="yes" haltonfailure="no" haltonerror="no">		
 	 	<classpath path="${toString:lib.path.ref}"/>
 	 	<formatter type="plain"/>
 		<formatter type="xml"/>
@@ -175,6 +192,10 @@
 	      		<exclude name="MultipleMmpTest.java"/>
 	      		<exclude name="TracesInHeadersTest.java"/>	      		
                 <exclude name="TraceHeadersLicenceTest.java"/>
+	 		</fileset>
+            <fileset dir="../src/com.nokia.tracecompiler/src">
+	      		<include name="**/*Test.java"/>
+                <exclude name="**/Mock*.java"/>
 	 		</fileset>
 		</batchtest>
 	</junit>
@@ -202,7 +223,7 @@
    		<fileset dir="../jar" includes="*.jar"/>
  	</path>
 	
-	<junit printsummary="yes" haltonfailure="yes">		
+	<junit printsummary="yes" haltonfailure="no" haltonerror="no">		
 	 	<classpath path="${toString:lib.path.ref}"/>
 	 	<formatter type="plain"/>
 	 	<formatter type="xml"/>
@@ -217,6 +238,10 @@
 	      		<exclude name="MultipleMmpTest.java"/>
 	      		<exclude name="TracesInHeadersTest.java"/>	 
 	      		<exclude name="TraceHeadersLicenceTest.java"/>                
+	 		</fileset>
+            <fileset dir="../src/com.nokia.tracecompiler/src">
+	      		<include name="**/*Test.java"/>
+                <exclude name="**/Mock*.java"/>
 	 		</fileset>
 	 	</batchtest>	
 	</junit>

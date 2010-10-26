@@ -77,7 +77,9 @@ inline DProfilerSampleBuffer::~DProfilerSampleBuffer()
 inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
     {
 	TUint32 bytesTotal;
-
+#ifdef __SMP__
+	TInt intState(0);
+#endif
 	// check whether the buffer status is
 	switch (iBufferStatus)
 	    {
@@ -87,7 +89,13 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 
 			if(bytesTotal < iBufferDataSize)
 			    {
+#ifdef __SMP__
+				__SPIN_LOCK_IRQ(WriteSpinLock);
+#endif
 				memcpy((&(iBufStruct->iDataStart))+iBytesWritten,aSample,aLength);
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQ(WriteSpinLock);
+#endif
 				iBytesWritten+=aLength;
 				return 0;
 			    }
@@ -96,16 +104,27 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 
 				// the sample does not fit to the buffer
 				// first copy as much data as we can fit to the first buffer
-				TUint32 fitsToBuffer = iBufferDataSize-iBytesWritten;
-				TUint32 remaining = aLength-fitsToBuffer;
-
+				TUint32 fitsToBuffer(iBufferDataSize-iBytesWritten);
+				TUint32 remaining(aLength-fitsToBuffer);
+				LOGSTRING2("DProfilerSampleBuffer::AddSample sample does not fit to buffer, cpu %d", NKern::CurrentCpu());
+#ifdef __SMP__
+				__SPIN_LOCK_IRQ(WriteSpinLock);
+#endif
 				memcpy((&(iBufStruct->iDataStart))+iBytesWritten,aSample,fitsToBuffer);
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQ(WriteSpinLock);
+#endif
 				iBytesWritten = iBufferDataSize;
 
+#ifdef __SMP__
+				intState = __SPIN_LOCK_IRQSAVE(BufferStateSpinLock);
+#endif
 				// ->switch to the double buffer
 				iBufferStatus = DProfilerSampleBuffer::BufferCopyAsap;
-				
-				TProfilerSampleBufStruct* tmpPtr = iBufStruct;
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQRESTORE(BufferStateSpinLock, intState);
+#endif
+				TProfilerSampleBufStruct* tmpPtr(iBufStruct);
 				iBufStruct = iDblBufStruct;
 				iDblBufStruct = tmpPtr;
 				
@@ -123,8 +142,14 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 				// there should be room - in case the single sample
 				// is smaller than the whole buffer! so we don't
 				// bother to check
-
+				//Kern::Printf("DProfilerSampleBuffer::AddSample else 2");
+#ifdef __SMP__
+				__SPIN_LOCK_IRQ(WriteSpinLock);
+#endif 
 				memcpy((&(iBufStruct->iDataStart)),aSample,remaining);
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQ(WriteSpinLock);
+#endif 
 				iBytesWritten = remaining;
 				return 0;
 			    }
@@ -139,7 +164,14 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 
 			if(bytesTotal < iBufferDataSize)
 			    {
+				LOGSTRING2("DProfilerSampleBuffer::BufferCopyAsap, cpu %d", NKern::CurrentCpu());
+#ifdef __SMP__
+				__SPIN_LOCK_IRQ(WriteSpinLock);
+#endif
 				memcpy((&(iBufStruct->iDataStart))+iBytesWritten,aSample,aLength);
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQ(WriteSpinLock);
+#endif 
 				iBytesWritten+=aLength;
 				return 0;
 			    }
@@ -148,8 +180,14 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 				// the double buffer is now also full - there is no
 				// place to put the data -> we have to waste it!
 				// this is an indication of a too small buffer size
+#ifdef __SMP__
+				intState = __SPIN_LOCK_IRQSAVE(BufferStateSpinLock);
+#endif
 				iBufferStatus = DProfilerSampleBuffer::BufferFull;
-				LOGSTRING("DProfilerSampleBuffer::AddSample - double buffer full1!!");
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQRESTORE(BufferStateSpinLock, intState);
+#endif
+				Kern::Printf("DProfilerSampleBuffer::AddSample - double buffer full1!! cpu %d", NKern::CurrentCpu());
 				return -1;
 			    }
 
@@ -160,7 +198,14 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 
 			if(bytesTotal < iBufferDataSize)
 			    {
+				LOGSTRING2("DProfilerSampleBuffer::BufferBeingCopied iBufferDataSize, cpu %d", NKern::CurrentCpu());
+#ifdef __SMP__
+				__SPIN_LOCK_IRQ(WriteSpinLock);
+#endif
 				memcpy((&(iBufStruct->iDataStart))+iBytesWritten,aSample,aLength);
+#ifdef __SMP__
+				__SPIN_UNLOCK_IRQ(WriteSpinLock);
+#endif 
 				iBytesWritten+=aLength;
 				return 0;
 			    }
@@ -169,8 +214,7 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 				// the double buffer is now also full - there is no
 				// place to put the data -> we have to waste it!
 				// this is an indication of a too small buffer size
-                LOGSTRING("DProfilerSampleBuffer::AddSample - double buffer full2!!");
-				
+                Kern::Printf("DProfilerSampleBuffer::AddSample - double buffer full2!! cpu %d", NKern::CurrentCpu());
 				// don't change the state to CProfilerSampleBuffer::BufferFull, since it is
 				// already being copied
 				return -1;
@@ -179,17 +223,20 @@ inline TInt DProfilerSampleBuffer::AddSample(TUint8* aSample, TUint32 aLength)
 		case DProfilerSampleBuffer::BufferFull:
 			// the buffer is still full, there is noting we can do
 			// about it -> return
-		    LOGSTRING("DProfilerSampleBuffer::AddSample - double buffer full3!!");
+		    Kern::Printf("DProfilerSampleBuffer::AddSample - double buffer full3!! cpu %d", NKern::CurrentCpu());
 			return -1;
 
 		default:
-		    LOGSTRING("DProfilerSampleBuffer::AddSample - wrong switch!!");
+		    Kern::Printf("DProfilerSampleBuffer::AddSample - wrong switch!!");
 			return -1;
 	    }
     }
 
 inline void DProfilerSampleBuffer::EndSampling()
     {
+#ifdef __SMP__
+	TInt intState(0);
+#endif
     LOGSTRING("DProfilerSampleBuffer::EndSampling");
 	// this will switch to the dbl buffer even though
 	// the buffer is not full, so that data can be copied
@@ -203,9 +250,14 @@ inline void DProfilerSampleBuffer::EndSampling()
 	    {
 		// ->switch to the double buffer
         LOGSTRING("DProfilerSampleBuffer::EndSampling - switching to double buffer");
+#ifdef __SMP__
+		intState = __SPIN_LOCK_IRQSAVE(BufferStateSpinLock);
+#endif
 		iBufferStatus = DProfilerSampleBuffer::BufferCopyAsap;
-		
-		TProfilerSampleBufStruct* tmpPtr = iBufStruct;
+#ifdef __SMP__
+		__SPIN_UNLOCK_IRQRESTORE(BufferStateSpinLock, intState);
+#endif
+		TProfilerSampleBufStruct* tmpPtr(iBufStruct);
 		iBufStruct = iDblBufStruct;
 		iDblBufStruct = tmpPtr;
 				
@@ -225,12 +277,14 @@ inline TUint32 DProfilerSampleBuffer::GetBufferStatus()
 inline void DProfilerSampleBuffer::ClearBuffer()
     {
 	LOGSTRING2("CProfilerSampleBuffer::ClearBuffer - %d",iBufferDataSize);
-
+#ifdef __SMP__
+	TInt intState(0);
+#endif
 	// the buffers are of same size
-	TUint8* ptr1 = (TUint8*)&(iBufStruct->iDataStart);
-	TUint8* ptr2 = (TUint8*)&(iDblBufStruct->iDataStart);
+	TUint8* ptr1((TUint8*)&(iBufStruct->iDataStart));
+	TUint8* ptr2((TUint8*)&(iDblBufStruct->iDataStart));
 
-	for(TUint32 i=0;i<iBufferDataSize;i++)
+	for(TUint32 i(0);i<iBufferDataSize;i++)
 	    {
 		ptr1[i] = 0;
 		ptr2[i] = 0;
@@ -244,15 +298,29 @@ inline void DProfilerSampleBuffer::ClearBuffer()
 	iBytesWritten = 0;
 	iDblBytesWritten = 0;
 	iDblBytesRead = 0;
-
+#ifdef __SMP__
+	intState = __SPIN_LOCK_IRQSAVE(BufferStateSpinLock);
+#endif
 	iBufferStatus = DProfilerSampleBuffer::BufferOk;
+#ifdef __SMP__
+	__SPIN_UNLOCK_IRQRESTORE(BufferStateSpinLock, intState);
+#endif
     }
 
 inline void DProfilerSampleBuffer::DataCopied()
     {
+#ifdef __SMP__
+	TInt intState(0);
+#endif
 	iDblBytesRead = 0;
 	iDblBytesWritten = 0;
+#ifdef __SMP__
+	intState = __SPIN_LOCK_IRQSAVE(BufferStateSpinLock);
+#endif
 	iBufferStatus = DProfilerSampleBuffer::BufferOk;
+#ifdef __SMP__
+	__SPIN_UNLOCK_IRQRESTORE(BufferStateSpinLock, intState);
+#endif
     }
 
 /*
@@ -287,7 +355,7 @@ inline void DProfilerSampleStream::AddSampleBuffer(TBapBuf* aBuffer,TRequestStat
     {
 	if(iCurrentBuffer != 0 || iPendingRequest != 0)
 	    {
-		LOGSTRING("DProfilerSampleStream::AddSampleBuffer - ERROR 1");
+		Kern::Printf("DProfilerSampleStream::AddSampleBuffer - ERROR 1");
 		return;
 	    }
 
@@ -319,7 +387,7 @@ inline void DProfilerSampleStream::ReleaseIfPending()
 
 inline void DProfilerSampleStream::AddSamples(DProfilerSampleBuffer& aBuffer, TInt aSamplerId)
     {
-	LOGSTRING3("DProfilerSampleStream::AddSamples - entry ID: %d, currentbuffer: 0x%x", aSamplerId,iCurrentBuffer);
+	LOGSTRING4("DProfilerSampleStream::AddSamples - entry ID: %d, currentbuffer: 0x%x, cpu %d", aSamplerId,iCurrentBuffer, NKern::CurrentCpu());
 	if(iCurrentBuffer != 0)
 	    {
 		// the following will perform simple mutual exclusion
@@ -327,7 +395,7 @@ inline void DProfilerSampleStream::AddSamples(DProfilerSampleBuffer& aBuffer, TI
 		if(iAddingSamples > 1) 
 		    {
 			// there is someone else adding samples to the buffer
-            LOGSTRING("DProfilerSampleStream::AddSamples - mutex in use");
+			Kern::Printf("DProfilerSampleStream::AddSamples - mutex in use");
 			iAddingSamples--;
 			return;
 		    }
@@ -351,14 +419,14 @@ inline void DProfilerSampleStream::AddSamples(DProfilerSampleBuffer& aBuffer, TI
 			realBuf.iDataSize);
 
 		// get the address of the source buffer data
-		TUint8* src = (TUint8*)&(aBuffer.iDblBufStruct->iDataStart);
+		TUint8* src((TUint8*)&(aBuffer.iDblBufStruct->iDataStart));
 		src += aBuffer.iDblBytesRead;
 
 		// the amount of data to copy is the 4 header bytes +
 		// the remaining data in the buffer
-		TInt amount = aBuffer.iDblBytesWritten-aBuffer.iDblBytesRead;
+		TInt amount(aBuffer.iDblBytesWritten-aBuffer.iDblBytesRead);
 
-		TUint8* dst = realBuf.iBuffer;
+		TUint8* dst(realBuf.iBuffer);
 
 		LOGSTRING4("DProfilerSampleStream::AddSamples - s:0x%x d:0x%x a:%d",src,dst,amount);
 
@@ -395,7 +463,7 @@ inline void DProfilerSampleStream::AddSamples(DProfilerSampleBuffer& aBuffer, TI
 
 			// there is data in the client buffer
 			dst += realBuf.iDataSize;
-			TInt remainingSpace = realBuf.iBufferSize-realBuf.iDataSize;
+			TInt remainingSpace(realBuf.iBufferSize-realBuf.iDataSize);
 
 			if( remainingSpace >= (amount+4) )
 			    {
@@ -458,7 +526,9 @@ inline void DProfilerSampleStream::AddSamples(DProfilerSampleBuffer& aBuffer, TI
 inline TInt DProfilerSampleStream::EndSampling(DProfilerSampleBuffer& aBuffer,TInt aSamplerId)
     {
     LOGSTRING2("DProfilerSampleStream::EndSampling, sampler ID: %d",aSamplerId);
-
+#ifdef __SMP__
+	TInt intState(0);
+#endif
 	// switch the buffer to double buffer
 	// even though it would not be full yet
 	// the switch is done only once / end sampling procedure
@@ -488,7 +558,13 @@ inline TInt DProfilerSampleStream::EndSampling(DProfilerSampleBuffer& aBuffer,TI
 			// now we have to change the status of the buffer to BufferDataEnd, so
 			// we know that the particular buffer has no more data to copy
             LOGSTRING("DProfilerSampleStream::EndSampling - switch to BufferDataEnd");
+#ifdef __SMP__
+			intState = __SPIN_LOCK_IRQSAVE(BufferStateSpinLock);
+#endif
 			aBuffer.iBufferStatus = DProfilerSampleBuffer::BufferDataEnd;
+#ifdef __SMP__
+			__SPIN_UNLOCK_IRQRESTORE(BufferStateSpinLock, intState);
+#endif
 		    }
 	    }
 
@@ -512,7 +588,11 @@ inline void DProfilerSampleStream::PerformCopy(TUint8 aSamplerId,TUint8* aSrc,TP
 	LOGSTRING2("DProfilerSampleStream::PerformCopy - start header copy HDR = 0x%x",header);	
 
 	// write the header
-	Kern::ThreadDesWrite(iClient,(TAny*)aDst,ptr,aOffset,KChunkShiftBy0);
+	TInt err(Kern::ThreadDesWrite(iClient,(TAny*)aDst,ptr,aOffset,KChunkShiftBy0));
+	if (err != KErrNone)
+		{
+		Kern::Printf(("DProfilerSampleStream::PerformCopy() - thread des write error, %d"), err);
+		}
 
 	LOGSTRING2("DProfilerSampleStream::PerformCopy - copied header %d bytes",ptr.Size());	
 	aOffset+=4;
@@ -522,8 +602,11 @@ inline void DProfilerSampleStream::PerformCopy(TUint8 aSamplerId,TUint8* aSrc,TP
 	ptr.Set(aSrc,aAmount,aAmount);
 	ptr.SetLength(aAmount);
 	
-	Kern::ThreadDesWrite(iClient,(TAny*)aDst,ptr,aOffset,KChunkShiftBy0);
-
+	err = Kern::ThreadDesWrite(iClient,(TAny*)aDst,ptr,aOffset,KChunkShiftBy0);
+	if (err != KErrNone)
+		{
+		Kern::Printf(("DProfilerSampleStream::PerformCopy() - thread des write error, %d"), err);
+		}
 
 	LOGSTRING2("DProfilerSampleStream::PerformCopy - copied data %d bytes",ptr.Size());	
 

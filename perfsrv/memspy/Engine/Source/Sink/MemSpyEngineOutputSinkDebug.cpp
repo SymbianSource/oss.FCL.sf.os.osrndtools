@@ -108,4 +108,7 @@ void CMemSpyEngineOutputSinkDebug::DoOutputRawL( const TDesC8& /*aData*/ )
     User::Leave( KErrNotSupported );
     }
 
-
+void CMemSpyEngineOutputSinkDebug::FlushL()
+    {
+    // Nothing to do since everything has already been written out
+    }

@@ -55,20 +55,30 @@ public:
 	void	Reset();
 	TInt    ProcessEvent();
 	
+	TInt   HandleLibs(TUint32 sampleNum);
+	TInt   HandleSegs(TUint32 sampleNum);
+	
 	TUint8*         itt_sample;
 	TInt            iIttSamplingPeriod;
 	TInt            iIttSamplingPeriodDiv2;
 	TBool           iTimeToSample;
 #ifdef ITT_EVENT_HANDLER
     TBool           iEventReceived;
-    TBool           iFirstSampleTaken;
+    TBool           iInitialLibsTaken;
+    TBool           iInitialSegsTaken;
 #endif
 	
 private:
+    enum {
+        KIttHandlingLibs=0,
+        KIttHandlingCodeSegs    
+    };
 #ifdef ITT_EVENT_HANDLER    
     TInt            iCount;
 #endif
-    TInt            currentLibCount;
+    TInt            iCurrentLibCount;
+    TInt            iLibsCount;
+    TInt            iCodeSegsCount;
     TInt            currentProcCount;
     
 	TUint8          sample[KITTSampleBufferSize ];
@@ -76,7 +86,8 @@ private:
 		
 	TBuf8<64>		iVersionData;
 	SDblQue* 		codeSegList;
-
+    TUint8          iInitState;
+    SDblQueLink*    iLatestCodeseg;
 };
 
 /*
@@ -90,12 +101,13 @@ public:
 	DProfilerIttSampler(struct TProfilerGppSamplerData* gppSamplerDataIn);
 	~DProfilerIttSampler();
 
-	void	Sample();
+	void	Sample(TAny* aPtr);
 	TInt	Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset);
 	TInt	PostSample();
 	TBool	PostSampleNeeded();
 
 private:
+
 #ifdef ITT_EVENT_HANDLER
     DIttEventHandler*               iEventHandler;
 #endif
@@ -103,6 +115,7 @@ private:
 	struct TProfilerGppSamplerData*     gppSamplerData;
 	TBool							sampleInProgress;
 	TBool							sampleNeeded;
+	TUint32                         iSyncOffset;
 };
 
 /*  
@@ -112,11 +125,12 @@ private:
 template <int BufferSize>
 DProfilerIttSampler<BufferSize>::DProfilerIttSampler(struct TProfilerGppSamplerData* gppSamplerDataIn) :
 	DProfilerGenericSampler<BufferSize>(PROFILER_ITT_SAMPLER_ID)
-{
+    {
 	this->gppSamplerData = (struct TProfilerGppSamplerData*)gppSamplerDataIn;
 	this->sampleInProgress = false;
-	LOGSTRING2("CProfilerIttSampler<%d>::CProfilerIttSampler",BufferSize);	
-}
+	iSyncOffset = 0;
+	LOGSTRING2("DProfilerIttSampler<%d>::DProfilerIttSampler",BufferSize);	
+    }
 
 /*
  *  DProfilerIttSampler::Reset()
@@ -126,13 +140,12 @@ DProfilerIttSampler<BufferSize>::DProfilerIttSampler(struct TProfilerGppSamplerD
  */
 template <int BufferSize>
 TInt DProfilerIttSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset)
-{
-    Kern::Printf("DProfilerIttSampler<%d>::Reset - calling superclass reset",BufferSize);
-    DProfilerGenericSampler<BufferSize>::Reset(aStream);
-
+    {
+    iSyncOffset = aSyncOffset;
     // check if reset called in stop (by driver)
-    if(aSyncOffset != 999999)
+    if(iSyncOffset != KStateSamplingEnding)
         {
+        DProfilerGenericSampler<BufferSize>::Reset(aStream);
 #ifdef ITT_EVENT_HANDLER
         // Itt event handler
         if(iEventHandler)
@@ -140,15 +153,11 @@ TInt DProfilerIttSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
             // stop previous sampling if still running
             Kern::Printf("Stopping DIttEventHandler");
             iEventHandler->Stop();
-            iEventHandler->Close();
-            iEventHandler = NULL;
             }
     
-        Kern::Printf("Initiating DIttEventHandler");
         iEventHandler = new DIttEventHandler(this->iSampleBuffer, this->gppSamplerData);
         if(iEventHandler)
             {
-            Kern::Printf("Creating DIttEventHandler");
             TInt err(iEventHandler->Create());
             if(err != KErrNone)
                 {
@@ -163,12 +172,12 @@ TInt DProfilerIttSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
             }
     
         // set first sample at the 10 ms, should be enough
-        this->ittSamplerImpl.iIttSamplingPeriod = 10;
+        this->ittSamplerImpl.iIttSamplingPeriod = 8;
 #else
         this->ittSamplerImpl.iIttSamplingPeriod = this->iSamplingPeriod;
 #endif
         this->ittSamplerImpl.iIttSamplingPeriodDiv2 = (TInt)(this->ittSamplerImpl.iIttSamplingPeriod / 2);
-        LOGSTRING3("CProfilerIttSampler<%d>::Reset - set ITT sampling period to %d",
+        LOGSTRING3("DProfilerIttSampler<%d>::Reset - set ITT sampling period to %d",
                                 BufferSize,this->ittSamplerImpl.iIttSamplingPeriod);
         }
     else
@@ -180,8 +189,6 @@ TInt DProfilerIttSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
             {
             // stop previous sampling if still running
             iEventHandler->Stop();
-            iEventHandler->Close();
-            iEventHandler = NULL;
             }
 #endif
         return KErrNone;    // return if reset called in stop
@@ -196,7 +203,7 @@ TInt DProfilerIttSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
 	this->ittSamplerImpl.Reset();
     return KErrNone;
 
-}
+    }
 
 /*
  * DProfilerIttSampler::PostSample
@@ -205,53 +212,52 @@ TInt DProfilerIttSampler<BufferSize>::Reset(DProfilerSampleStream* aStream, TUin
  */
 template <int BufferSize> 
 TInt DProfilerIttSampler<BufferSize>::PostSample()
-{
-#ifdef ITT_EVENT_HANDLER
-    if(!ittSamplerImpl.iFirstSampleTaken)   // if we haven't read the initial state
     {
+#ifdef ITT_EVENT_HANDLER
+    if(!ittSamplerImpl.iInitialSegsTaken || !ittSamplerImpl.iInitialLibsTaken)   // if we haven't read the initial state
+        {
 #endif
         if(sampleNeeded)
-        {
+            {
             this->sampleNeeded = false;
-            //LOGSTRING3("CProfilerIttSampler<%d>::PostSample - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
-            //Kern::Printf("DProfilerIttSampler<%d>::PostSample - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
+            LOGSTRING3("DProfilerIttSampler<%d>::PostSample - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
     
             TInt length = this->ittSamplerImpl.SampleImpl(this->gppSamplerData->lastPcValue,
                                                           this->gppSamplerData->sampleNumber);
             if(length != 0)
-            {		
+                {		
                 LOGSTRING("ITT sampler PostSample - starting to sample");
-    
                 while(length > 0)
-                {
+                    {
                     this->iSampleBuffer->AddSample(ittSamplerImpl.itt_sample,length);
                     length = this->ittSamplerImpl.SampleImpl( this->gppSamplerData->lastPcValue,
                                                           this->gppSamplerData->sampleNumber );	
                     if(length == 0) 
-                    {
-                        LOGSTRING("MEM sampler PostSample - all samples generated!");
+                        {
+                        LOGSTRING("ITT sampler PostSample - done for this round!");
+                        }
                     }
-                }
                 LOGSTRING("ITT sampler PostSample - finished sampling");
-            }
+                }
             this->sampleInProgress = false;
-        }
-#ifdef ITT_EVENT_HANDLER
-    }   
-        if(!iEventHandler->Tracking())
-            {
-            iEventHandler->Start();
-            Kern::Printf("DProfilerITTSampler<%d>::PostSample - ITT handler started",BufferSize);
             }
-
-#endif    
+#ifdef ITT_EVENT_HANDLER
+        }
+#endif
 	
     LOGSTRING2("ITT sampler PostSample - finished sampling, time: %d", gppSamplerData->sampleNumber);
     
 	// finally perform superclass postsample
 	TInt i(this->DProfilerGenericSampler<BufferSize>::PostSample());
+#ifdef ITT_EVENT_HANDLER	
+	// notify event handler
+	if(iEventHandler)
+	    {
+	    iEventHandler->SampleHandled();
+	    }
+#endif
 	return i;
-}
+    }
 
 /*
  *  DProfilerIttSampler::PostSampleNeeded()
@@ -260,18 +266,28 @@ TInt DProfilerIttSampler<BufferSize>::PostSample()
  */
 template <int BufferSize> 
 TBool DProfilerIttSampler<BufferSize>::PostSampleNeeded()
-{
-	LOGSTRING3("CProfilerIttSampler<%d>::PostSampleNeeded - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
+    {
+	LOGSTRING3("DProfilerIttSampler<%d>::PostSampleNeeded - buffer status %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
 
-	TUint32 status = this->iSampleBuffer->iBufferStatus;
-
-	if(status == DProfilerSampleBuffer::BufferCopyAsap || status == DProfilerSampleBuffer::BufferFull || this->sampleNeeded == true)
-	{
+	TUint32 status(this->iSampleBuffer->GetBufferStatus());
+#ifdef ITT_EVENT_HANDLER
+    if(iEventHandler)
+        {
+        if(iEventHandler->Tracking())
+            {
+            this->sampleNeeded = iEventHandler->SampleNeeded();
+            }
+        }
+#endif    
+	if(status == DProfilerSampleBuffer::BufferCopyAsap || 
+	        status == DProfilerSampleBuffer::BufferFull || 
+	        this->sampleNeeded == true)
+	    {
+	    LOGSTRING2("DProfilerIttSampler<%d>::PostSampleNeeded - buffer needs emptying or sample is needed",BufferSize);
 		return true;
-	}
-	
+	    }
 	return false;
-}
+    }
 
 /*
  * DProfilerIttSampler::Sample
@@ -279,40 +295,49 @@ TBool DProfilerIttSampler<BufferSize>::PostSampleNeeded()
  * Function for initiating sampling
  */
 template <int BufferSize>
-void DProfilerIttSampler<BufferSize>::Sample()
-{
-	LOGSTRING2("CProfilerIttSampler<%d>::Sample",BufferSize);	
-	
-	//#ifdef ITT_TEST
-	LOGSTRING2("CProfilerIttSampler<%d>::Sample",BufferSize);	
-	
-	if(ittSamplerImpl.SampleNeeded(this->gppSamplerData->sampleNumber) && this->sampleInProgress == false) 
-	{
-		this->sampleInProgress = true;
-		this->sampleNeeded = true;
-
-		LOGSTRING2("CProfilerIttSampler<%d>::Sample - sample needed",BufferSize);	
-	}	
-#ifdef ITT_EVENT_HANDLER
-    // call this to increase the time stamp
-    else if(iEventHandler->SampleNeeded())
+void DProfilerIttSampler<BufferSize>::Sample(TAny* aPtr)
+    {
+	LOGSTRING2("DProfilerIttSampler<%d>::Sample - entry",BufferSize);	
+    if(iEventHandler)
         {
-        // set the flag for post sampling
-        this->sampleNeeded = true;
+        if(!iEventHandler->Tracking())
+            {
+            if(ittSamplerImpl.SampleNeeded(this->gppSamplerData->sampleNumber) && this->sampleInProgress == false) 
+                {
+                this->sampleInProgress = true;
+                this->sampleNeeded = true;
+        
+                LOGSTRING2("DProfilerIttSampler<%d>::Sample - sample needed 1",BufferSize);	
+                }
+            
+            if(ittSamplerImpl.iInitialSegsTaken && ittSamplerImpl.iInitialLibsTaken) 
+                {
+                iEventHandler->Start();
+                }
+            }
         }
-#endif
+    else
+        {
+        if(ittSamplerImpl.SampleNeeded(this->gppSamplerData->sampleNumber) && this->sampleInProgress == false) 
+            {
+            this->sampleInProgress = true;
+            this->sampleNeeded = true;
+    
+            LOGSTRING2("DProfilerIttSampler<%d>::Sample - sample needed 2",BufferSize);   
+            }
+        }
 
-	LOGSTRING2("CProfilerIttSampler<%d>::Sample",BufferSize);
+	LOGSTRING2("DProfilerIttSampler<%d>::Sample - exit",BufferSize);
 	return;
-}
+    }
 
 /*
  * Destructor
  */
 template <int BufferSize>
 DProfilerIttSampler<BufferSize>::~DProfilerIttSampler()
-{
-	LOGSTRING2("CProfilerIttSampler<%d>::~CProfilerIttSampler",BufferSize);
+    {
+	LOGSTRING2("DProfilerIttSampler<%d>::~DProfilerIttSampler",BufferSize);
 #ifdef ITT_EVENT_HANDLER
      if(iEventHandler)
          {
@@ -322,6 +347,6 @@ DProfilerIttSampler<BufferSize>::~DProfilerIttSampler()
          iEventHandler = NULL;
          }
 #endif
-}
+    }
 #endif
 // end of file

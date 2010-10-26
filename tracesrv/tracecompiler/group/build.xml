@@ -70,7 +70,10 @@
 
 
 <target name="build" if="isRel" depends="clean">	
-	<javac srcdir="${src.dir}" destdir="${build.dir}" debug="true" target="1.5"></javac>
+	<javac srcdir="${src.dir}" destdir="${build.dir}" debug="true" target="1.5">
+        <exclude name="**/*Test.java"/>
+        <exclude name="**/Mock*.java"/>
+    </javac>
 
 	<echo> Copying html and properties files from src/com.nokia.tracecompiler/src to ${build.dir} </echo>
 	<copy todir="${build.dir}">

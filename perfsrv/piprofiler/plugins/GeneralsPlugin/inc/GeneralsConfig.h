@@ -19,6 +19,21 @@
 #ifndef GENERALS_CONFIG_H
 #define GENERALS_CONFIG_H
 
+/* Inspired from nomadik.h to use a free interrupt id */ 
+// For HREFED
+//const TInt KBridgeProfilerInterruptId = 108;
+// For HREFv1
+const TInt KBridgeProfilerInterruptId = 117;
+const TInt KDefaultInterruptNumber  = 99;
+/* Bridge Machine Unique ID in variant.cpp */
+const TUint KBridgeMachineUID = 0x101FF810;
+
+/* Naviengine Machine Unique ID in variant.cpp */
+const TUint KNaviengineMachineUID = 0x4956414E;
+
+const TUint32 KStateSamplingEnding = 999999;
+
+const TInt KValueZero = 0;
 
 	// change this to reflect the ISA task amount
 	#define PROFILER_ISA_OS_TASK_AMOUNT	50	

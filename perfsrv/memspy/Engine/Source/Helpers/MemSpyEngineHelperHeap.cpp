@@ -927,15 +927,24 @@ EXPORT_C CMemSpyEngineOutputList* CMemSpyEngineHelperHeap::NewHeapSummaryShortLC
 
         _LIT( KItem0_Type_RHeap, "RHeap" );
         _LIT( KItem0_Type_RHybridHeap, "RHybridHeap" );
+        _LIT( KItem0_Type_RHybridHeapRefactored, "RHybridHeap (Refactored)" );
 		if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap)
 			{
 	        list->AddItemL( KItem0, KItem0_Type_RHeap );
 			}
-		else
+		else if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHybridHeap)
 			{
 	        list->AddItemL( KItem0, KItem0_Type_RHybridHeap );
 			}
-
+		else if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap) 
+		    {
+		    list->AddItemL( KItem0, KItem0_Type_RHybridHeapRefactored );
+		    }
+		else
+		    {
+		    MemSpyEngineUtils::Panic( EMemSpyEnginePanicUnsupportedHeapType );
+		    }
+		
         // Heap size is the size of the heap minus the size of the embedded (in-place) RHeap. 
         _LIT( KItem1, "Heap size" );
         list->AddItemL(KItem1, metaData.iHeapSize);
@@ -1033,6 +1042,7 @@ EXPORT_C TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo( const TMemSpyH
 
 		_LIT(KRHeap, "RHeap");
 		_LIT(KRHybridHeap, "RHybridHeap");
+		_LIT(KRHybridHeapV2, "RHybridHeap v2");
 		switch (aInfo.Type())
 			{
 			case TMemSpyHeapInfo::ETypeRHeap:
@@ -1041,7 +1051,11 @@ EXPORT_C TMemSpyHeapData CMemSpyEngineHelperHeap::NewHeapRawInfo( const TMemSpyH
 			case TMemSpyHeapInfo::ETypeRHybridHeap:
 				list.iType.Copy(KRHybridHeap);
 				break;
+            case TMemSpyHeapInfo::ETypeRHybridHeapV2:
+                list.iType.Copy(KRHybridHeapV2);
+                break;
 			default:
+			    MemSpyEngineUtils::Panic( EMemSpyEnginePanicUnsupportedHeapType );
 				break;
 			}
 
@@ -1138,15 +1152,24 @@ void CMemSpyEngineHelperHeap::AppendMetaDataL( const TMemSpyHeapInfo& aInfo, CMe
         // Type
         _LIT( KMetaData_Type_RHeap,  "Symbian OS RHeap" );
         _LIT( KMetaData_Type_RHybridHeap,  "Symbian OS RHybridHeap" );
+        _LIT( KMetaData_Type_RHybridHeapV2,  "Symbian OS RHybridHeap v2" );
 		if (aInfo.Type() == TMemSpyHeapInfo::ETypeRHeap)
 			{
 	        aList.AddItemL( KMetaData_Type, KMetaData_Type_RHeap );
 			}
-		else
+		else if(aInfo.Type() == TMemSpyHeapInfo::ETypeRHybridHeap)
 			{
 			aList.AddItemL( KMetaData_Type, KMetaData_Type_RHybridHeap );
 			}
-
+		else if(aInfo.Type() == TMemSpyHeapInfo::ETypeRHybridHeapV2)
+		    {
+            aList.AddItemL( KMetaData_Type, KMetaData_Type_RHybridHeapV2 );		    
+		    }
+		else
+		    {
+		    MemSpyEngineUtils::Panic( EMemSpyEnginePanicUnsupportedHeapType );
+		    }
+		
         // VTable
         //_LIT( KMetaData_VTable,  "VTable:" );
         //aList.AddItemHexL( KMetaData_VTable, metaData.VTable() );

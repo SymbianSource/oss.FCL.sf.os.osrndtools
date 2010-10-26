@@ -36,6 +36,7 @@ import com.nokia.tracecompiler.engine.TraceCompilerEngineGlobals;
 import com.nokia.tracecompiler.engine.TraceCompilerEngineInterface;
 import com.nokia.tracecompiler.engine.TraceLocationList;
 import com.nokia.tracecompiler.engine.project.ProjectEngine;
+import com.nokia.tracecompiler.engine.utils.TraceUtils;
 import com.nokia.tracecompiler.file.FileUtils;
 import com.nokia.tracecompiler.model.TraceCompilerException;
 import com.nokia.tracecompiler.model.TraceModel;
@@ -511,6 +512,9 @@ public class TraceCompilerMain {
 		if (projectName == null) {
 			throw new TraceCompilerIllegalArgumentsException(Messages.getString("TraceCompiler.projectNameMissing"), null); //$NON-NLS-1$
 		}
+		
+		//Sanitise the project name
+		projectName = TraceUtils.convertName(projectName);
 		
 		//if files have not been provided , get them from stdin
 		if (sources.size() == 0) {

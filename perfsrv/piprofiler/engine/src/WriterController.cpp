@@ -24,37 +24,44 @@
 const TInt KMaxWriterPluginCount = 10;
 
 
-CWriterController* CWriterController::NewL(CProfilerSampleStream& aStream)
+CWriterController* CWriterController::NewL(CProfilerSampleStream& aStream, TBool aBootMode)
     {
-    CWriterController* self = new( ELeave ) CWriterController(aStream);
+    CWriterController* self = new( ELeave ) CWriterController(aStream, aBootMode);
     CleanupStack::PushL( self );
     self->ConstructL( );
     CleanupStack::Pop( self );
     return self;
     }
 
-CWriterController::CWriterController(CProfilerSampleStream& aStream) : 
-    iStream(aStream)
+CWriterController::CWriterController(CProfilerSampleStream& aStream, TBool aBootMode) : 
+    iStream(aStream),
+    iBootMode(aBootMode)
     {
     }
 
 void CWriterController::ConstructL()
 	{
 	// initiate writer plugin list
-
+    LOGSTRING2("boot mode %d", iBootMode);
 	}
 
 
 void CWriterController::InitialiseWriterListL()
     {
     // create new writer plugin array
-    iPluginArray = new(ELeave) CArrayPtrFlat<CWriterPluginInterface>( KMaxWriterPluginCount );
-    
-    // create new writer plugin loader
-    iPluginLoader = CWriterPluginLoader::NewL();
-    iPluginLoader->SetObserver( this );
-    iPluginLoader->LoadAsyncL( iPluginArray );
-
+          iPluginArray = new(ELeave) CArrayPtrFlat<CWriterPluginInterface>( KMaxWriterPluginCount );
+          
+          // create new writer plugin loader
+          iPluginLoader = CWriterPluginLoader::NewL(iBootMode);
+          iPluginLoader->SetObserver( this );
+    if ( iBootMode )
+        {
+        iPluginLoader->LoadRlibraryL( iPluginArray );
+        }
+    else
+        {
+        iPluginLoader->LoadAsyncL( iPluginArray );
+        }
     LOGTEXT(_L(" RWriterController::InitialiseWriterList - exit"));	
     }
 
@@ -84,7 +91,8 @@ CWriterController::~CWriterController()
         delete iPluginLoader;
         iPluginLoader = NULL;
         }
-
+    
+    REComSession::FinalClose();
     }
 
 

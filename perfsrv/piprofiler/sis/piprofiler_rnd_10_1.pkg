@@ -1,0 +1,74 @@
+;
+; Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies). 
+; All rights reserved.
+; This component and the accompanying materials are made available
+; under the terms of "Eclipse Public License v1.0"
+; which accompanies this distribution, and is available
+; at the URL "http://www.eclipse.org/legal/epl-v10.html".
+;
+; Initial Contributors:
+; Nokia Corporation - initial contribution.
+;
+; Contributors:
+;
+; Description:  
+
+;Languages
+&EN
+
+;Header
+#{"PIProfiler"}, (0x2001E5AD), 2,3,1,TYPE=SA, RU
+
+;Supports Series 60 v 3.2
+[0x102752AE], 0, 0, 0, {"Series60ProductID"}
+;Supports Series 60 v 5.0
+[0x1028315F], 0, 0, 0, {"Series60ProductID"}
+;Supports Series 60 v 5.1
+[0x10283160], 0, 0, 0, {"Series60ProductID"}
+;Supports Series 60 v 5.2
+[0x20022E6D], 0, 0, 0, {"Series60ProductID"}
+;Supports Symbian^3
+[0x20022E6D], 0, 0, 0, {"Series60ProductID"}
+
+; Non-localised vendor name
+:"Nokia Corporation"
+
+; Localised vendor names
+%{"Nokia Corporation"}
+
+; engine
+"\epoc32\release\armv5\urel\PIProfilerEngine.exe"	-"!:\sys\bin\PIProfilerEngine.exe"
+"\epoc32\release\armv5\urel\PIProfiler.exe"			-"!:\sys\bin\PIProfiler.exe"
+
+; basic sampler plugins
+"\epoc32\release\armv5\urel\PIProfilerGenerals.dll"	-"!:\sys\bin\PIProfilerGenerals.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerGenerals.rsc"   -   "!:\Resource\Plugins\PIProfilerGenerals.RSC"
+"\epoc32\release\armv5\urel\PIProfilerGeneralsSampler.ldd"	-"!:\sys\bin\PIProfilerGeneralsSampler.ldd"
+"\epoc32\release\armv5\urel\PIProfilerBUP.dll"	-"!:\sys\bin\PIProfilerBUP.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerBUP.rsc"   -   "!:\Resource\Plugins\PIProfilerBUP.RSC"
+"\epoc32\RELEASE\armv5\urel\PIProfilerTouchEventAnim.dll"-"!:\sys\bin\PIProfilerTouchEventAnim.dll"
+"\epoc32\release\armv5\urel\PIProfilerPWR.dll"	-"!:\sys\bin\PIProfilerPWR.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerPWR.rsc"   -   "!:\Resource\Plugins\PIProfilerPWR.RSC"
+
+; internals sampler plugins
+"\epoc32\release\armv5\urel\PIProfilerInternals.dll"	-"!:\sys\bin\PIProfilerInternals.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerInternals.rsc"   -   "!:\Resource\Plugins\PIProfilerInternals.RSC"
+"\epoc32\release\armv5\urel\PIProfilerInternalsSampler.ldd"	-"!:\sys\bin\PIProfilerInternalsSampler.ldd"
+"\epoc32\release\armv5\urel\PIProfilerISA.dll"	-"!:\sys\bin\PIProfilerISA.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerISA.rsc"   -   "!:\Resource\Plugins\PIProfilerISA.RSC"
+"\epoc32\release\armv5\urel\PIProfilerGPU.dll"	-"!:\sys\bin\PIProfilerGPU.dll"
+"\epoc32\data\Z\Resource\plugins\PIProfilerGPU.rsc"   -   "!:\Resource\Plugins\PIProfilerGPU.RSC"
+
+; writer plugins
+"\epoc32\release\armv5\urel\piprofilerdebugwriter.dll"	-"!:\sys\bin\piprofilerdebugwriter.dll"
+"\epoc32\data\Z\Resource\plugins\piprofilerdebugwriter.rsc"   -   "!:\Resource\Plugins\piprofilerdebugwriter.rsc"
+"\epoc32\release\armv5\urel\piprofilerdiskwriter.dll"	-"!:\sys\bin\piprofilerdiskwriter.dll"
+"\epoc32\data\Z\Resource\plugins\piprofilerdiskwriter.rsc"   -   "!:\Resource\Plugins\piprofilerdiskwriter.rsc"
+
+; UI
+"\epoc32\RELEASE\armv5\urel\PIProfilerUI.exe"-"!:\sys\bin\PIProfilerUI.exe"
+"\epoc32\data\z\Resource\apps\piprofilerui_aif.mif"-"!:\Resource\Apps\piprofilerui_aif.mif"
+"\epoc32\data\z\Resource\apps\piprofilerui_ExtraIcons.mif"-"!:\Resource\Apps\piprofilerui_ExtraIcons.mif"
+"\epoc32\data\z\PRIVATE\10003A3F\APPS\piprofilerui_reg.rsc"-"!:\private\10003a3f\import\apps\piprofilerui_reg.rsc"
+
+"\epoc32\data\z\PRIVATE\2001E5AE\backup_registration.xml"-"!:\private\2001E5AE\backup_registration.xml"

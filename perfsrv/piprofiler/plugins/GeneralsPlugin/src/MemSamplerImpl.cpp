@@ -56,13 +56,10 @@ DMemSamplerImpl::DMemSamplerImpl() :
 
 	iCount = 0;
 		
-#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
 	iSampleType = ESampleThreads;
-#else
-	iSampleThreads = true;
-#endif
-	iTimeToSample = false;
-	
+	//iSampleType = ESampleChunks;
+
+	iTimeToSample = true;
 	iTotalMemoryOk = false;
 	iTotalMemoryNameOk = false;
 	
@@ -71,6 +68,9 @@ DMemSamplerImpl::DMemSamplerImpl() :
 	iChunksProcessing = ENothingToProcess;
     iThreadsProcessing = ENothingToProcess;
 	
+    iChunksGathered = false;
+    iThreadsGathered = false;
+    
 	iNewThreadCount = 0;
 	iThreadCount = 0;
 	
@@ -118,205 +118,143 @@ TInt DMemSamplerImpl::CreateFirstSample()
 	this->sampleDescriptor.Append(KMemVersion);
 	this->sampleDescriptor.Append(_L8("_MEM"));
 	
-	sample[0] = this->sampleDescriptor.Size();
+    LOGSTRING2("timestamp : 0x%04x",  iCount);
 
-	LOGSTRING("MemSamplerImpl::CreateFirstSample - exit");
-
-	return (TInt)(sample[0]+1);
+    LOGSTRING("MemSamplerImpl::CreateFirstSample - exit");
+    sample[0] = this->sampleDescriptor.Size();
+    
+    return (TInt)(sample[0]+1);
     }
 
-TBool DMemSamplerImpl::SampleNeeded()
+TBool DMemSamplerImpl::SampleNeeded(TUint32 sampleNum)
     {
-	iCount++;
+    TBool ret(false);
+    iCount = sampleNum;
 #ifdef MEM_EVENT_HANDLER
     // make the collection of chunks/threads only once, rest will be collected with mem event handler
-#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
-	if (iCount <= iMemSamplingPeriod && ((iCount % iMemSamplingPeriod) == 0 || (iCount % iMemSamplingPeriodDiv3) == 0))
-#else
-    if (iCount <= iMemSamplingPeriod && ((iCount % iMemSamplingPeriod) == 0 || (iCount % iMemSamplingPeriodDiv2) == 0))
-#endif
+
+//    #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
+//    if (iCount <= iMemSamplingPeriod && ((iCount % iMemSamplingPeriod) == 0 || (iCount % iMemSamplingPeriodDiv3) == 0))
+//    #else
+	if (iCount % iMemSamplingPeriod == 0)
+//    #endif
+
 #else
 	if ((iCount % iMemSamplingPeriod) == 0 || (iCount % iMemSamplingPeriodDiv2) == 0)
 #endif
 	    {
         LOGSTRING2("MemSamplerImpl::SampleNeeded - time: %d", iCount);
-		iTimeToSample = true;
-		return true;
+        ret= true;
         }
-	else 
+	else
 	    {
-		return false;
+		ret=false;
         }
+	return ret;
+	}
 
-    }
-#ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
-TInt DMemSamplerImpl::SampleImpl()
-    {    
-    // Sample threads:
-    if( iSampleType == ESampleThreads )
-        {    
-        if(this->iThreadsProcessing == ENothingToProcess )
-            {     
-            if(!iTimeToSample)
-                {
-                return 0;
-                }
-            else
-                {
-                iTimeToSample = false;
-                // gather first all thread stacks
-                return GatherThreads();
-                }
-            }
-        else
-            {
-            // process now thread stack list
-            TInt length = this->ProcessThreads();
-
-            if(length == 0)
-                {
-                this->iThreadsProcessing = ENothingToProcess;
-                // switch to collect chunk data
-                iSampleType = ESampleChunks;
-                }
-            return length;
-            }
-        }
-
-    // Sample chunks:
-    if( iSampleType == ESampleChunks )
+/*
+ * When returns 0, means that all samples done.
+ * Should return length of sample available in iSample
+ */
+TInt DMemSamplerImpl::SampleImpl(TUint32 sampleNum)
+    {
+    if(iTimeToSample)
         {
-        if(this->iChunksProcessing == ENothingToProcess)
+        // Sample threads:
+        if( iSampleType == ESampleThreads && !iThreadsGathered )
             {
-            if(!iTimeToSample)
+            if(this->iThreadsProcessing == ENothingToProcess )
                 {
-                return 0;
+                 // gather first all thread stacks
+                 return GatherThreads(); 
                 }
             else
                 {
-                iTimeToSample = false;
+                // process now thread stack list
+                TInt length = this->ProcessThreads();
+                if(length == 0)
+                    {
+                    this->iThreadsProcessing = ENothingToProcess;
+                    // switch to collect chunk data
+                    iSampleType = ESampleChunks;
+                    iThreadsGathered = ETrue;
+                    }
+                return length;
+                }
+            }
+        // Sample chunks:
+        else if( iSampleType == ESampleChunks && !iChunksGathered)
+            {
+            if(this->iChunksProcessing == ENothingToProcess)
+                {
                 // gather first all chunks
                 return GatherChunks();
                 }
-            }
-        else
-            {
-            // still something to go through in lists
-            TInt length = this->ProcessChunks();
-        
-            if(length == 0) 
-            {
-                this->iChunksProcessing = ENothingToProcess;
-                // switch to collect library data
-                iSampleType = ESampleLibraries;
-                //iSampleThreads = true;
-            }
-            return length;
-            }
-        }
-        
-    // Sample libraries:
-    if( iSampleType == ESampleLibraries )
-        {
-        if(this->iLibrariesProcessing == ENothingToProcess )
-            {        
-            if(!iTimeToSample)
-                {             
-                return 0;
-                }
             else
                 {
-                iTimeToSample = false;
+                // still something to go through in lists
+                TInt length = this->ProcessChunks();
+                if(length == 0) 
+                    {
+                    this->iChunksProcessing = ENothingToProcess;
+                    // switch to collect library data
+                    iSampleType = ESampleLibraries;
+                    iChunksGathered = ETrue;
+                    iThreadsGathered = ETrue;
+                    //iSampleThreads = true;
+                    }
+                return length;
+                }
+            }
+
+    #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
+        // Sample libraries:
+        else if( iSampleType == ESampleLibraries )
+            {
+            if(this->iLibrariesProcessing == ENothingToProcess )
+                {        
                 // gather libraries
                 return GatherLibraries();
                 }
-            }
-        else
-            {
-            // process now thread stack list
-            TInt length = this->ProcessLibraries();
-            if(length == 0)
+            else
                 {
-                this->iLibrariesProcessing = ENothingToProcess;
-                // switch to collect chunk data
-                iSampleType = ESampleThreads;
+                // process now thread stack list
+                TInt length = this->ProcessLibraries();
+                if(length == 0)
+                    {
+                    this->iLibrariesProcessing = ENothingToProcess;
+                    // switch to collect chunk data
+                    iSampleType = ESampleThreads;
+                    iLibrariesGathered = ETrue;
+                    }
+                return length;
                 }
-            return length;
+            }
+    #endif
+        else
+            {
+            // Will not be executed. Ever. PostSample handles the state change and starting of
+            // memory event handler.
+            iChunksGathered = ETrue;
+            iThreadsGathered = ETrue;
+            iTimeToSample = false;
+            Kern::Printf("MEM sampler - all initial samples generated but we should not be here...!");
             }
         }
-
+    else    // not time to sample
+        {
+        LOGSTRING("MEM sampler - not time to sample!");
+        }
     // should not reach this point...
     return 0;
     }
-#else
-TInt DMemSamplerImpl::SampleImpl()
-    {
-    // check if either chunk or thread lists have unprocessed items
-    if(this->iChunksProcessing == ENothingToProcess && !iSampleThreads)
-        {
-        if(!iTimeToSample)
-            {
-            return 0;
-            }
-        else
-            {
-            iTimeToSample = false;
-            // gather first all chunks
-            return GatherChunks();
-            }
-        }
-    else if(!iSampleThreads)
-        {
-        // still something to go through in lists
-        TInt length = this->ProcessChunks();
-        
-        if(length == 0) 
-            {
-            this->iChunksProcessing = ENothingToProcess;
-            // switch to collect thread data
-            iSampleThreads = true;
-            }
-        return length;
-        }
-    
-    if(this->iThreadsProcessing == ENothingToProcess && iSampleThreads)
-        {
-        if(!iTimeToSample)
-            {
-            return 0;
-            }
-        else
-            {
-            iTimeToSample = false;
-            // gather first all thread stacks
-            return GatherThreads();
-            }
-        }
-    
-    else if(iSampleThreads)
-        {
-        // process now thread stack list
-        TInt length = this->ProcessThreads();
 
-        if(length == 0)
-            {
-            this->iThreadsProcessing = ENothingToProcess;
-            // switch to collect chunk data
-            iSampleThreads = false;
-            }
-        return length;
-        }
-
-    // should not reach this point...
-    return 0;
-    }
-#endif
 
 inline TInt DMemSamplerImpl::GatherChunks()
     {
     // encode a process binary
     name.Zero();
-    
     NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
     DObjectCon& chunks = *Kern::Containers()[EChunk];
     chunks.Wait();  // Obtain the container mutex so the list does get changed under us
@@ -326,16 +264,16 @@ inline TInt DMemSamplerImpl::GatherChunks()
     this->iTotalMemoryOk = false;
     TInt totalChunkCount(chunks.Count());
     DChunk* c; 
-    
+    LOGSTRING2("DMemSamplerImpl::GatherChunks() chunk count %d",totalChunkCount);
     for(TInt i(0);i<totalChunkCount;i++)
         {
         c = (DChunk*)(chunks)[i];
 
-        LOGSTRING3("Processing chunk %d, tag: 0x%x",i,TAG(c));
+        //LOGSTRING3("Processing chunk %d, tag: 0x%x",i,TAG(c));
         
         if( (TAG(c) & 0x0000ffff) != PROFILER_CHUNK_MARK)
             {
-            LOGSTRING4("Marking chunk %d/%d, old tag 0x%x",i,(totalChunkCount-1), TAG(c));
+            //LOGSTRING4("Marking chunk %d/%d, old tag 0x%x",i,(totalChunkCount-1), TAG(c));
             // this chunk has not been tagged yet
             name.Zero();
             c->TraceAppendName(name,false);
@@ -348,8 +286,8 @@ inline TInt DMemSamplerImpl::GatherChunks()
         // the chunk has been tagged, add heap chunks to the list
         this->heapChunksToSample[this->iChunkCount] = c;
         this->iChunkCount++;
-        LOGSTRING2("Added chunk %d to Chunks",i);
         }
+        LOGSTRING2("Added  %d Chunks", totalChunkCount);
 
     if(this->iChunkCount > 0 || this->iNewChunkCount > 0)
         {
@@ -357,7 +295,6 @@ inline TInt DMemSamplerImpl::GatherChunks()
         
         // process the first sample
         TInt length = this->ProcessChunks();
-        
         if(length == 0)
             {
             this->iChunksProcessing = ENothingToProcess;
@@ -377,7 +314,6 @@ inline TInt DMemSamplerImpl::GatherChunks()
 inline TInt DMemSamplerImpl::GatherThreads()
     {
     // The thread memory consumption
-    
     NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
     DObjectCon& threads = *Kern::Containers()[EThread];
     threads.Wait(); // Obtain the container mutex so the list does get changed under us
@@ -387,16 +323,16 @@ inline TInt DMemSamplerImpl::GatherThreads()
     this->iTotalMemoryOk = false;           
 
     TInt totalThreadCount = threads.Count();
-
+    LOGSTRING2("DMemSamplerImpl::GatherThreads() thread count %d",totalThreadCount);
     for(TInt i(0);i<totalThreadCount;i++)
         {
         DThread* t = (DThread*)(threads)[i];
 
-        LOGSTRING3("Processing thread %d, tag: 0x%x",i,TAG(t));
+        //LOGSTRING3("Processing thread %d, tag: 0x%x",i,TAG(t));
 
         if( (TAG(t) & PROFILER_MEM_THREAD_MARK) == 0)
             {
-            LOGSTRING4("Marking thread %d/%d, old tag 0x%x",i,(totalThreadCount-1), TAG(t));
+            //LOGSTRING4("Marking thread %d/%d, old tag 0x%x",i,(totalThreadCount-1), TAG(t));
             // this thread's chunk has not been reported yet
             this->threadNamesToReport[iNewThreadCount] = t;
             iNewThreadCount++;
@@ -407,16 +343,16 @@ inline TInt DMemSamplerImpl::GatherThreads()
         // the chunk has been tagged, add heap chunks to the list
         this->threadsToSample[this->iThreadCount] = t;
         this->iThreadCount++;
-        LOGSTRING2("Added thread %d to threads to sample",i);
+        //LOGSTRING2("Added thread %d to threads to sample",i);
         }
-    
+
+    LOGSTRING3("Added %d threads. ithreadcount %d",totalThreadCount, iThreadCount);
+   
     if(this->iThreadCount > 0 || this->iNewThreadCount > 0)
         {
         this->iThreadsProcessing = EStartingToProcess;
-        
-        // process the first sample
+      // process the first sample
         TInt length = this->ProcessThreads();
-        
         if(length == 0)
             {
             this->iThreadsProcessing = ENothingToProcess;
@@ -426,7 +362,7 @@ inline TInt DMemSamplerImpl::GatherThreads()
         return length;
         }
     
-    LOGTEXT("MemSamplerImpl::SampleImpl - Error, no threads"); 
+    LOGTEXT("DMemSamplerImpl::GatherThreads() - Error, no threads"); 
     threads.Signal();  // Release the container mutex
     NKern::ThreadLeaveCS();  // End of critical section
     return 0;
@@ -500,131 +436,164 @@ inline TInt DMemSamplerImpl::GatherLibraries()
 
 inline TInt DMemSamplerImpl::ProcessChunks()
     {
-    if(iNewChunkCount > 0)
+    if(iHandledChunks < 50)
         {
-        if(this->iChunksProcessing == EStartingToProcess)
+        if(iNewChunkCount > 0)
             {
-            // this is the first sample, encode a code for names
-            this->iChunksProcessing = EProcessingNames;
-            return EncodeNameCode();
+            if(this->iChunksProcessing == EStartingToProcess)
+                {
+                // this is the first sample, encode a code for names
+                this->iChunksProcessing = EProcessingNames;
+                iHandledChunks++;
+                return EncodeNameCode();
+                }
+    
+            if(iTotalMemoryNameOk == false)
+                {
+                iHandledChunks++;
+                return EncodeTotalMemoryName();
+                }
+            iNewChunkCount--;
+            DChunk* c = this->heapChunkNamesToReport[iNewChunkCount];
+            iHandledChunks++;
+            return EncodeChunkName(*c);
             }
-
-        if(iTotalMemoryNameOk == false)
+        else if(iChunkCount > 0)
             {
-            return EncodeTotalMemoryName();
+            if(this->iChunksProcessing == EProcessingNames || this->iChunksProcessing == EStartingToProcess)
+                {
+                // this is the first data sample, encode a code for data
+                this->iChunksProcessing = EProcessingData;
+                iHandledChunks++;
+                return EncodeDataCode();
+                }
+            
+            if(this->iTotalMemoryOk == false)
+                {
+                iHandledChunks++;
+                return EncodeTotalMemory();
+                }
+    
+            // there are no new chunks to report
+            // thus generate the real report
+            iChunkCount--;
+            DChunk* c = this->heapChunksToSample[iChunkCount];
+            iHandledChunks++;
+            return EncodeChunkData(*c);
             }
-        
-        // there are new chunk names to report
-        iNewChunkCount--;
-        DChunk* c = this->heapChunkNamesToReport[iNewChunkCount];
-        return EncodeChunkName(*c);
-        
-        }
-    else if(iChunkCount > 0)
-        {
-        if(this->iChunksProcessing == EProcessingNames || this->iChunksProcessing == EStartingToProcess)
+        else
             {
-            // this is the first data sample, encode a code for data
-            this->iChunksProcessing = EProcessingData;
-            return EncodeDataCode();
+            // everything is processed
+            LOGSTRING2("MemSamplerImpl::ProcessChunks() Chunks processed! Chunk count = %d", iChunkCount);
+    #ifdef MEM_EVENT_HANDLER
+            this->iChunksGathered = ETrue;
+            LOGSTRING2("MemSamplerImpl::ProcessChunks() - chunks gathered! Time: %d",iCount);
+    #endif
+            return 0;
             }
-        
-        if(this->iTotalMemoryOk == false)
-            {
-            return EncodeTotalMemory();	
-            }
-
-        // there are no new chunks to report
-        // thus generate the real report
-        iChunkCount--;
-        DChunk* c = this->heapChunksToSample[iChunkCount];
-        return EncodeChunkData(*c);
         }
     else
         {
-        // everything is processed
-        LOGSTRING2(" Chunks processed! Chunk count = %d", iChunkCount);
-#ifdef MEM_EVENT_HANDLER
-        this->iChunksGathered = true;
-        Kern::Printf("MemSamplerImpl::ProcessChunks() - chunks gathered! Time: %d",iCount);
-#endif
-        return 0;
+        LOGSTRING("MemSamplerImpl::ProcessChunks() 0");
+        iHandledChunks =0;
         }
+    return -1;
     }
 
 inline TInt DMemSamplerImpl::ProcessThreads()
     {
-
-    if(iNewThreadCount > 0)
+    if(iHandledThreads < 50)
         {
-        if(this->iThreadsProcessing == EStartingToProcess)
+        if(iNewThreadCount > 0)
             {
-            // this is the first sample, encode a code for names
-            this->iThreadsProcessing = EProcessingNames;
-            return EncodeNameCode();
+            if(this->iThreadsProcessing == EStartingToProcess)
+                {
+                // this is the first sample, encode a code for names
+                this->iThreadsProcessing = EProcessingNames;
+                iHandledThreads++;
+                return EncodeNameCode();
+                }
+            
+            if(iTotalMemoryNameOk == false)
+                {
+                LOGSTRING("MemSamplerImpl::ProcessThreads() Encoding total memory name!");
+                iHandledThreads++;
+                return EncodeTotalMemoryName();
+                }
+            iNewThreadCount--;
+            DThread* t = this->threadNamesToReport[iNewThreadCount];
+            iHandledThreads++;
+            return EncodeChunkName(*t);
             }
-        
-        if(iTotalMemoryNameOk == false)
+        else if(iThreadCount > 0)
             {
-            return EncodeTotalMemoryName();
+            if(this->iThreadsProcessing == EProcessingNames || this->iThreadsProcessing == EStartingToProcess)
+                {
+                // this is the first data sample, encode a code for data
+                this->iThreadsProcessing = EProcessingData;
+                iHandledThreads++;
+                return EncodeDataCode();
+                }
+    
+            if(this->iTotalMemoryOk == false)
+                {
+                iHandledThreads++;
+                return EncodeTotalMemory(); 
+                }
+    
+            // there are no new threads to report
+            // thus generate the real report
+            iThreadCount--;
+            DThread* t = this->threadsToSample[iThreadCount];
+            iHandledThreads++;
+            return EncodeChunkData(*t);
             }
-
-        iNewThreadCount--;
-        DThread* t = this->threadNamesToReport[iNewThreadCount];
-        return EncodeChunkName(*t);
-        }
-    else if(iThreadCount > 0)
-        {
-        if(this->iThreadsProcessing == EProcessingNames || this->iThreadsProcessing == EStartingToProcess)
-            {
-            // this is the first data sample, encode a code for data
-            this->iThreadsProcessing = EProcessingData;
-            return EncodeDataCode();
+        else
+            {   
+            // everything is processed
+            LOGSTRING2("MemSamplerImpl::ProcessThreads() Threads processed! Thread count = %d", iThreadCount);
+#ifdef MEM_EVENT_HANDLER
+            this->iThreadsGathered = true;
+            LOGSTRING2("MemSamplerImpl::ProcessThreads() - threads gathered! Time: %d", iCount);
+#endif
+            return 0;
             }
-
-        if(this->iTotalMemoryOk == false)
-            {
-            return EncodeTotalMemory(); 
-            }
-
-        // there are no new threads to report
-        // thus generate the real report
-        iThreadCount--;
-        DThread* t = this->threadsToSample[iThreadCount];
-        return EncodeChunkData(*t);
         }
     else
-        {   
-        // everything is processed
-        LOGSTRING2(" Threads processed! Thread count = %d", iThreadCount);
-#ifdef MEM_EVENT_HANDLER
-        this->iThreadsGathered = true;
-        Kern::Printf("MemSamplerImpl::ProcessThreads() - threads gathered! Time: %d", iCount);
-#endif
-        return 0;
+        {
+        LOGSTRING("MemSamplerImpl::ProcessThreads() 0");
+        iHandledThreads=0;
         }
+    return -1;
     }
+
 #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
 inline TInt DMemSamplerImpl::ProcessLibraries()
     {
     LOGTEXT("ProcessLibraries - entry");
-    if(iNewLibraryCount > 0)
+    
+    if(iHandledLibs < 50)
+        {
+        if(iNewLibraryCount > 0)
         {
         if(this->iLibrariesProcessing == EStartingToProcess)
             {
             // this is the first sample, encode a code for names
             this->iLibrariesProcessing = EProcessingNames;
+            iHandledLibs++;
             return EncodeNameCode();
             }
 
         if(iTotalMemoryNameOk == false)
             {
+            iHandledLibs++;
             return EncodeTotalMemoryName();
             }
         
         // there are new library names to report
         iNewLibraryCount--;
         DLibrary* l = this->libraryNamesToReport[iNewLibraryCount];
+        iHandledLibs++;
         return EncodeChunkName(*l);
         
         }
@@ -634,11 +603,13 @@ inline TInt DMemSamplerImpl::ProcessLibraries()
             {
             // this is the first data sample, encode a code for data
             this->iLibrariesProcessing = EProcessingData;
+            iHandledLibs++;
             return EncodeDataCode();
             }
         
         if(this->iTotalMemoryOk == false)
             {
+            iHandledLibs++;
             return EncodeTotalMemory(); 
             }
 
@@ -646,6 +617,7 @@ inline TInt DMemSamplerImpl::ProcessLibraries()
         // thus generate the real report
         iLibraryCount--;
         DLibrary* l = this->librariesToSample[iLibraryCount];
+        iHandledLibs++;
         return EncodeChunkData(*l);
         }
     else
@@ -654,12 +626,20 @@ inline TInt DMemSamplerImpl::ProcessLibraries()
         LOGSTRING2(" Libraries processed! Library count = %d", iLibraryCount);
 
         this->iLibrariesGathered = true;
-        Kern::Printf("MemSamplerImpl::ProcessLibraries() - libraries gathered! Time: %d",iCount);
+        LOGSTRING2("MemSamplerImpl::ProcessLibraries() - libraries gathered! Time: %d",iCount);
 
         return 0;
         }
     }
+    else
+        {
+        LOGSTRING("MemSamplerImpl::ProcessLibs() 0");
+        iHandledLibs =0;
+        }
+    return -1;
+    }
 #endif
+
 inline TInt DMemSamplerImpl::EncodeNameCode()
     {
 	sample[0] = 1;
@@ -697,7 +677,6 @@ inline TInt DMemSamplerImpl::EncodeTotalMemoryName()
 
 inline TInt DMemSamplerImpl::EncodeTotalMemory()
     {	
-	
 	TUint8* size = &sample[0];
 	*size = 0;
 
@@ -753,7 +732,7 @@ inline TInt DMemSamplerImpl::EncodeChunkName(DChunk& c)
 
 	// the size is the descriptor length + the size field
 	LOGSTRING2("Non-Heap Chunk Name - %d",*size);
-	return ((TInt)(*size))+1;			
+	return ((TInt)(*size))+1;
     }
 
 inline TInt DMemSamplerImpl::EncodeChunkName(DThread& t)
@@ -803,14 +782,14 @@ inline TInt DMemSamplerImpl::EncodeChunkData(DChunk& c)
 	// the size of the following name is in the first byte
 	TUint8* size = &sample[0];
 	*size = 0;
+	
+    TInt zero(0);
 	this->sampleDescriptor.Zero();
-	TInt zero(0);
-
 	TUint32 address((TUint32)&c);
 		
 	this->sampleDescriptor.Append((TUint8*)&address,sizeof(TUint32));
-	*size += sizeof(TUint);
-	
+	*size += sizeof(TUint32);
+	LOGSTRING2("address - 0x%04x",&address);
 	// copy the total amount of memory allocated
 	this->sampleDescriptor.Append((TUint8*)&(c.iSize),sizeof(TInt));
 	*size += sizeof(TInt);
@@ -827,22 +806,18 @@ inline TInt DMemSamplerImpl::EncodeChunkData(DChunk& c)
 	this->sampleDescriptor.Append((TUint8*)&(zero),sizeof(TInt));
 	*size += sizeof(TInt);
 
-	LOGSTRING2("Data - %d",*size);
+	LOGSTRING2("chunk Data - %d",*size);
 	return ((TInt)(*size))+1;
-
     }
 
 inline TInt DMemSamplerImpl::EncodeChunkData(DThread& t)
     {
-	LOGTEXT("MemSamplerImpl::EncodeChunkData - entry");
-	//LOGSTRING2("MemSamplerImpl::EncodeChunkData - processing thread 0x%x ",&t);
-		
 	// the size of the following name is in the first byte
 	TUint8* size = &sample[0];
 	*size = 0;
+    TInt zero(0);
 	this->sampleDescriptor.Zero();
-
-	LOGTEXT("MemSamplerImpl::EncodeChunkData - cleared");
+	//LOGTEXT("MemSamplerImpl::EncodeChunkData - cleared");
 
 	this->sampleDescriptor.Append((TUint8*)&(t.iId),sizeof(TUint));
 	*size += sizeof(TUint);
@@ -851,7 +826,7 @@ inline TInt DMemSamplerImpl::EncodeChunkData(DThread& t)
 	this->sampleDescriptor.Append((TUint8*)&(t.iUserStackSize),sizeof(TInt));
 	*size += sizeof(TInt);
 
-	TInt zero(0);		
+
 	// append the cell amount allocated (zero, not in use here)
 	this->sampleDescriptor.Append((TUint8*)&zero,sizeof(TInt));
 	*size += sizeof(TInt);
@@ -901,9 +876,9 @@ inline TInt DMemSamplerImpl::EncodeChunkData(DLibrary& l)
 #endif
 void DMemSamplerImpl::Reset()
     {
-	Kern::Printf("MemSamplerImpl::Reset");
+    LOGSTRING("MemSamplerImpl::Reset - entry");
 	iCount = 0; // sample threads 1 cycle after actual MEM sample time...
-    this->iTimeToSample = false;
+    this->iTimeToSample = true;
     this->iChunkCount = 0;
 	this->iNewChunkCount = 0;
 	
@@ -914,14 +889,13 @@ void DMemSamplerImpl::Reset()
     this->iThreadsProcessing = ENothingToProcess;
 #ifdef MEM_EVENT_HANDLER_LIBRARY_EVENTS
     this->iLibrariesProcessing = ENothingToProcess;
-    this->iSampleType = ESampleThreads;
 #else
-    this->iSampleThreads = true;
+    this->iSampleType = ESampleThreads;
+    //this->iSampleType = ESampleChunks;
+    //this->iSampleThreads = true;
 #endif
-    
-	this->sampleDescriptor.Zero();
-	
-	// clear all chunk tags
+    this->sampleDescriptor.Zero();
+    // clear all chunk tags
     NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
 	DObjectCon* chunks = Kern::Containers()[EChunk];
     chunks->Wait(); // Obtain the container mutex so the list does get changed under us
@@ -934,12 +908,12 @@ void DMemSamplerImpl::Reset()
 	    }
 	chunks->Signal();  // Release the container mutex
 
-	Kern::Printf("MemSamplerImpl::Reset");
+	LOGSTRING("MemSamplerImpl::Reset");
 	this->iThreadCount = 0;
 	this->iNewThreadCount = 0;
 	this->sampleDescriptor.Zero();
 
-	// clear all chunk tags
+	// clear all thread tags
 	DObjectCon* threads = Kern::Containers()[EThread];
     threads->Wait(); // Obtain the container mutex so the list does get changed under us
 
@@ -972,3 +946,5 @@ void DMemSamplerImpl::Reset()
     NKern::ThreadLeaveCS();  // End of critical section
     }
 
+
+// end of file

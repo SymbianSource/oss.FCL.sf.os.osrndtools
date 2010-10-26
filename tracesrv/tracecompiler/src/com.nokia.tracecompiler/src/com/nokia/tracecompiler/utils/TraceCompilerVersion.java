@@ -40,7 +40,7 @@ public abstract class TraceCompilerVersion {
 			version = versionImpl.getTraceCompilerVersion();
 		} else {
 			// TODO: This is used in console builds -> Maintenance needed
-			version = "2.3.0"; //$NON-NLS-1$
+			version = "2.3.2"; //$NON-NLS-1$
 		}
 		return version;
 	}

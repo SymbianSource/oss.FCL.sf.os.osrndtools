@@ -25,22 +25,20 @@
 #include "MemoryEventHandler.h"
 
 
-DMemoryEventHandler::DMemoryEventHandler(DProfilerSampleBuffer* aSampleBuffer)
+DMemoryEventHandler::DMemoryEventHandler(DProfilerSampleBuffer* aSampleBuffer, TProfilerGppSamplerData* aGppSamplerDataIn)
     :   DKernelEventHandler(EventHandler, this), 
         iSampleBuffer(aSampleBuffer), 
-        iSampleDescriptor(&(this->iSample[1]),0,256)
+        iSampleDescriptor(&(this->iSample[1]),0,256),
+        gppSamplerData(aGppSamplerDataIn)
     {
-//    Kern::Printf("DMemoryEventHandler::DMemoryEventHandler()");
-    iCount = 0;
     iPreviousCount = 0;
+    iSampleAvailable = false;
     }
 
 
 TInt DMemoryEventHandler::Create()
     {
-//    Kern::Printf("DMemoryEventHandler::Create()");
-
-    TInt err(Kern::MutexCreate(iLock, _L("MemoryEventHandlerLock"), KMutexOrdGeneral0));
+    TInt err(Kern::MutexCreate(iLock, _L("MemoryEventHandlerLock"), KMutexOrdResourceManager));
     if (err != KErrNone)
         return err;
     
@@ -50,8 +48,6 @@ TInt DMemoryEventHandler::Create()
 
 DMemoryEventHandler::~DMemoryEventHandler()
     {
-//    Kern::Printf("DMemoryEventHandler::~DMemoryEventHandler()");
-
     if (iLock)
         iLock->Close(NULL);
        
@@ -60,8 +56,6 @@ DMemoryEventHandler::~DMemoryEventHandler()
 
 TInt DMemoryEventHandler::Start()
     {
-//    Kern::Printf("DMemoryEventHandler::Start()");
-
     iTracking = ETrue;
     return KErrNone;
     }
@@ -69,8 +63,6 @@ TInt DMemoryEventHandler::Start()
 
 TInt DMemoryEventHandler::Stop()
     {
-//    Kern::Printf("DMemoryEventHandler::Stop()");
-
     iTracking = EFalse;
     return KErrNone;
     }
@@ -79,14 +71,22 @@ TBool DMemoryEventHandler::SampleNeeded()
     {
     LOGTEXT("DMemoryEventHandler::SampleNeeded()");
     
-    // increase the coutner by one on each round
-    iCount++;
-    
     // check if event handler was not running
-//    if(!iTracking)
-//        return false; // return false
-    
-    return true;
+    if(!iTracking)
+        return false; // return false
+    // check if a new sample is available
+    if(iSampleAvailable)
+        {
+        return true;
+        }
+    else
+        {
+        return false;
+        }
+    }
+void DMemoryEventHandler::SampleHandled()
+    {
+    iSampleAvailable = false;
     }
 
 
@@ -100,11 +100,10 @@ TUint DMemoryEventHandler::EventHandler(TKernelEvent aType, TAny* a1, TAny* a2, 
 TUint DMemoryEventHandler::HandleEvent(TKernelEvent aType, TAny* a1, TAny* a2)
     {
     // debug
-//    Kern::Printf("New kernel event received, %d", aType);
+    // Kern::Printf("New kernel event received, %d", aType);
     
-    if (iTracking/* && iCount != iPreviousCount*/)
+    if (iTracking)
         {
-//        iPreviousCount = iCount;
         iCounters[aType]++;
         switch (aType)
             {
@@ -163,11 +162,6 @@ TUint DMemoryEventHandler::HandleEvent(TKernelEvent aType, TAny* a1, TAny* a2)
                 break;
             }
         }
-//    else if(iTracking && iCount == iPreviousCount)
-//        {
-//        // if time stamp is not updated profiling has stopped
-//        Stop();
-//        }
     return DKernelEventHandler::ERunNext;
     }
 
@@ -208,12 +202,12 @@ TInt DMemoryEventHandler::AddHeader()
     TInt err(KErrNone);
     
     TUint8 number(4);    // mem sampler id
-
+    TUint32 sampleNum= this->gppSamplerData->sampleNumber;
     // check if iCount bigger than previous, i.e. at least 1 ms has passed from the previous sample
-    if(iCount > iPreviousCount)
+    if(sampleNum > iPreviousCount)
         {
         err = this->iSampleBuffer->AddSample(&number,1);
-        err = this->iSampleBuffer->AddSample((TUint8*)&(iCount),4);
+        err = this->iSampleBuffer->AddSample((TUint8*)&(sampleNum),4);
     
         // add data chunk header
         TInt length(EncodeUpdateCode());
@@ -224,11 +218,12 @@ TInt DMemoryEventHandler::AddHeader()
         err = iSampleBuffer->AddSample(iSample, length);
         AddFooter();    // end mark for total memory sample
         }
-    iPreviousCount = iCount;
+    iPreviousCount = sampleNum;
     
     // add actual sample
     err = this->iSampleBuffer->AddSample(&number,1);
-    err = this->iSampleBuffer->AddSample((TUint8*)&(iCount),4);
+    err = this->iSampleBuffer->AddSample((TUint8*)&(sampleNum),4);
+    LOGSTRING2("handler timestamp : 0x%04x", sampleNum);
 
     return err;
     }
@@ -284,8 +279,6 @@ TInt DMemoryEventHandler::EncodeTotalMemory()
 // handle chunk activity
 TBool DMemoryEventHandler::HandleAddChunk(DChunk* aChunk)
     {    
-//    Kern::Printf("New DChunk created: 0x%08x, time: %d", aChunk, iCount);
-    
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -293,6 +286,8 @@ TBool DMemoryEventHandler::HandleAddChunk(DChunk* aChunk)
     
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -320,8 +315,6 @@ TBool DMemoryEventHandler::HandleAddChunk(DChunk* aChunk)
 
 TBool DMemoryEventHandler::HandleUpdateChunk(DChunk* aChunk)
     {
-//    Kern::Printf("DChunk updated: 0x%08x, time: %d", aChunk, iCount);
-    
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -329,6 +322,9 @@ TBool DMemoryEventHandler::HandleUpdateChunk(DChunk* aChunk)
     
     if(err != KErrNone)
         {
+        Kern::Printf("DChunk update error: %d", err);
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -348,7 +344,6 @@ TBool DMemoryEventHandler::HandleUpdateChunk(DChunk* aChunk)
 
 TBool DMemoryEventHandler::HandleDeleteChunk(DChunk* aChunk)
     {
-//    Kern::Printf("DChunk deleted: 0x%08x, time: %d", aChunk, iCount);
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -356,6 +351,8 @@ TBool DMemoryEventHandler::HandleDeleteChunk(DChunk* aChunk)
     
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -392,7 +389,6 @@ TBool DMemoryEventHandler::HandleDeleteProcess(DProcess *aProcess)
 // handle thread activity
 TBool DMemoryEventHandler::HandleAddThread(DThread* aThread)
     {
-//    Kern::Printf("DThread added: 0x%08x, time: %d", aThread->iId, iCount);
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -400,6 +396,8 @@ TBool DMemoryEventHandler::HandleAddThread(DThread* aThread)
     
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -427,7 +425,6 @@ TBool DMemoryEventHandler::HandleAddThread(DThread* aThread)
 
 TBool DMemoryEventHandler::HandleUpdateThread(DThread* aThread)
     {
-//    Kern::Printf("DThread updated: 0x%08x, time: %d", aThread->iId, iCount);
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -435,6 +432,8 @@ TBool DMemoryEventHandler::HandleUpdateThread(DThread* aThread)
     
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -454,7 +453,6 @@ TBool DMemoryEventHandler::HandleUpdateThread(DThread* aThread)
 
 TBool DMemoryEventHandler::HandleDeleteThread(DThread* aThread)
     {
-//    Kern::Printf("DThread deleted: 0x%08x, time: %d", aThread->iId, iCount);
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -462,6 +460,8 @@ TBool DMemoryEventHandler::HandleDeleteThread(DThread* aThread)
     
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -482,7 +482,6 @@ TBool DMemoryEventHandler::HandleDeleteThread(DThread* aThread)
 TBool DMemoryEventHandler::HandleAddLibrary(DLibrary* aLibrary, DThread* aThread)
     {
     LOGTEXT("DMemoryEventHandler::HandleAddLibrary");
-    Kern::Printf("DLibrary added: 0x%08x, time: %d", aLibrary, iCount);
     // add header first
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
@@ -490,6 +489,8 @@ TBool DMemoryEventHandler::HandleAddLibrary(DLibrary* aLibrary, DThread* aThread
         
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
     
@@ -517,7 +518,7 @@ TBool DMemoryEventHandler::HandleAddLibrary(DLibrary* aLibrary, DThread* aThread
 
 TBool DMemoryEventHandler::HandleDeleteLibrary(DLibrary* aLibrary)
     {
-    Kern::Printf("DLibrary deleted: 0x%08x, time: %d", aLibrary, iCount);
+    LOGTEXT("DMemoryEventHandler::HandleDeleteLibrary");
     NKern::ThreadEnterCS();
     Kern::MutexWait(*iLock);
     // add header first
@@ -525,6 +526,8 @@ TBool DMemoryEventHandler::HandleDeleteLibrary(DLibrary* aLibrary)
         
     if(err != KErrNone)
         {
+        Kern::MutexSignal(*iLock);
+        NKern::ThreadLeaveCS();
         return EFalse;
         }
         
@@ -640,7 +643,7 @@ TInt DMemoryEventHandler::EncodeChunkData(DThread& t)
     iSampleDescriptor.Append((TUint8*)&(t.iUserStackSize),sizeof(TInt));
     *size += sizeof(TInt);
 
-//    Kern::Printf("TData -> %d",*size);
+    LOGSTRING2("TData -> %d",*size);
     return ((TInt)(*size))+1;
     }
 
@@ -656,7 +659,7 @@ TInt DMemoryEventHandler::EncodeChunkData(DChunk& c)
     TInt zero(0);
 
     TUint32 address((TUint32)&c);
-        
+    LOGSTRING2("DMemoryEventHandler::EncodeChunkDataC - address 0x%x", *&address);
     iSampleDescriptor.Append((TUint8*)&address,sizeof(TUint32));
     *size += sizeof(TUint);
     
@@ -676,7 +679,7 @@ TInt DMemoryEventHandler::EncodeChunkData(DChunk& c)
     iSampleDescriptor.Append((TUint8*)&(zero),sizeof(TInt));
     *size += sizeof(TInt);
 
-//    Kern::Printf("CData - %d",*size);
+    LOGSTRING2("CData - %d",*size);
     return ((TInt)(*size))+1;
     }
 

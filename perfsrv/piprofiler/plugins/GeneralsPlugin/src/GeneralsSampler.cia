@@ -88,4 +88,29 @@ __NAKED__ void UsrModLr(TUint32*)
 	__JUMP(,lr);
 }
 
+// This will return 1 if it was iDFC interrupted (0 otherwise).
+// As there is no Kernel interface for that, we have to 'fake' Kernel by
+// setting SVC mode before calling NKern::CurrentContext.
+// Without that, CurrentContext would always return EInterrupt.
+__NAKED__ TUint IDFCRunning()
+    {
+    asm("stmfd sp!, {r4-r5} "); 
+
+    asm("mrs r5, cpsr");                            // r5 = cpsr_irq
+    asm("bic r4, r5, #0xdf ");                      // clear interrupt mask & CPU mode
+    asm("orr r4, r4, #0xd3 ");                      // disable all interrupts and set SVC mode
+
+    asm("msr CPSR_cf, r4");                         // switch to SVC, (dissable FIQ, IRQ)
+
+    // NKern::CurrentContext does not use sp (only r0,r1,r2)
+    // It is just lr in svc mode we need to preserve.
+    asm("mov r4, lr");                              // r4 = lr_svc
+    asm("bl " CSM__ZN5NKern14CurrentContextEv );    // r0 = 1 if iDFC was running, 0 if a thread was running
+    asm("mov lr, r4");                              // lr_svc is back to original state
+
+    asm("msr CPSR_cf, r5");                         // return to IRQ mode
+
+    asm("ldmfd sp!, {r4-r5} ");
+    __JUMP(,lr);
+    }
 #endif

@@ -47,6 +47,8 @@ private: // From CMemSpyEngineOutputSink
     void DataStreamBeginL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite );
     void DataStreamBeginL( const TDesC& aContext, const TDesC& aFolder, const TDesC& aExtension, TBool aOverwrite, TBool aUseTimeStamp );
     void DataStreamEndL();
+    void FlushL();
+
     void DoOutputLineL( const TDesC& aLine );
     void DoOutputRawL( const TDesC8& aData );
     TBool IsPrefixAllowed( const TDesC& aPrefix );
@@ -93,6 +95,7 @@ public: // API
     void EnableBufferL();
     void DisableBufferL();
     const TDesC& FileName() const;
+    void FlushL();
     //
     inline TBool UsingBuffer() const { return iEntireFileBuffer != NULL; }
     inline TBool IsMainLog() const { return iIsMainLog; }

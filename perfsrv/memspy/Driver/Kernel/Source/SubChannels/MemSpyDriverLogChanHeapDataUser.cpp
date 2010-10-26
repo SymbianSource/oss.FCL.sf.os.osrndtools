@@ -109,7 +109,7 @@ TInt DMemSpyDriverLogChanHeapDataUser::GetInfoData( TMemSpyDriverInternalHeapReq
                 TRACE( Kern::Printf("DMemSpyDriverLogChanHeapDataUser::GetInfoData - opening client heap returned: %d", r) );
 
                 if  ( r == KErrNone )
-    {
+                    {
                     // This object holds all of the info we will accumulate for the client.
                     TMemSpyHeapInfo masterHeapInfo;
                     masterHeapInfo.SetType(rHeap.GetTypeFromHelper());

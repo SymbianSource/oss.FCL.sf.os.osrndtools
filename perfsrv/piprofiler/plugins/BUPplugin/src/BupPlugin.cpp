@@ -75,7 +75,7 @@ CBupPlugin::~CBupPlugin()
 	    if(Enabled())
 	        {
 	        // stop profiling
-	        iButtonListener->Stop();
+	        iButtonListener->Cancel();
 	        }
         delete iButtonListener;
 	    }
@@ -228,11 +228,6 @@ TInt CBupPlugin::ResetAndActivateL(CProfilerSampleStream& aStream)
 	// check if sampler enabled
 	if(iSamplerAttributes->At(0).iEnabled)
 	    {
-        // create first the listener instance
-        iButtonListener = CProfilerButtonListener::NewL(this);
-        
-        LOGTEXT(_L("CBupPlugin::ResetAndActivate() - listener created"));
-        
         iStream = &aStream;
         TInt length = this->CreateFirstSample();
         iVersion[0] = (TUint8)length;
@@ -240,9 +235,11 @@ TInt CBupPlugin::ResetAndActivateL(CProfilerSampleStream& aStream)
         ret = AddSample(iVersion, length+1, 0);
         if(ret != KErrNone)
             return ret;
-        
-        // activate button listener
-        ret = iButtonListener->StartL();
+
+        // create first the listener instance
+        iButtonListener = new (ELeave)CProfilerButtonListener;
+        iButtonListener->ConstructL(this);
+        LOGTEXT(_L("CBupPlugin::ResetAndActivate() - listener created"));
 
         iEnabled = ETrue;
         
@@ -264,16 +261,22 @@ TInt CBupPlugin::CreateFirstSample()
 
 TInt CBupPlugin::StopSampling() 
 	{
+    LOGTEXT(_L("CBupPlugin::StopSampling() - Start"));
+
 	if(iButtonListener)
 		{
-		iButtonListener->Stop();
+	    LOGTEXT(_L("CBupPlugin::StopSampling() - Cancelling listener..."));
+		iButtonListener->Cancel();
+	    LOGTEXT(_L("CBupPlugin::StopSampling() - deleting listener..."));
 		delete iButtonListener;	// delete listener after every trace
+	    LOGTEXT(_L("CBupPlugin::StopSampling() - finalizing listener..."));
 		iButtonListener = NULL;
 		}
 	
     // set disabled
     iEnabled = EFalse;
 
+    LOGTEXT(_L("CBupPlugin::StopSampling() - Exit"));
 	return KErrNone;
 	}
 
@@ -281,167 +284,6 @@ void CBupPlugin::FillThisStreamBuffer(TBapBuf* /*aBapBuf*/, TRequestStatus& /*aS
 	{
 	}
 
-/*
- * 
- * Implementation of class CProfilerButtonListener
- * 
- */
-CProfilerButtonListener::CProfilerButtonListener(CBupPlugin* aSampler) 
-	{
-	LOGTEXT(_L("CProfilerButtonListener::CProfilerButtonListener() - konstuktori"));
-	this->iSampler = aSampler;
-	iSampleStartTime = 0;
-	LOGTEXT(_L("CProfilerButtonListener::CProfilerButtonListener() - konstuktori exit"));
-	}
-
-CProfilerButtonListener* CProfilerButtonListener::NewL(CBupPlugin* aSampler)
-	{
-	LOGTEXT(_L("CProfilerButtonListener::NewL() - entry"));
-	CProfilerButtonListener* self = new (ELeave) CProfilerButtonListener(aSampler);
-	CleanupStack::PushL( self );
-	self->ConstructL();
-	CleanupStack::Pop();
-	LOGTEXT(_L("CProfilerButtonListener::NewL() - exit"));
-	return self;
-	}
-
-CProfilerButtonListener::~CProfilerButtonListener() 
-	{
-	LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener() - entry af"));
-
-	if(iMainWindow)
-		{
-		LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener(): flushing iWs"));
-		iWs.Flush();
-		LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener(): finishing"));
-		}
-	delete iMainWindow;
-	LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener() - exit"));
-	}
-	
-void CProfilerButtonListener::ConstructMainWindowL()
-	{
-    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - Entry"));
-
-    CWindow* window = new (ELeave) CWindow(this);
-    CleanupStack::PushL( window );
-	window->ConstructL(TRect(TPoint(0,0), TSize(0,0)));
-    delete iMainWindow;
-    iMainWindow = window;
-    CleanupStack::Pop( window );
-	
-    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - Exit"));
-	}
-
-void CProfilerButtonListener::HandleKeyEventL (TKeyEvent& /*aKeyEvent*/)
-    {
-    LOGTEXT(_L("CProfilerButtonListener::HandleKeyEventL() - Start"));
-    LOGTEXT(_L("CProfilerButtonListener::HandleKeyEventL() - End"));
-	}
-
-
-TInt CProfilerButtonListener::RunError(TInt aError)
-    {
-    // get rid of everything we allocated
-    // deactivate the anim dll before killing window, otherwise anim dll dies too early
-    iAnim->Deactivate();
-    iAnim->Close();
-
-    iAnimDll->Close();
-    
-    return aError;
-    }
-
-void CProfilerButtonListener::RunL() 
-	{	
-    // resubscribe before processing new value to prevent missing updates
-	IssueRequest();
-	
-	TInt c = 0;
-	if(RProperty::Get(KProfilerKeyEventPropertyCat, EProfilerKeyEventPropertySample, c) == KErrNone)
-		{
-		// do something with event
-		LOGSTRING2("CProfilerButtonListener::RunL() - event [%d] received",c);
-	
-		iSample[0] = c;
-		iSample[1] = c >> 8;
-		iSample[2] = c >> 16;
-		iSample[3] = c >> 24;
-		
-		// Space for GPP sample time		
-		TUint32 sampleTime = User::NTickCount() - iSampleStartTime; 
-		LOGSTRING2("CProfilerButtonListener::RunL() - sample time is %d",sampleTime);
-		
-		iSample[4] = sampleTime;
-		iSample[5] = sampleTime >> 8;
-		iSample[6] = sampleTime >> 16;
-		iSample[7] = sampleTime >> 24;
-		
-		iSampler->AddSample(iSample, 8, 0xb0);
-		}
-	}
-	
-TInt CProfilerButtonListener::StartL()
-	{
-	LOGTEXT(_L("CProfilerButtonListener::StartL() - Activate touch server dll"));
-	TInt err(KErrNone);
-	
-	// get the property value
-	TInt r = RProperty::Get(KGppPropertyCat, EGppPropertySyncSampleNumber, iSampleStartTime);
-	if(r != KErrNone)
-		{
-		LOGSTRING2("CProfilerButtonListener::StartL() - getting iSyncOffset failed, error %d", r);
-		}
-	
-	iAnimDll = new (ELeave) RAnimDll(iWs);
-	LOGTEXT(_L("CProfilerButtonListener::StartL() - #1"));
-	
-	TParse* fp = new (ELeave) TParse();
-	CleanupStack::PushL(fp);
-	fp->Set( KDllName, &KDC_SHARED_LIB_DIR , NULL );    
-	LOGSTRING2("CProfilerButtonListener::StartL() - touch event server: %S" , &(fp->FullName()));
-
-	err = iAnimDll->Load(fp->FullName());
-	// check if anim dll load failed
-	if(err != KErrNone)
-	    {
-        CleanupStack::PopAndDestroy(fp);
-	    // stop plugin if failed
-	    iAnimDll->Close();
-	    return KErrGeneral;
-	    }
-    CleanupStack::PopAndDestroy(fp);
- 	LOGTEXT(_L("CProfilerButtonListener::StartL() - #2"));
-
-	iAnim = new (ELeave) RProfilerTouchEventAnim(*iAnimDll);
- 	LOGTEXT(_L("CProfilerButtonListener::StartL() - #3"));
-	iAnim->ConstructL(iMainWindow->Window());
-	
-	// activate the animation dll for collecting touch and key events
-	iAnim->Activate();
-
-	// wait for a new sample
-	IssueRequest();
-	
-	// hide this window group from the app switcher
-	iMainWindow->Client()->Group().SetOrdinalPosition(-1);
-	iMainWindow->Client()->Group().EnableReceiptOfFocus(EFalse);
-	return KErrNone;
-	}
-
-TInt CProfilerButtonListener::Stop() 
-	{
-	LOGTEXT(_L("CProfilerButtonListener::Stop() - enter"));
-	// deactivate the anim dll before killing window, otherwise anim dll dies too early
-	iAnim->Deactivate();
-	iAnim->Close();
-
-	iAnimDll->Close();
-
-	Cancel();
-	LOGTEXT(_L("CProfilerButtonListener::Stop() - exit"));
-	return KErrNone;
-	}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -499,17 +341,21 @@ CWsClient::CWsClient()
     LOGTEXT(_L("CWsClient::CWsClient()"));
 	}
 
-void CWsClient::ConstructL()
+void CWsClient::ConstructL(CBupPlugin* aSampler)
 	{
     LOGTEXT(_L("CWsClient::ConstructL() - Start"));
+    // pointer to parent, for collecting the trace data to the data stream
+    iSampler = aSampler;
+
+    // add to the active scheduler
+    CActiveScheduler::Add(this);
+    
     TInt r = RProperty::Define(EProfilerKeyEventPropertySample, RProperty::EInt, KAllowAllPolicy, KCapabilityNone);
     if (r!=KErrAlreadyExists)
         {
         User::LeaveIfError(r);
         }
     
-	CActiveScheduler::Add(this);
-
 	// attach to 
 	User::LeaveIfError(iProperty.Attach(KProfilerKeyEventPropertyCat,EProfilerKeyEventPropertySample));
     
@@ -528,35 +374,42 @@ void CWsClient::ConstructL()
 	// construct main window
 	ConstructMainWindowL();
 
-	LOGTEXT(_L("CWsClient::CWsClient() - End"));
+    // wait for a new sample
+    IssueRequest();
+	
+	LOGTEXT(_L("CWsClient::ConstructL() - End"));
 	}
 
 CWsClient::~CWsClient()
 	{
     LOGTEXT(_L("CWsClient::~CWsClient() - Start"));
-    
-	// get rid of everything we allocated
-	delete iGc;
-	delete iScreen;
-	
-	iGroup.Close();
-	// finish with window server
-	iWs.Close();
-	
+
+    // finish with window server
+    iWs.Close();
+
+    // neutralize us as an active object
+    Deque();
     LOGTEXT(_L("CWsClient::~CWsClient() - Exit"));
 	}
 
-void CWsClient::Exit()
-	{
-    LOGTEXT(_L("CWsClient::Exit() - Start"));
+CBupPlugin* CWsClient::GetSampler()
+    {
+    return iSampler;
+    }
 
-	// destroy window group
-	iGroup.Close();
-	// finish with window server
+void CWsClient::Exit()
+    {
+    LOGTEXT(_L("CWsClient::Exit(): Start"));
+    // get rid of everything we allocated
+    delete iGc;
+    delete iScreen;
+    // destroy the window group
+    iGroup.Close();
+    // close the key event P&S object
     iProperty.Close();
-	iWs.Close();
-    LOGTEXT(_L("CWsClient::Exit() - Exit"));
-	}
+
+    LOGTEXT(_L("CWsClient::Exit(): End"));
+    }
 
 void CWsClient::IssueRequest()
 	{
@@ -569,9 +422,6 @@ void CWsClient::IssueRequest()
 void CWsClient::DoCancel()
 	{
     LOGTEXT(_L("CWsClient::DoCancel() - Start"));
-	// clean up the sample property
-    iProperty.Cancel();
-    iProperty.Close();
     LOGTEXT(_L("CWsClient::DoCancel() - Exit"));
 	}
 
@@ -580,3 +430,203 @@ void CWsClient::ConstructMainWindowL()
     LOGTEXT(_L("CWsClient::ConstructMainWindowL()"));
 	}
 
+
+/****************************************************************************\
+|   Function:   Constructor/Destructor for CMainWindow
+|               Doesn't do much, as most initialisation is done by the
+|               CWindow base class.
+|   Input:      aClient     Client application that owns the window
+\****************************************************************************/
+CMainWindow::CMainWindow (CWsClient* aClient)
+: CWindow (aClient)
+    {
+    LOGTEXT(_L("CMainWindow::CMainWindow()"));
+    }
+
+CMainWindow::~CMainWindow ()
+    {
+    LOGTEXT(_L("CMainWindow::~CMainWindow(): Start"));
+    LOGTEXT(_L("CMainWindow::~CMainWindow(): End"));
+    }
+
+void CMainWindow::ConstructL (const TRect& aRect, CWindow* aParent)
+    {
+    LOGTEXT(_L("CMainWindow::ConstructL(): Start"));
+    CWindow::ConstructL(aRect, aParent);
+    LOGTEXT(_L("CMainWindow::ConstructL(): End"));
+    }
+
+/****************************************************************************\
+|   Function:   CMainWindow::Draw
+|   Purpose:    Redraws the contents of CMainWindow within a given
+|               rectangle. As CMainWindow has no contents, it simply
+|               clears the redraw area. A blank window could be used here
+|               instead. The Clear() is needed because a redraw should
+|               always draw to every pixel in the redraw rectangle.
+|   Input:      aRect   Rectangle that needs redrawing
+|   Output:     None
+\****************************************************************************/
+void CMainWindow::Draw(const TRect& aRect)
+    {
+    LOGTEXT(_L("CMainWindow::Draw(): Start"));
+    // empty
+    LOGTEXT(_L("CMainWindow::Draw(): End"));
+}
+
+/****************************************************************************\
+|   Function:   CMainWindow::HandlePointerEvent
+|   Purpose:    Handles pointer events for CMainWindow.  Doesn't do
+|               anything except get the co-ordinates where the pointer
+|               event occurred.
+|   Input:      aPointerEvent   The pointer event
+|   Output:     None
+\****************************************************************************/
+void CMainWindow::HandlePointerEvent (TPointerEvent& /*aPointerEvent*/)
+    {
+    LOGTEXT(_L("CMainWindow::HandlePointerEvent(): Start"));
+    //  TPoint point = aPointerEvent.iPosition;
+    //  (void)point;
+    LOGTEXT(_L("CMainWindow::HandlePointerEvent(): End"));
+    }
+
+/*
+ * 
+ * Implementation of class CProfilerButtonListener
+ * 
+ */
+CProfilerButtonListener::CProfilerButtonListener() 
+    {
+    LOGTEXT(_L("CProfilerButtonListener::CProfilerButtonListener() - konstuktori"));
+    iSampleStartTime = 0;
+    LOGTEXT(_L("CProfilerButtonListener::CProfilerButtonListener() - konstuktori exit"));
+    }
+
+CProfilerButtonListener::~CProfilerButtonListener() 
+    {
+    LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener() - entry"));
+
+    // clean up the main window
+    if(iMainWindow)
+        {
+        LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener(): flushing iWs"));
+        iWs.Flush();
+        LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener(): finishing"));
+        }
+    delete iMainWindow;
+    LOGTEXT(_L("CProfilerButtonListener::~CProfilerButtonListener() - exit"));
+    }
+    
+void CProfilerButtonListener::ConstructMainWindowL()
+    {
+    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - Entry"));
+
+    CMainWindow* window = new (ELeave) CMainWindow(this);
+    CleanupStack::PushL( window );
+    window->ConstructL(TRect(TPoint(0,0), TSize(0,0)));
+    //window->Client()->Group().SetOrdinalPosition(0,ECoeWinPriorityAlwaysAtFront + 1);   // in front of the Status Bar
+    // hide this window group from the app switcher
+    window->Client()->Group().SetOrdinalPosition(-1);
+    window->Client()->Group().EnableReceiptOfFocus(EFalse);
+    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - Activate touch server dll"));
+
+    delete iMainWindow;
+    iMainWindow = window;
+    CleanupStack::Pop( window );
+    
+    // animation dll, the key event listener start
+    TInt err(KErrNone);
+    
+    // get the property value
+    TInt r = RProperty::Get(KGppPropertyCat, EGppPropertySyncSampleNumber, iSampleStartTime);
+    if(r != KErrNone)
+        {
+        LOGSTRING2("CProfilerButtonListener::ConstructMainWindowL() - getting iSyncOffset failed, error %d", r);
+        }
+    
+    iAnimDll = new (ELeave) RAnimDll(iWs);
+    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - #1"));
+    
+    TParse* fp = new (ELeave) TParse();
+    CleanupStack::PushL(fp);
+    fp->Set( KDllName, &KDC_SHARED_LIB_DIR , NULL );    
+    LOGSTRING2("CProfilerButtonListener::ConstructMainWindowL() - touch event server: %S" , &(fp->FullName()));
+
+    err = iAnimDll->Load(fp->FullName());
+    // check if anim dll load failed
+    if(err != KErrNone)
+        {
+        CleanupStack::PopAndDestroy(fp);
+        // stop plugin if failed
+        iAnimDll->Close();
+        User::Leave(err);
+        }
+    CleanupStack::PopAndDestroy(fp);
+    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - #2"));
+
+    iAnim = new (ELeave) RProfilerTouchEventAnim(*iAnimDll);
+    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - #3"));
+    iAnim->ConstructL(iMainWindow->Window());
+    
+    // activate the animation dll for collecting touch and key events
+    iAnim->Activate();
+    
+    LOGTEXT(_L("CProfilerButtonListener::ConstructMainWindowL() - Exit"));
+    }
+
+void CProfilerButtonListener::DoCancel()
+    {
+    LOGTEXT(_L("CProfilerButtonListener::DoCancel() - Start"));
+    // animation dll deactivation, stopping key listener
+    iAnim->Deactivate();
+    iAnim->Close();
+    iAnimDll->Close();
+
+    // exiting the parent
+    Exit();
+    LOGTEXT(_L("CProfilerButtonListener::DoCancel() - Exit"));
+    }
+
+void CProfilerButtonListener::RunL() 
+    {   
+    // resubscribe before processing new value to prevent missing updates
+    IssueRequest();
+    
+    TInt c(0);
+    if(RProperty::Get(KProfilerKeyEventPropertyCat, EProfilerKeyEventPropertySample, c) == KErrNone)
+        {
+        // do something with event
+        LOGSTRING2("CProfilerButtonListener::RunL() - event [%d] received",c);
+        HandleEvent(c);
+        }
+    }
+
+void CProfilerButtonListener::HandleKeyEventL (TKeyEvent& /*aKeyEvent*/)
+    {
+    LOGTEXT(_L("CProfilerButtonListener::HandleKeyEventL() - Start"));
+    LOGTEXT(_L("CProfilerButtonListener::HandleKeyEventL() - End"));
+    }
+
+void CProfilerButtonListener::HandleEvent(TInt c)
+    {
+    LOGTEXT(_L("CProfilerButtonListener::HandleEvent() - Start"));
+    if(c >= 0)
+        {
+        // put the event to a sample and finally in to the data stream
+        iSample[0] = c;
+        iSample[1] = c >> 8;
+        iSample[2] = c >> 16;
+        iSample[3] = c >> 24;
+        
+        // Space for GPP sample time        
+        TUint32 sampleTime(User::NTickCount() - iSampleStartTime); 
+        LOGSTRING2("CProfilerButtonListener::RunL() - sample time is %d",sampleTime);
+        
+        iSample[4] = sampleTime;
+        iSample[5] = sampleTime >> 8;
+        iSample[6] = sampleTime >> 16;
+        iSample[7] = sampleTime >> 24;
+        
+        GetSampler()->AddSample(iSample, 8, 0xb0);
+        }
+    LOGTEXT(_L("CProfilerButtonListener::HandleEvent() - End"));
+    }

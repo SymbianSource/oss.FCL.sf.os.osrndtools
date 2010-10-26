@@ -94,7 +94,7 @@ void CMemSpyCommandLine::PerformOpL(const CCommandLineArguments& aCommandLine)
 		}
 	else if ( count == 1 )
 		{
-		TRACE( RDebug::Printf( "[MemSpyCmdLine] CMemSpyCommandLine::PerformOpL() - nno commands and parameters set" ) );
+		PrintHelp();
 		}
 	else
 		{
@@ -132,22 +132,7 @@ void CMemSpyCommandLine::PerformSingleOpL(const TDesC& aCommand, const CDesCArra
 		aCommand.CompareF(KMemSpyCmdHelp3) == 0 || 
 		aCommand.CompareF(KMemSpyCmdHelp4) == 0)
 		{
-		iConsole.Write(KHelpMessage);
-		iConsole.Write(KMemSpyCLINewLine);
-		iConsole.Write(KHelpOutputCommand);
-		iConsole.Write(KHelpOutputToFileCommand);
-		iConsole.Write(KHelpHeapDumpCommand);
-		iConsole.Write(KHelpSwmtCommand);
-		iConsole.Write(KHelpKillServerCommand);
-		iConsole.Write(KMemSpyCLINewLine);
-		iConsole.Write(KHelpCommand);
-
-		// Show input prompt.
-		iCommandPromptPos = iConsole.CursorPos();
-		RedrawInputPrompt();
-		WaitForInput();
-
-		CActiveScheduler::Start();
+		PrintHelp();
 		}
 	// --- OUTPUT
 	//TODO: directory option to be added
@@ -706,4 +691,25 @@ void CMemSpyCommandLine::ProcessCommandBufferL()
 		RedrawStatusMessage(KInvalidEntry);
 		RedrawInputPrompt();
 		}
+	}
+
+
+void CMemSpyCommandLine::PrintHelp()
+	{
+	iConsole.Write(KHelpMessage);
+	iConsole.Write(KMemSpyCLINewLine);
+	iConsole.Write(KHelpOutputCommand);
+	iConsole.Write(KHelpOutputToFileCommand);
+	iConsole.Write(KHelpHeapDumpCommand);
+	iConsole.Write(KHelpSwmtCommand);
+	iConsole.Write(KHelpKillServerCommand);
+	iConsole.Write(KMemSpyCLINewLine);
+	iConsole.Write(KHelpCommand);
+
+	// Show input prompt.
+	iCommandPromptPos = iConsole.CursorPos();
+	RedrawInputPrompt();
+	WaitForInput();
+
+	CActiveScheduler::Start();
 	}

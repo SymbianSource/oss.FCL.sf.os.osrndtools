@@ -11,7 +11,7 @@
 *
 * Contributors:
 *
-* Description:  
+* Description:   
 *
 */
 
@@ -56,7 +56,7 @@ inline void CProfilerBufferHandler::ConstructL()
 	LOGTEXT(_L("CProfilerBufferHandler::ConstructL - entry"));
 	iBufferInProcess = 0;
 	iEndOfStreamDetected = false;
-
+	
 	iFinished = 0;
 	// add the buffer handler to the active scheduler
 	CActiveScheduler::Add(this);
@@ -93,14 +93,14 @@ inline TInt CProfilerBufferHandler::RunError(TInt aError)
 
 inline void CProfilerBufferHandler::HandleEndOfStream()
     {
-    LOGTEXT(_L("CProfilerBufferHandler::RunError - entry"));
+    LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - entry"));
     // Cancel has been called, the stream should be about to end now,
     // we will wait for the rest of the buffers to be filled synchronously
     // the end of the stream will be indicated through an empty buffer
     // at first, complete the ongoing request
     if(iStatus == KRequestPending && iBufferInProcess != 0)
         {
-        LOGTEXT(_L("CProfilerBufferHandler::DoCancel - case 1"));
+        LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - case 1"));
 
         // wait for the buffer to be filled synchronously
         User::WaitForRequest(iStatus);
@@ -122,7 +122,7 @@ inline void CProfilerBufferHandler::HandleEndOfStream()
         }
     else if (iBufferInProcess != 0)
         {
-        LOGTEXT(_L("CProfilerBufferHandler::DoCancel - case 2"));
+        LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - case 2"));
 
         // add the buffer into filled, i.e. ready-to-write buffers
         iObserver.AddToFilledBuffers(iBufferInProcess);
@@ -131,13 +131,15 @@ inline void CProfilerBufferHandler::HandleEndOfStream()
         if(iBufferInProcess->iDataSize == 0)
             {
             // a buffer with size 0 was received
-            LOGTEXT(_L("CProfilerBufferHandler::DoCancel - case 2.1"));
+            LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - case 2.1"));
             iEndOfStreamDetected = true;
             }       
         // there will be no more asynchronous requests
-        iBufferInProcess = 0;   
+        iBufferInProcess = 0;
+        //delete iBufferInProcess;
+        //iBufferInProcess = NULL;    
+        //iObserver.AddToFreeBuffers(iBufferInProcess);
         }
-
     // then, continue until end of stream has been reached
     while(iEndOfStreamDetected == false)
         {
@@ -146,10 +148,10 @@ inline void CProfilerBufferHandler::HandleEndOfStream()
 
         if(iStatus == KRequestPending)
             {
-            LOGTEXT(_L("CProfilerBufferHandler::DoCancel - ERROR 1"));
+            LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - ERROR 1"));
             }
 
-        LOGTEXT(_L("CProfilerBufferHandler::DoCancel - case 3"));
+        LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - case 3"));
 
         TBapBuf* nextFree = iObserver.GetNextFreeBuffer();  
         iSampler.FillThisStreamBuffer(nextFree,iStatus);
@@ -163,18 +165,17 @@ inline void CProfilerBufferHandler::HandleEndOfStream()
         // check if end-of-data message (i.e. data size is 0 sized) received
         if(nextFree->iDataSize == 0)
             {
-            LOGTEXT(_L("CProfilerBufferHandler::DoCancel - case 3.1"));
+            LOGTEXT(_L("CProfilerBufferHandler::HandleEndOfStream - case 3.1"));
             // a buffer with size 0 was received
             iEndOfStreamDetected = true;
             nextFree = 0;
             }
-        }   
+        }
     }
 
 inline void CProfilerBufferHandler::RunL()
 	{
 	LOGTEXT(_L("CProfilerBufferHandler::RunL - entry"));
-
 	// is called by the active scheduler
 	// when a buffer has been received
 
@@ -184,26 +185,31 @@ inline void CProfilerBufferHandler::RunL()
 	    LOGTEXT(_L("CProfilerBufferHandler::RunL - buffer received"));
 
 		TBapBuf* nextFree = iObserver.GetNextFreeBuffer();
-		
-		LOGSTRING5("CProfilerBufferHandler::RunL - 0x%x -> b:0x%x s:%d d:%d",
+		if(nextFree == 0)
+		    {
+		    LOGTEXT(_L("CProfilerSampleStream::RunL - GetNextFreeBuffer failed!!"));
+		    }
+		else{
+		    LOGSTRING5("CProfilerBufferHandler::RunL - 0x%x -> b:0x%x s:%d d:%d",
 					nextFree,
 					nextFree->iBuffer,
 					nextFree->iBufferSize,
 					nextFree->iDataSize);
 
-		iSampler.FillThisStreamBuffer(nextFree,iStatus);
-
-		LOGTEXT(_L("CProfilerBufferHandler::RunL - issued new sample command"));
-
-		// add the received buffer to the list of filled buffers
-		iObserver.AddToFilledBuffers(iBufferInProcess);
-		iObserver.NotifyWriter();
-
-        // the empty buffer is now the one being processed
-        iBufferInProcess = nextFree;
-        
-        LOGTEXT(_L("CProfilerBufferHandler::RunL - SetActive"));
-        SetActive();        
+            iSampler.FillThisStreamBuffer(nextFree,iStatus);
+            SetActive();        
+    
+            LOGTEXT(_L("CProfilerBufferHandler::RunL - issued new sample command"));
+    
+            // add the received buffer to the list of filled buffers
+            iObserver.AddToFilledBuffers(iBufferInProcess);
+            iObserver.NotifyWriter();
+    
+            // the empty buffer is now the one being processed
+            iBufferInProcess = nextFree;
+            }
+//        LOGTEXT(_L("CProfilerBufferHandler::RunL - SetActive"));
+//        SetActive();        
 		}
 	else
 		{
@@ -252,7 +258,7 @@ inline CProfilerSampleStream::CProfilerSampleStream(TInt aBufSize) :
 	{
 	LOGTEXT(_L("CProfilerSampleStream::CProfilerSampleStream - entry"));
 	
-	iFilledBuffers = 0;
+    iFilledBuffers = 0;
     iFreeBuffers = 0;
     iFinished = 0;
     
@@ -265,6 +271,10 @@ inline CProfilerSampleStream::~CProfilerSampleStream()
 
 	// empty all buffers
 	EmptyBuffers();
+	User::Free(iFilledBuffers);
+    	User::Free(iFreeBuffers);
+	//delete iFilledBuffers;
+	//delete iFreeBuffers;
 	    
 	LOGTEXT(_L("CProfilerSampleStream::~CProfilerSampleStream - exit"));
 	}
@@ -308,17 +318,34 @@ inline void CProfilerSampleStream::InitialiseBuffers()
         {
         // alloc new buffer
         TBapBuf* newBuf = (TBapBuf*)User::Alloc(sizeof(TBapBuf));
-        newBuf->iBuffer = (TUint8*)User::Alloc(iBufferSize);
-
-        // initialize the new buffer
-        newBuf->iBufferSize = iBufferSize;
-        newBuf->iDataSize = 0;
-        newBuf->iNext = 0;
-        newBuf->iDes = new TPtr8((TUint8*)newBuf,sizeof(TBapBuf));
-        newBuf->iDes->SetLength(sizeof(TBapBuf));
-        newBuf->iBufDes = new TPtr8((TUint8*)newBuf->iBuffer,iBufferSize);
-        newBuf->iBufDes->SetLength(iBufferSize);
-        AddToFreeBuffers(newBuf);
+        if(newBuf != 0)
+            {
+            newBuf->iBuffer = (TUint8*)User::Alloc(iBufferSize);
+            if(newBuf->iBuffer != 0)
+                {
+                // initialize the new buffer
+                newBuf->iBufferSize = iBufferSize;
+                newBuf->iDataSize = 0;
+                newBuf->iNext = 0;
+                newBuf->iDes = new TPtr8((TUint8*)newBuf,sizeof(TBapBuf));
+                newBuf->iDes->SetLength(sizeof(TBapBuf));
+                newBuf->iBufDes = new TPtr8((TUint8*)newBuf->iBuffer,iBufferSize);
+                newBuf->iBufDes->SetLength(iBufferSize);
+                LOGSTRING3("CProfilerSampleStream::InitialiseBuffers - newBuf 0x%x newBuf->iNext 0x%x",newBuf, newBuf->iNext);
+                AddToFreeBuffers(newBuf);
+                }
+            else
+                {
+                delete newBuf->iBuffer;
+                delete newBuf;
+                LOGTEXT(_L("CProfilerSampleStream::InitialiseBuffers - Out of memory (1)!!"));
+                }
+            }
+        else
+            {
+            LOGTEXT(_L("CProfilerSampleStream::InitialiseBuffers - Out of memory (2)!!"));
+            delete newBuf;
+            }       
         }
     }
 
@@ -337,17 +364,35 @@ inline void CProfilerSampleStream::EmptyBuffers()
 		delete iFreeBuffers->iBufDes;
 		delete iFreeBuffers->iDes;
 		delete iFreeBuffers->iBuffer;
-		delete iFreeBuffers;
+		//delete iFreeBuffers;
+		User::Free(iFreeBuffers);
 		// set the list start to the next buffer
 		iFreeBuffers = nextFree;
 	    }
 	iFreeBuffers = 0;
+	// delete all filled buffers
+	    while(iFilledBuffers != 0)
+	        {
+	        LOGSTRING2("CProfilerSampleStream::EmptyBuffers - deleting 0x%x",iFilledBuffers);
+
+	        // store the next buffer in the list
+	        TBapBuf* nextFilled = iFilledBuffers->iNext;
+	        // delete the first one in the list
+	        delete iFilledBuffers->iBufDes;
+	        delete iFilledBuffers->iDes;
+	        delete iFilledBuffers->iBuffer;
+	        delete iFilledBuffers;
+	        User::Free(iFilledBuffers);
+	        // set the list start to the next buffer
+	        iFilledBuffers = nextFilled;
+	        }
+	    iFilledBuffers = 0;
 	LOGTEXT(_L("CProfilerSampleStream::EmptyBuffers - exit"));
     }
 
 inline TBapBuf* CProfilerSampleStream::GetNextFreeBuffer()
-    {
-    LOGTEXT(_L("CProfilerSampleStream::GetNextFreeBuffer - entry"));
+	{
+	LOGTEXT(_L("CProfilerSampleStream::GetNextFreeBuffer - entry"));
 
 	// get a new buffer from the free buffers list
 	TBapBuf* nextFree = iFreeBuffers;
@@ -375,6 +420,11 @@ inline TBapBuf* CProfilerSampleStream::GetNextFreeBuffer()
 			    }
 			else
 			    {
+			    delete newBuf->iBufDes;
+			    delete newBuf->iDes;
+			    delete newBuf->iBuffer;
+			    delete newBuf;
+			    delete nextFree;
 				LOGTEXT(_L("CProfilerSampleStream::GetNextFreeBuffer - Out of memory (1)!!"));
 				return 0;
 			    }
@@ -383,12 +433,14 @@ inline TBapBuf* CProfilerSampleStream::GetNextFreeBuffer()
 		    {
 			LOGTEXT(_L("CProfilerSampleStream::GetNextFreeBuffer - Out of memory (2)!!"));
 			delete newBuf;
+			delete nextFree;
 			return 0;
 		    }		
-	    }
+	    }// nextFree != 0
 	else
 	    {
 		// set the list to point to next free buffer
+	    LOGSTRING3("CProfilerSampleStream::GetNextFreeBuffer 0x%x buf 0x%x inext", nextFree, nextFree->iNext);
 		iFreeBuffers = nextFree->iNext;
 	    }
 
@@ -398,11 +450,12 @@ inline TBapBuf* CProfilerSampleStream::GetNextFreeBuffer()
 
 inline void CProfilerSampleStream::AddToFilledBuffers(TBapBuf* aFilledBuffer)
     {
-    LOGSTRING2("CProfilerSampleStream::AddToFilledBuffers - entry, size %d", aFilledBuffer->iDataSize);
-
+    LOGSTRING4("CProfilerSampleStream::AddToFilledBuffers - entry, size %d aFilledBuffer* 0x%x iNext 0x%x", aFilledBuffer->iDataSize, aFilledBuffer, aFilledBuffer->iNext);
+    //LOGSTRING3("CProfilerSampleStream::AddToFilledBuffers  iFilledBuffers* 0x%x iNext 0x%x",iFilledBuffers, iFilledBuffers->iNext);
     // add this buffer to the list of filled buffers
     if(iFilledBuffers == 0)
         {
+        LOGSTRING("CProfilerSampleStream::AddToFilledBuffers iFilledBuffers == 0");
         // the list is empty, so add the the beginning of the list
         // there is no next buffer in the list at the moment
         aFilledBuffer->iNext = 0;
@@ -410,17 +463,31 @@ inline void CProfilerSampleStream::AddToFilledBuffers(TBapBuf* aFilledBuffer)
         }
     else
         {
+        LOGSTRING("CProfilerSampleStream::AddToFilledBuffers iFilledBuffers != 0");
         // there are buffers in the list, add this buffer to the beginning of the list
-        aFilledBuffer->iNext = iFilledBuffers;
-        iFilledBuffers = aFilledBuffer;
+        if(aFilledBuffer == iFilledBuffers)
+            {
+            LOGSTRING("CProfilerSampleStream::AddToFilledBuffers iFilledBuffers same");
+            }
+        else
+            {
+            LOGSTRING("CProfilerSampleStream::AddToFilledBuffers iFilledBuffers different");
+            LOGSTRING3("iFilledBuffers 0x%x iFilledBuffers->iNext 0x%x", iFilledBuffers, iFilledBuffers->iNext);
+            if(iFilledBuffers->iNext != 0)
+                {
+                LOGSTRING3("next buf 0x%x ->iNext 0x%x", iFilledBuffers->iNext,iFilledBuffers->iNext->iNext );
+                }
+            }
+            aFilledBuffer->iNext = iFilledBuffers;
+            iFilledBuffers = aFilledBuffer;
         }
-    LOGTEXT(_L("CProfilerSampleStream::AddToFilledBuffers - exit"));
+    LOGSTRING3("CProfilerSampleStream::AddToFilledBuffers - exit, iFilledBuffer* 0x%x ->iNext 0x%x", iFilledBuffers, iFilledBuffers->iNext);
+    //LOGTEXT(_L("CProfilerSampleStream::AddToFilledBuffers - exit "));
     }
 
 TBapBuf* CProfilerSampleStream::GetNextFilledBuffer()
     {
     LOGTEXT(_L("CProfilerSampleStream::GetNextFilledBuffer - entry"));
-
     if(iFilledBuffers == 0)
         {
         // there are no filled buffers in the list
@@ -432,30 +499,37 @@ TBapBuf* CProfilerSampleStream::GetNextFilledBuffer()
         // get a buffer from the end of the list
         TBapBuf* buf = iFilledBuffers;
         TBapBuf* prev = 0;
-
-        if(buf->iNext == 0)
+        if(buf)
             {
-            // this was the last (and only) buffer
-            iFilledBuffers = 0;
-            LOGTEXT(_L("CProfilerSampleStream::GetNextFilledBuffer - last filled"));
-            return buf;
-            }
-        else
-            {
-            LOGTEXT(_L("CProfilerSampleStream::GetNextFilledBuffer - searching last filled"));
-            while(buf->iNext != 0)
+            LOGSTRING3("CProfilerSampleStream::GetNextFilledBuffer buf 0x%x, inext 0x%x", buf, buf->iNext);
+            if(buf->iNext == 0)
                 {
-                // there are two or more buffers in the list
-                // proceed until the end of the list is found
-                prev = buf;
-                buf = buf->iNext;
+                // this was the last (and only) buffer
+                iFilledBuffers = 0;
+                LOGTEXT(_L("CProfilerSampleStream::GetNextFilledBuffer - last filled"));
+                return buf;
                 }
-            // now buf->next is 0, return buf and set the next
-            // element of prev to NULL
-            prev->iNext = 0;
-            LOGTEXT(_L("CProfilerSampleStream::GetNextFilledBuffer - found last"));
-            return buf;
+            else
+                {
+                LOGSTRING2("CProfilerSampleStream::GetNextFilledBuffer - searching last filled, inext 0x%x ", buf->iNext);
+                while(buf->iNext != 0)
+                    {
+                    // there are two or more buffers in the list
+                    // proceed until the end of the list is found
+                    LOGSTRING3("CProfilerSampleStream::GetNextFilledBuffer - searching. buf 0x%x, inext 0x%x", buf, buf->iNext);
+                    prev = buf;
+                    buf = buf->iNext;
+                    }
+                // now buf->next is 0, return buf and set the next
+                // element of prev to NULL
+                prev->iNext = 0;
+                LOGSTRING3("CProfilerSampleStream::GetNextFilledBuffer - found last. buf 0x%x, iNext 0x%x", buf, buf->iNext);
+                return buf;
+                }
             }
+        else{
+            LOGTEXT(_L("CProfilerSampleStream::GetNextFilledBuffer - nullihan se siellä"));
+            }   
         }
     }
 
@@ -481,7 +555,7 @@ inline void CProfilerSampleStream::AddToFreeBuffers(TBapBuf* aFreeBuffer)
 	// set this buffer to be the first one in the list
 	iFreeBuffers = aFreeBuffer;
 
-	LOGTEXT(_L("CProfilerSampleStream::AddToFreeBuffers - exit"));
+	LOGSTRING3("CProfilerSampleStream::AddToFreeBuffers - exit iFreeBuffers 0x%x iFreeBuffers->iNext 0x%x",iFreeBuffers, iFreeBuffers->iNext);
     }
 
 void CProfilerSampleStream::NotifyWriter()

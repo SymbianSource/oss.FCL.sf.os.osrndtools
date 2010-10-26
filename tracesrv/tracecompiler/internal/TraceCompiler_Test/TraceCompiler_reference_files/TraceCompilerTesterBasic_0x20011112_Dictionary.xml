@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tracedictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="DictionarySchema.xsd">
+	<typedefs>
+		<object type="int32" size="4" formatchar="d" classification="integer"/>
+		<object type="int32" size="4" formatchar="ld" classification="integer"/>
+		<object type="int8" size="1" formatchar="hhd" classification="integer"/>
+		<object type="hex8" size="1" formatchar="hhx" classification="hex"/>
+		<object type="HEX8" size="1" formatchar="hhX" classification="hex"/>
+		<object type="int16" size="2" formatchar="hd" classification="integer"/>
+		<object type="int64" size="8" formatchar="Ld" classification="integer"/>
+		<object type="int64" size="8" formatchar="lld" classification="integer"/>
+		<object type="uint8" size="1" formatchar="hhu" classification="integer"/>
+		<object type="uint16" size="2" formatchar="hu" classification="integer"/>
+		<object type="uint32" size="4" formatchar="u" classification="integer"/>
+		<object type="uint32" size="4" formatchar="lu" classification="integer"/>
+		<object type="uint64" size="8" formatchar="Lu" classification="integer"/>
+		<object type="uint64" size="8" formatchar="llu" classification="integer"/>
+		<object type="hex16" size="2" formatchar="hx" classification="hex"/>
+		<object type="HEX16" size="2" formatchar="hX" classification="hex"/>
+		<object type="hex32" size="4" formatchar="x" classification="hex"/>
+		<object type="hex32" size="4" formatchar="lx" classification="hex"/>
+		<object type="HEX32" size="4" formatchar="lX" classification="hex"/>
+		<object type="HEX32" size="4" formatchar="X" classification="hex"/>
+		<object type="hex64" size="8" formatchar="Lx" classification="hex"/>
+		<object type="hex64" size="8" formatchar="llx" classification="hex"/>
+		<object type="HEX64" size="8" formatchar="llX" classification="hex"/>
+		<object type="ascii" size="1" formatchar="s" classification="string"/>
+		<object type="ascii" size="1" formatchar="ls" classification="string"/>
+		<object type="unicode" size="2" formatchar="S" classification="string"/>
+		<object type="unicode" size="2" formatchar="lS" classification="string"/>
+		<object type="ffix" size="8" formatchar="f" classification="float"/>
+		<object type="ffix" size="8" formatchar="Lf" classification="float"/>
+		<object type="fexp" size="8" formatchar="e" classification="float"/>
+		<object type="fexp" size="8" formatchar="Le" classification="float"/>
+		<object type="fopt" size="8" formatchar="g" classification="float"/>
+		<object type="fopt" size="8" formatchar="Lg" classification="float"/>
+		<object type="TErrorCodes" size="4" classification="enum">
+			<typemember value="-2" name="KErrGeneral"/>
+			<typemember value="1" name="ValueOne"/>
+		</object>
+	</typedefs>
+	<data>
+		<def id="1" type="string">Inline function GetBigValue1000 return value: %d</def>
+		<def id="2" type="string">Inline function GetBigValue1000 return value: %d</def>
+		<def id="3" type="string">int8: %hhd</def>
+		<def id="4" type="string">int16: %hd</def>
+		<def id="5" type="string">int32: %d</def>
+		<def id="6" type="string">int64: %Ld</def>
+		<def id="7" type="string">uint8: %hhu</def>
+		<def id="8" type="string">uint16: %hu</def>
+		<def id="9" type="string">uint32: %u</def>
+		<def id="10" type="string">uint64: %Lu</def>
+		<def id="11" type="string">hex8: %hhx</def>
+		<def id="12" type="string">hex16: %hx</def>
+		<def id="13" type="string">hex32: %x</def>
+		<def id="14" type="string">hex64: %Lx</def>
+		<def id="15" type="string">ascii: %s</def>
+		<def id="16" type="string">unicode: %S</def>
+		<def id="17" type="string">ffix: %f</def>
+		<def id="18" type="string">fexp: %e</def>
+		<def id="19" type="string">fopt: %g</def>
+		<def id="20" type="string">int8 array: %{int8[]}</def>
+		<def id="21" type="string">int16 array: %{int16[]}</def>
+		<def id="22" type="string">int32 array: %{int32[]}</def>
+		<def id="23" type="string">int64 array: %{int64[]}</def>
+		<def id="24" type="string">uint8 array: %{uint8[]}</def>
+		<def id="25" type="string">uint16 array: %{uint16[]}</def>
+		<def id="26" type="string">uint32 array: %{uint32[]}</def>
+		<def id="27" type="string">uint64 array: %{uint64[]}</def>
+		<def id="28" type="string">hex8 array: %{hex8[]}</def>
+		<def id="29" type="string">hex16 array: %{hex16[]}</def>
+		<def id="30" type="string">hex32 array: %{hex32[]}</def>
+		<def id="31" type="string">hex64 array: %{hex64[]}</def>
+		<def id="32" type="string">ffix array: %{ffix[]}</def>
+		<def id="33" type="string">fexp array: %{fexp[]}</def>
+		<def id="34" type="string">fopt array: %{fopt[]}</def>
+		<def id="35" type="string">int8: %hhd %hhd</def>
+		<def id="36" type="string">int16: %hd, %hd</def>
+		<def id="37" type="string">int32: %d, %d</def>
+		<def id="38" type="string">int64: %Ld, %Ld</def>
+		<def id="39" type="string">uint8: %hhu, %hhu</def>
+		<def id="40" type="string">uint16: %hu, %hu</def>
+		<def id="41" type="string">uint32: %u, %u</def>
+		<def id="42" type="string">uint64: %Lu, %Lu</def>
+		<def id="43" type="string">hex8: %hhx, %hhx</def>
+		<def id="44" type="string">hex16: %hx, %hx</def>
+		<def id="45" type="string">hex32: %x, %x</def>
+		<def id="46" type="string">hex64: %Lx, %Lx</def>
+		<def id="47" type="string">ascii: %s, %s</def>
+		<def id="48" type="string">ffix: %f, %f</def>
+		<def id="49" type="string">fexp: %e, %f</def>
+		<def id="50" type="string">fopt: %g, %g</def>
+		<def id="51" type="string">int8: %{int8[]} %{int8[]}</def>
+		<def id="52" type="string">int16: %{int16[]} %{int16[]}</def>
+		<def id="53" type="string">int32: %{int32[]} %{int32[]}</def>
+		<def id="54" type="string">int64: %{int64[]} %{int64[]}</def>
+		<def id="55" type="string">uint8: %{uint8[]} %{uint8[]}</def>
+		<def id="56" type="string">uint16: %{uint16[]} %{uint16[]}</def>
+		<def id="57" type="string">uint32: %{uint32[]} %{uint32[]}</def>
+		<def id="58" type="string">uint64: %{uint64[]} %{uint64[]}</def>
+		<def id="59" type="string">hex8: %{hex8[]} %{hex8[]}</def>
+		<def id="60" type="string">hex16: %{hex16[]} %{hex16[]}</def>
+		<def id="61" type="string">hex32: %{hex32[]} %{hex32[]}</def>
+		<def id="62" type="string">hex64: %{hex64[]} %{hex64[]}</def>
+		<def id="63" type="string">ffix: %{ffix[]} %{ffix[]}</def>
+		<def id="64" type="string">fexp: %{fexp[]} %{fexp[]}</def>
+		<def id="65" type="string">fopt: %{fopt[]} %{fopt[]}</def>
+		<def id="66" type="string">Enum: %{TErrorCodes}</def>
+		<def id="67" type="string">Enum Array: %{TErrorCodes[]}</def>
+		<def id="68" type="string">Event1&gt;;Value=%d</def>
+		<def id="69" type="string">Event1&lt;;Value=%d;Start Event Trace ID=%u</def>
+		<def id="70" type="string">Event2&gt;;Value=%d</def>
+		<def id="71" type="string">Event2&lt;;Value=%d;Start Event Trace ID=%u</def>
+		<def id="72" type="string">&gt; DTraceCompilerTesterCommon1::SumValues;aValue1=%d;aValue2=%d;aValue3=%hhu;aValue4=%hhu;Filler=%hhx;Filler=%hhx;this=%x</def>
+		<def id="73" type="string">&lt; DTraceCompilerTesterCommon1::SumValues;this=%x;retVal=%d</def>
+		<def id="74" type="string">                      :;ttjffLLGLLLLffjt;,</def>
+		<def id="75" type="string">                  :;fGWWGWWWWWWWWWWWWGGGGGGLj,.</def>
+		<def id="76" type="string">               ;tfGGGGGGGGGWWWWGGGGGGGGGGGLLLLGj;</def>
+		<def id="77" type="string">             ifGGGGGGGGGGGGGGGGGGGGGGGLLLLLLLLLLLLj.</def>
+		<def id="78" type="string">           ;fGGGGGGGGGGGGGGGGGGGGGLLLLLLffffffffLffLt,</def>
+		<def id="79" type="string">         .iLLLGGGGGGGGGGGGGGGGGGLLLLLfffffffffjfffffjfi:</def>
+		<def id="80" type="string">        .fLLLLLGGGGGGGGGGGGGGGGLLLLLLLfffffjjjjjjjjjttjt</def>
+		<def id="81" type="string">       .iffLfLGLGGGGGGGGGGGGGGGGGLLLLfffffffjjjjjjjtttii.</def>
+		<def id="82" type="string">      .ijfffLLLLLLGGGGGGGGGGGGGGGLLLffLffffffjjjjjttti;;:</def>
+		<def id="83" type="string">      ittfffffLLLLGGGGGGGGGGGGGGGLLLLLLLffffjjjjjttttti;:</def>
+		<def id="84" type="string">     .iitjffffLLLLLGGGGGGGGGGGGGGGGGLLLffffjjttjjtitttii;:</def>
+		<def id="85" type="string">     :ittffLLLLGGGLGGGGGGGGGWGGGGGGGGLLLLffjjttjjtittiiii:</def>
+		<def id="86" type="string">    .,tjjffLLLGGGGGGGGGGGGWWWWWGGGGGGGLLLffjjtjfftitttti;:</def>
+		<def id="87" type="string">     ,jffjjffLLGGGGGGGGGWWWWGGGWWWWWWWGGLLjjtjffjtttttti;:</def>
+		<def id="88" type="string">    .;LLLLLLLLGGGGGGGGGWWWWGGWGGLGGGGWGGLfjjjffjjjjtttii,:.:.</def>
+		<def id="89" type="string">    .;fffjjjfLLGGGGGGGGWGGGLfttitLGGGGGGLfjjjjfjjjjjti;,:;fLfi.</def>
+		<def id="90" type="string">      .:;;,:...:,;jLLLfi.....:,;;iii:,,::,jjjjfjti;.. .;GGjiiji</def>
+		<def id="91" type="string">  . ..:,:::..  ....,;;.:,:. .....  .:;;,..;tt;,.   ..:jLtiLfLGi</def>
+		<def id="92" type="string">::    :,,;iii;,:::  .::iffjtttjjffffjt;,.        ..,;ijffGGLLL;</def>
+		<def id="93" type="string">::  .:;itttjjjjjjj:tGG,:ifGGLLLLLLfffffji:  ..::::,tiiLtifGGLi</def>
+		<def id="94" type="string"> ....:,;itttjjjjfijDDWGt .iGLLLLfffffffft,.:,,::,jjiiiLGLLGGt.</def>
+		<def id="95" type="string">  ,:.:,,,;iittjji;WDDWGG,..fGGGLffffjjjji,,;,:,tjjji;iLjjLGW,</def>
+		<def id="96" type="string">  .,,:..:,;iiii:.iDDDWGLft;ifLLLLLffjjji::ii,jjfjjti;iiiLfjj</def>
+		<def id="97" type="string">     .:..::::..ifLWDDWGLLLLj;,,;;;iiii;;ttt;;fjfjtiiiijGLjf;</def>
+		<def id="98" type="string">         .:;;;;ti;jfLLjt;;ijjLfjjfffffjttti;tjjjjtitiijLfj;</def>
+		<def id="99" type="string">        .;tffjjjti::::;tLGGGGWWGLGGGLLLfLLLLfjjjjtti;;jji,</def>
+		<def id="100" type="string">       .;i;fjjffLLGGWGWWWWWGGGGWGLLLLLffLLffjttttiii;,...</def>
+		<def id="101" type="string">        ,;ijjjjfffLGGLLGGGGGGGGGGLfjLLfffffjjiii;;;,:..:</def>
+		<def id="102" type="string">        .iifjttttjfLGGLLLLLLLLffffjtfLffffjjt;;;,;,:..:i</def>
+		<def id="103" type="string">         ,iLGi,:,,,;;iiiiiittttiiitjLLffjjjti:::,;,..:ff</def>
+		<def id="104" type="string">         .,jLfjtjjfLLGGGGGGGGLLLLfjjfLfjjjti;..;;,:,itG,</def>
+		<def id="105" type="string">           ijjjjjjttjjfffLLGGGLLLLfjjfjjjji;:.,;;,;tfW,</def>
+		<def id="106" type="string">           :;itjjffffLLGGGGGGGGGGLLLfjfjjj;:.,iiitjGDL</def>
+		<def id="107" type="string">           .:;ijjfffLLGGWWWWWWGGGGLLffjjti:..;ttijjEG,</def>
+		<def id="108" type="string">              .itjjjfLLLGGGWWWWGGLjji;,,::..:jjitWEj.</def>
+		<def id="109" type="string">               :;itjjjjjLLLGGGWGLi;,,::::::;ttiGEKW</def>
+		<def id="110" type="string">                  ::,,;;iiittjj;,,,,,,;;;ijjjGEKKf:</def>
+		<def id="111" type="string">                    .: ........::,,;;;ttjjGDKKKEL</def>
+		<def id="112" type="string">                    ,j. ......:::,,;ttjjWE#KKKE,</def>
+		<def id="113" type="string">                    ,fj,  .  ..,,;;iijDK#####f:</def>
+		<def id="114" type="string">                    tWLf.   ..:,,;tfEKKK###Ef</def>
+		<def id="115" type="string">                    jK##EL; .. :iDKKKKKKK#f:</def>
+		<def id="116" type="string">                    LK#Effj;;::fDKKKKKKK#D.</def>
+		<def id="117" type="string">                    EEi.     .:EKKKKKKKKL:</def>
+		<def id="118" type="string">                            :DitD#KKKKKG</def>
+		<def id="119" type="string">                   ;i: .:,,::::.iK###Ki.</def>
+		<def id="120" type="string">                  .iWD  .:::::,,:fE#Dt</def>
+		<def id="121" type="string">                  ,L#D:ijttiiii;, :j:</def>
+		<def id="122" type="string">                  jK#  ...::,,.  .</def>
+	</data>
+	<locations>
+		<path val="../../TraceCompilerTester/src/">
+			<file id="1">TraceCompilerTesterBasic.cpp</file>
+			<file id="2">TraceCompilerTesterCommon1.cpp</file>
+			<file id="3">TraceCompilerTesterCommon2.cpp</file>
+		</path>
+		<path val="W:/TraceCompilerTester/inl/">
+			<file id="4">BigNumbers.inl</file>
+		</path>
+	</locations>
+	<component id="536940818" name="TraceCompilerTesterBasic" prefix="TraceCompilerTesterBasic: " suffix="">
+		<group id="222" name="INCLUDED_NON_SOURCE_FILE_TEST" prefix="INCLUDED_NON_SOURCE_FILE_TEST: " suffix="">
+			<trace data-ref="1" name="NON_SOURCE_FILE_TRACE1">
+				<instance id="1" loc-ref="4" line="12" methodname="GetBigValue1000"/>
+			</trace>
+			<trace data-ref="2" name="NON_SOURCE_FILE_TRACE2">
+				<instance id="2" loc-ref="4" line="19" methodname="GetBigValue2000"/>
+			</trace>
+		</group>
+		<group id="223" name="BASIC_OK_TEST" prefix="BASIC_OK_TEST: " suffix="">
+			<trace data-ref="3" name="TEST_BASIC_INT8">
+				<instance id="1" loc-ref="1" line="120" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="4" name="TEST_BASIC_INT16">
+				<instance id="2" loc-ref="1" line="121" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="5" name="TEST_BASIC_INT32">
+				<instance id="3" loc-ref="1" line="122" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="6" name="TEST_BASIC_INT64">
+				<instance id="4" loc-ref="1" line="123" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="7" name="TEST_BASIC_UINT8">
+				<instance id="5" loc-ref="1" line="124" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="8" name="TEST_BASIC_UINT16">
+				<instance id="6" loc-ref="1" line="125" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="9" name="TEST_BASIC_UINT32">
+				<instance id="7" loc-ref="1" line="126" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="10" name="TEST_BASIC_UINT64">
+				<instance id="8" loc-ref="1" line="127" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="11" name="TEST_BASIC_HEX8">
+				<instance id="9" loc-ref="1" line="128" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="12" name="TEST_BASIC_HEX16">
+				<instance id="10" loc-ref="1" line="129" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="13" name="TEST_BASIC_HEX32">
+				<instance id="11" loc-ref="1" line="130" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="14" name="TEST_BASIC_HEX64">
+				<instance id="12" loc-ref="1" line="131" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="15" name="TEST_BASIC_STRING8">
+				<instance id="13" loc-ref="1" line="132" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="16" name="TEST_BASIC_STRING16">
+				<instance id="14" loc-ref="1" line="134" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="17" name="TEST_BASIC_FFIX">
+				<instance id="15" loc-ref="1" line="135" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="18" name="TEST_BASIC_FEXP">
+				<instance id="16" loc-ref="1" line="136" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="19" name="TEST_BASIC_FOPT">
+				<instance id="17" loc-ref="1" line="137" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+		</group>
+		<group id="224" name="ARRAY_OK_TEST" prefix="ARRAY_OK_TEST: " suffix="">
+			<trace data-ref="20" name="TEST_ARRAY_INT8">
+				<instance id="1" loc-ref="1" line="193" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="21" name="TEST_ARRAY_INT16">
+				<instance id="2" loc-ref="1" line="195" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="22" name="TEST_ARRAY_INT32">
+				<instance id="3" loc-ref="1" line="197" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="23" name="TEST_ARRAY_INT64">
+				<instance id="4" loc-ref="1" line="199" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="24" name="TEST_ARRAY_UINT8">
+				<instance id="5" loc-ref="1" line="201" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="25" name="TEST_ARRAY_UINT16">
+				<instance id="6" loc-ref="1" line="203" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="26" name="TEST_ARRAY_UINT32">
+				<instance id="7" loc-ref="1" line="205" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="27" name="TEST_ARRAY_UINT64">
+				<instance id="8" loc-ref="1" line="207" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="28" name="TEST_ARRAY_HEX8">
+				<instance id="9" loc-ref="1" line="209" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="29" name="TEST_ARRAY_HEX16">
+				<instance id="10" loc-ref="1" line="211" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="30" name="TEST_ARRAY_HEX32">
+				<instance id="11" loc-ref="1" line="213" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="31" name="TEST_ARRAY_HEX64">
+				<instance id="12" loc-ref="1" line="215" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="32" name="TEST_ARRAY_FFIX">
+				<instance id="13" loc-ref="1" line="219" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="33" name="TEST_ARRAY_FEXP">
+				<instance id="14" loc-ref="1" line="221" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="34" name="TEST_ARRAY_FOPT">
+				<instance id="15" loc-ref="1" line="223" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+		</group>
+		<group id="225" name="BASIC_TWO_SIMILAR_OK_TEST" prefix="BASIC_TWO_SIMILAR_OK_TEST: " suffix="">
+			<trace data-ref="35" name="TEST_BASIC_SIMILAR2_INT8">
+				<instance id="1" loc-ref="1" line="231" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="36" name="TEST_BASIC_SIMILAR2_INT16">
+				<instance id="2" loc-ref="1" line="233" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="37" name="TEST_BASIC_SIMILAR2_INT32">
+				<instance id="3" loc-ref="1" line="235" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="38" name="TEST_BASIC_SIMILAR2_INT64">
+				<instance id="4" loc-ref="1" line="237" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="39" name="TEST_BASIC_SIMILAR2_UINT8">
+				<instance id="5" loc-ref="1" line="239" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="40" name="TEST_BASIC_SIMILAR2_UINT16">
+				<instance id="6" loc-ref="1" line="241" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="41" name="TEST_BASIC_SIMILAR2_UINT32">
+				<instance id="7" loc-ref="1" line="243" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="42" name="TEST_BASIC_SIMILAR2_UINT64">
+				<instance id="8" loc-ref="1" line="245" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="43" name="TEST_BASIC_SIMILAR2_HEX8">
+				<instance id="9" loc-ref="1" line="247" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="44" name="TEST_BASIC_SIMILAR2_HEX16">
+				<instance id="10" loc-ref="1" line="249" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="45" name="TEST_BASIC_SIMILAR2_HEX32">
+				<instance id="11" loc-ref="1" line="251" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="46" name="TEST_BASIC_SIMILAR2_HEX64">
+				<instance id="12" loc-ref="1" line="253" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="47" name="TEST_BASIC_SIMILAR2_STRING8">
+				<instance id="13" loc-ref="1" line="255" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="48" name="TEST_BASIC_SIMILAR2_FFIX">
+				<instance id="14" loc-ref="1" line="257" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="49" name="TEST_BASIC_SIMILAR2_FEXP">
+				<instance id="15" loc-ref="1" line="259" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="50" name="TEST_BASIC_SIMILAR2_FOPT">
+				<instance id="16" loc-ref="1" line="261" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+		</group>
+		<group id="226" name="ARRAY_TWO_SIMILAR_OK_TEST" prefix="ARRAY_TWO_SIMILAR_OK_TEST: " suffix="">
+			<trace data-ref="51" name="TEST_ARRAY_SIMILAR2_INT8">
+				<instance id="1" loc-ref="1" line="317" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="52" name="TEST_ARRAY_SIMILAR2_INT16">
+				<instance id="2" loc-ref="1" line="319" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="53" name="TEST_ARRAY_SIMILAR2_INT32">
+				<instance id="3" loc-ref="1" line="321" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="54" name="TEST_ARRAY_SIMILAR2_INT64">
+				<instance id="4" loc-ref="1" line="323" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="55" name="TEST_ARRAY_SIMILAR2_UINT8">
+				<instance id="5" loc-ref="1" line="325" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="56" name="TEST_ARRAY_SIMILAR2_UINT16">
+				<instance id="6" loc-ref="1" line="327" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="57" name="TEST_ARRAY_SIMILAR2_UINT32">
+				<instance id="7" loc-ref="1" line="329" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="58" name="TEST_ARRAY_SIMILAR2_UINT64">
+				<instance id="8" loc-ref="1" line="331" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="59" name="TEST_ARRAY_SIMILAR2_HEX8">
+				<instance id="9" loc-ref="1" line="333" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="60" name="TEST_ARRAY_SIMILAR2_HEX16">
+				<instance id="10" loc-ref="1" line="335" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="61" name="TEST_ARRAY_SIMILAR2_HEX32">
+				<instance id="11" loc-ref="1" line="337" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="62" name="TEST_ARRAY_SIMILAR2_HEX64">
+				<instance id="12" loc-ref="1" line="339" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="63" name="TEST_ARRAY_SIMILAR2_FFIX">
+				<instance id="13" loc-ref="1" line="343" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="64" name="TEST_ARRAY_SIMILAR2_FEXP">
+				<instance id="14" loc-ref="1" line="345" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="65" name="TEST_ARRAY_SIMILAR2_FOPT">
+				<instance id="15" loc-ref="1" line="347" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+		</group>
+		<group id="227" name="ENUM_OK_TEST" prefix="ENUM_OK_TEST: " suffix="">
+			<trace data-ref="66" name="TEST_ENUM_OK">
+				<instance id="1" loc-ref="1" line="361" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="67" name="TEST_ENUM_ARRAY_OK">
+				<instance id="2" loc-ref="1" line="362" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+		</group>
+		<group id="139" name="TRACE_PERFORMANCE" prefix="Performance: " suffix="">
+			<trace data-ref="68" name="EVENT_MY_EVENT_TRACE1_START">
+				<instance id="1" loc-ref="1" line="370" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="69" name="EVENT_MY_EVENT_TRACE1_STOP">
+				<instance id="2" loc-ref="1" line="371" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="70" name="EVENT_MY_EVENT_TRACE2_START">
+				<instance id="3" loc-ref="1" line="373" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+			<trace data-ref="71" name="EVENT_MY_EVENT_TRACE2_STOP">
+				<instance id="4" loc-ref="1" line="374" methodname="TraceActivated" classname="DTraceCompilerTesterBasic"/>
+			</trace>
+		</group>
+		<group id="138" name="TRACE_FLOW" prefix="Flow: " suffix="">
+			<trace data-ref="72" name="DTRACECOMPILERTESTERCOMMON1_SUMVALUES_ENTRY">
+				<instance id="1" loc-ref="2" line="38" methodname="SumValues" classname="DTraceCompilerTesterCommon1"/>
+			</trace>
+			<trace data-ref="73" name="DTRACECOMPILERTESTERCOMMON1_SUMVALUES_EXIT">
+				<instance id="2" loc-ref="2" line="40" methodname="SumValues" classname="DTraceCompilerTesterCommon1"/>
+			</trace>
+		</group>
+		<group id="228" name="KEKKONEN" prefix="KEKKONEN: " suffix="">
+			<trace data-ref="74" name="TEXT1">
+				<instance id="1" loc-ref="3" line="32" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="75" name="TEXT2">
+				<instance id="2" loc-ref="3" line="33" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="76" name="TEXT3">
+				<instance id="3" loc-ref="3" line="34" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="77" name="TEXT4">
+				<instance id="4" loc-ref="3" line="35" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="78" name="TEXT5">
+				<instance id="5" loc-ref="3" line="36" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="79" name="TEXT6">
+				<instance id="6" loc-ref="3" line="37" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="80" name="TEXT7">
+				<instance id="7" loc-ref="3" line="38" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="81" name="TEXT8">
+				<instance id="8" loc-ref="3" line="39" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="82" name="TEXT9">
+				<instance id="9" loc-ref="3" line="40" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="83" name="TEXT10">
+				<instance id="10" loc-ref="3" line="41" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="84" name="TEXT11">
+				<instance id="11" loc-ref="3" line="42" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="85" name="TEXT12">
+				<instance id="12" loc-ref="3" line="43" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="86" name="TEXT13">
+				<instance id="13" loc-ref="3" line="44" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="87" name="TEXT14">
+				<instance id="14" loc-ref="3" line="45" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="88" name="TEXT15">
+				<instance id="15" loc-ref="3" line="46" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="89" name="TEXT16">
+				<instance id="16" loc-ref="3" line="47" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="90" name="TEXT17">
+				<instance id="17" loc-ref="3" line="48" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="91" name="TEXT18">
+				<instance id="18" loc-ref="3" line="49" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="92" name="TEXT19">
+				<instance id="19" loc-ref="3" line="50" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="93" name="TEXT20">
+				<instance id="20" loc-ref="3" line="51" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="94" name="TEXT21">
+				<instance id="21" loc-ref="3" line="52" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="95" name="TEXT22">
+				<instance id="22" loc-ref="3" line="53" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="96" name="TEXT23">
+				<instance id="23" loc-ref="3" line="54" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="97" name="TEXT24">
+				<instance id="24" loc-ref="3" line="55" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="98" name="TEXT25">
+				<instance id="25" loc-ref="3" line="56" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="99" name="TEXT26">
+				<instance id="26" loc-ref="3" line="57" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="100" name="TEXT27">
+				<instance id="27" loc-ref="3" line="58" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="101" name="TEXT28">
+				<instance id="28" loc-ref="3" line="59" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="102" name="TEXT29">
+				<instance id="29" loc-ref="3" line="60" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="103" name="TEXT30">
+				<instance id="30" loc-ref="3" line="61" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="104" name="TEXT31">
+				<instance id="31" loc-ref="3" line="62" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="105" name="TEXT32">
+				<instance id="32" loc-ref="3" line="63" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="106" name="TEXT33">
+				<instance id="33" loc-ref="3" line="64" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="107" name="TEXT34">
+				<instance id="34" loc-ref="3" line="65" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="108" name="TEXT35">
+				<instance id="35" loc-ref="3" line="66" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="109" name="TEXT36">
+				<instance id="36" loc-ref="3" line="67" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="110" name="TEXT37">
+				<instance id="37" loc-ref="3" line="68" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="111" name="TEXT38">
+				<instance id="38" loc-ref="3" line="69" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="112" name="TEXT39">
+				<instance id="39" loc-ref="3" line="70" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="113" name="TEXT40">
+				<instance id="40" loc-ref="3" line="71" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="114" name="TEXT41">
+				<instance id="41" loc-ref="3" line="72" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="115" name="TEXT42">
+				<instance id="42" loc-ref="3" line="73" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="116" name="TEXT43">
+				<instance id="43" loc-ref="3" line="74" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="117" name="TEXT44">
+				<instance id="44" loc-ref="3" line="75" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="118" name="TEXT45">
+				<instance id="45" loc-ref="3" line="76" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="119" name="TEXT46">
+				<instance id="46" loc-ref="3" line="77" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="120" name="TEXT47">
+				<instance id="47" loc-ref="3" line="78" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="121" name="TEXT48">
+				<instance id="48" loc-ref="3" line="79" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="122" name="TEXT49">
+				<instance id="49" loc-ref="3" line="80" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+		</group>
+	</component>
+</tracedictionary>

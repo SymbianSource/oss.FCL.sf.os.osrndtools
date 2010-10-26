@@ -36,8 +36,11 @@ _LIT8(KIttVersion, "1.22");
 IttSamplerImpl::IttSamplerImpl():
         sampleDescriptor(&(this->sample[1]),0,KITTSampleBufferSize)
 {
-	this->currentLibCount = 0;
-	iTimeToSample = EFalse;
+	iCurrentLibCount = 0;
+	iLibsCount = 0;
+	iCodeSegsCount = 0;
+	iTimeToSample = ETrue;
+	iInitState = KIttHandlingLibs;
 	this->Reset();
 }
 
@@ -46,7 +49,7 @@ IttSamplerImpl::IttSamplerImpl():
  */
 IttSamplerImpl::~IttSamplerImpl()
 {
-
+    LOGSTRING("IttSamplerImpl::~IttSamplerImpl()");
 }
 
 /*
@@ -56,7 +59,6 @@ IttSamplerImpl::~IttSamplerImpl()
  */
 TInt IttSamplerImpl::CreateFirstSample() 
 {	
-    Kern::Printf("ittSamplerImpl::createFirstSample\n");
 	this->iVersionData.Zero();
 	this->iVersionData.Append(_L8("Bappea_ITT_V"));
 	this->iVersionData.Append(KIttVersion);
@@ -71,26 +73,16 @@ TInt IttSamplerImpl::CreateFirstSample()
  * 
  */
 TBool IttSamplerImpl::SampleNeeded(TUint32 sampleNum)
-{
-#ifdef ITT_EVENT_HANDLER
-    iCount++;
-    if (iCount <= iIttSamplingPeriod && ((iCount % iIttSamplingPeriod) == 0 || (iCount % iIttSamplingPeriodDiv2) == 0))
     {
-        LOGSTRING2("IttSamplerImpl::SampleNeeded - time: %d", iCount);
-        iTimeToSample = true;
-#else
-    // no need to do anything, always a good time to sample.
-    // Sample time filtering is done in IttSamplerImpl:SampleImpl() function
-#endif
+    iCount = sampleNum;
+    LOGSTRING2("IttSamplerImpl::SampleNeeded - time: %d", iCount);
+
+    if ((iCount % iIttSamplingPeriod) == 0)
+        {
         return true;
-#ifdef ITT_EVENT_HANDLER    
+        }
+    return false;
     }
-    else 
-    {
-        return false;
-    }
-#endif
-}
 
 /*
  * IttSamplerImpl::SampleImpl(TUint32 pc, TUint32 sampleNum)
@@ -99,102 +91,91 @@ TBool IttSamplerImpl::SampleNeeded(TUint32 sampleNum)
  * @param TUint32 sample number
  */
 TInt IttSamplerImpl::SampleImpl(TUint32 pc,TUint32 sampleNum)
-{	
+    {	
+    //LOGSTRING3("IttSamplerImpl::SampleImpl pc %d samplenum %d",pc, sampleNum);
     // in order to avoid overloading the interrupt
 	// only one dynamic file in each 50ms is added to the stream
 	// with the application of the tool in mind, this is
 	// a reasonable measure
-
+    TInt ret(0);
     // encode a process binary
-    sampleDescriptor.Zero();
-	// original 
-	if((sampleNum % 20) != 0) return 0;
-	if((sampleNum % 40) == 0)
-	{
+ 
+    //sampleDescriptor.Zero();
+    if(iTimeToSample)
+        {
 		// encode a library binary
-		sampleDescriptor.Zero();
-		DObjectCon* libs = Kern::Containers()[ELibrary];
-		TInt libCount = libs->Count();
-		
-		// go 20 binaries through at a time
-		for(TInt i=0;i<20;i++)
-		{
-			if(currentLibCount >= libCount)
-			{
-				currentLibCount = 0;
-			}
-			
-			DLibrary* lib = (DLibrary*)(*libs)[currentLibCount];
-			currentLibCount++;
-			
-			DCodeSeg* seg = lib->iCodeSeg;
-			if(seg != 0)
-			{
-				if( (seg->iMark & 0x80) == 0)
-				{
-					this->sample[0] = seg->iFileName->Length();
-					sampleDescriptor.Append(*(seg->iFileName));
-					sampleDescriptor.Append((TUint8*)&(seg->iRunAddress),4);
-					sampleDescriptor.Append((TUint8*)&(seg->iSize),4);
-#ifdef ITT_EVENT_HANDLER
-					sampleDescriptor.Append((TUint8*)&(sampleNum),4);
-					//Kern::Printf("DLL: NM %S : RA:0x%x SZ:0x%x, SN:0x%x",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
-					this->iFirstSampleTaken = ETrue;
-#else
-		            //Kern::Printf("DLL: NM %S : RA:0x%x SZ:0x%x",seg->iFileName,seg->iRunAddress,seg->iSize);
-#endif
-					seg->iMark = (seg->iMark | 0x80);
-					
-					this->sample[0] = sampleDescriptor.Size();
-					return sampleDescriptor.Size()+1;
-				}
-			}
-		}
-	} else
-	{
-		SDblQue* codeSegList = Kern::CodeSegList();
-		//Kern::Printf("PI");
-		//TUint c = 0;
-		// the global list
-		for (SDblQueLink* codeseg= codeSegList->First(); codeseg!=(SDblQueLink*) codeSegList; codeseg=codeseg->iNext)
-		{				
-			DCodeSeg* seg = _LOFF(codeseg, DCodeSeg, iLink);
-			if(seg != 0)
-			{
-				if( (seg->iMark & 0x80) == 0)
-				{
-					this->sample[0] = seg->iFileName->Length();
-					sampleDescriptor.Append(*(seg->iFileName));
-					sampleDescriptor.Append((TUint8*)&(seg->iRunAddress),4);
-					sampleDescriptor.Append((TUint8*)&(seg->iSize),4);
-#ifdef ITT_EVENT_HANDLER
-                    sampleDescriptor.Append((TUint8*)&(sampleNum),4);
-                    //Kern::Printf("EXE2: NM %S : RA:0x%x SZ:0x%x, time: %d",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
-                    this->iFirstSampleTaken = ETrue;                    
-#else
-					//Kern::Printf("EXE2: NM %S : RA:0x%x SZ:0x%x, time: %d",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
-#endif					
-					seg->iMark = (seg->iMark | 0x80);
-					
-					this->sample[0] = sampleDescriptor.Size();
-					return sampleDescriptor.Size()+1;
-				}
-			}
-		}	
+		//sampleDescriptor.Zero();
+			if(iInitState == KIttHandlingLibs)
+		    {
+            if(iLibsCount < 20)
+                {
+                ret = HandleLibs(sampleNum);
+                iLibsCount++;
+                while(ret == KErrAlreadyExists)
+                    {
+                    ret = HandleLibs(sampleNum);
+                    iLibsCount++;
+                    }
+                }
+            else
+                {
+                iLibsCount = 0;
+                return 0;
+                }
+            }
+		//LOGSTRING2("IttSamplerImpl::SampleImpl HandledLibs %d", ret);
+		// one library has been read to sample, needs to be written to file
+
+		else if(iInitState == KIttHandlingCodeSegs)
+		    {
+		    if(iCodeSegsCount < 20)
+		        {
+		        ret = HandleSegs(sampleNum);
+		        iCodeSegsCount++;
+                while(ret == KErrAlreadyExists)
+                    {
+                    ret = HandleSegs(sampleNum);
+                    iCodeSegsCount++;
+                    }
+		        }
+		    
+		    else
+		        {
+		        iCodeSegsCount = 0;
+		        return 0;
+		        }
+		    }
+
+		//LOGSTRING2("IttSamplerImpl::SampleImpl HandledSegs %d", ret);
+		else
+		    {
+		    // nothing to do
+		    Kern::Printf("IttSamplerImpl::SampleImpl - should not be here");
+		    return 0;
+		    }
+        }
+    else
+        {
+        LOGSTRING("IttSamplerImpl::SampleImpl Not time to sample");
 	}
-	return 0;
+
+	return ret;
 }
 
 /*
  * IttSamplerImpl::Reset()
  */
 void IttSamplerImpl::Reset()
-{
-    iTimeToSample = EFalse;
+    {
+    iTimeToSample = ETrue;
 #ifdef ITT_EVENT_HANDLER
-    iFirstSampleTaken = EFalse;
+    iInitialLibsTaken= EFalse;
+    iInitialSegsTaken= EFalse;
 #endif
-	this->currentLibCount = 0;
+	iCurrentLibCount = 0;
+	iLibsCount = 0;
+	iCodeSegsCount = 0;
+	iLatestCodeseg = NULL;
 	this->itt_sample = (TUint8*)&(this->sample[0]);
 	sampleDescriptor.Zero();
 
@@ -202,43 +183,151 @@ void IttSamplerImpl::Reset()
 	SDblQue* codeSegList = Kern::CodeSegList();
 	// the global list
 	for (SDblQueLink* codeseg= codeSegList->First(); codeseg!=(SDblQueLink*) codeSegList; codeseg=codeseg->iNext)
-	{				
+	    {				
 		DCodeSeg* seg = _LOFF(codeseg,DCodeSeg, iLink);
 		//if(seg != 0)
-		{
+            {
 			if( (seg->iMark & 0x80) > 0)
-			{
+			    {
 				seg->iMark = (seg->iMark & ~0x80);
-			}
-		}
-	}	
+			    }
+            }
+	    }	
 	// the garbage list
+	
+	NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
 	DObjectCon* libs = Kern::Containers()[ELibrary];
+	libs->Wait();
 	TInt libCount = libs->Count();
 	for(TInt i=0;i<libCount;i++)
-	{
+	    {
 		DLibrary* lib = (DLibrary*)(*libs)[i];
 		DCodeSeg* seg = lib->iCodeSeg;
 		if( (seg->iMark & 0x80) > 0)
-		{
+		    {
 			seg->iMark = (seg->iMark & ~0x80);
-		}
-	}
-	
-	DObjectCon* procs = Kern::Containers()[EProcess];
-	TInt procCount = procs->Count();
-	for(TInt i=0;i<procCount;i++)
-	{
-		DProcess* pro = (DProcess*)(*procs)[i];
-		DCodeSeg* seg = pro->iCodeSeg;
-		if(seg != 0)
-		{
-			if( (seg->iMark & 0x80) > 0)
-			{
-				seg->iMark = (seg->iMark & ~0x80);
-			}
-		}
-	}
+		    }
+	    }
+    libs->Signal();
+	NKern::ThreadLeaveCS();
 	//#endif   //ITT_TEST
 }
+/*
+ * 
+ */
+TInt IttSamplerImpl::HandleLibs(TUint32 sampleNum)
+    {
+    NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
+    DObjectCon* libs = Kern::Containers()[ELibrary];
+    libs->Wait();
+    TInt libCount(libs->Count());
+    sampleDescriptor.Zero();
+    
+    // go 20 binaries through at a time
+    //for(TInt i=0;i<libCount;i++)
+    if (iCurrentLibCount < libCount)
+        {
+        // get libs from 
+        DLibrary* lib = (DLibrary*)(*libs)[iCurrentLibCount];
+        libs->Signal();
+        NKern::ThreadLeaveCS();
+        iCurrentLibCount++;
+        
+        DCodeSeg* seg = lib->iCodeSeg;
+        if(seg != 0)
+            {
+            if( (seg->iMark & 0x80) == 0)
+                {
+                this->sample[0] = seg->iFileName->Length();
+                sampleDescriptor.Append(*(seg->iFileName));
+                sampleDescriptor.Append((TUint8*)&(seg->iRunAddress),4);
+                sampleDescriptor.Append((TUint8*)&(seg->iSize),4);
+
+#ifdef ITT_EVENT_HANDLER
+                sampleDescriptor.Append((TUint8*)&(sampleNum),4);
+                //Kern::Printf("DLL: NM %S : RA:0x%x SZ:0x%x, SN:0x%x",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
+                //this->iFirstSampleTaken = ETrue;
+#else
+                //Kern::Printf("DLL: NM %S : RA:0x%x SZ:0x%x",seg->iFileName,seg->iRunAddress,seg->iSize);
+#endif
+                seg->iMark = (seg->iMark | 0x80);
+                this->sample[0] = sampleDescriptor.Size();
+                return sampleDescriptor.Size()+1;
+                }
+            else 
+                {
+                //Kern::Printf("Already met DLL: NM %S : RA:0x%x SZ:0x%x, SN:0x%x",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
+                return KErrAlreadyExists;
+                }
+            }
+        }
+    else
+        {
+        // check if list gone through
+        iInitState = KIttHandlingCodeSegs;
+        iInitialLibsTaken = ETrue;
+        }
+    libs->Signal();
+    NKern::ThreadLeaveCS();
+    return 0;
+    }
+/*
+ * 
+ */
+TInt IttSamplerImpl::HandleSegs(TUint32 sampleNum)
+    {
+    SDblQue* codeSegList = Kern::CodeSegList();
+    //Kern::Printf("PI");
+    TUint count(0);
+    sampleDescriptor.Zero();
+    if(iLatestCodeseg == NULL)
+        {
+        iLatestCodeseg = codeSegList->First();
+        }
+    else
+        {
+        iLatestCodeseg = iLatestCodeseg->iNext;
+        }
+    
+    // search the global code segment list
+    //for (; iLatestCodeseg!=(SDblQueLink*) codeSegList; iLatestCodeseg=iLatestCodeseg->iNext)
+    if (iLatestCodeseg != (SDblQueLink*) codeSegList)
+        {             
+        DCodeSeg* seg = _LOFF(iLatestCodeseg, DCodeSeg, iLink);
+        if(seg != 0)
+            {
+            if( (seg->iMark & 0x80) == 0)
+                {
+                this->sample[0] = seg->iFileName->Length();
+                sampleDescriptor.Append(*(seg->iFileName));
+                sampleDescriptor.Append((TUint8*)&(seg->iRunAddress),4);
+                sampleDescriptor.Append((TUint8*)&(seg->iSize),4);
+#ifdef ITT_EVENT_HANDLER
+                sampleDescriptor.Append((TUint8*)&(sampleNum),4);
+                //Kern::Printf("EXE2: NM %S : RA:0x%x SZ:0x%x, time: %d",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
+#else
+                //Kern::Printf("EXE2: NM %S : RA:0x%x SZ:0x%x, time: %d",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
+#endif                  
+                seg->iMark = (seg->iMark | 0x80);
+                count++;
+                this->sample[0] = sampleDescriptor.Size();
+                return sampleDescriptor.Size()+1;
+                }
+            else 
+                {
+                //Kern::Printf("Already met EXE2: NM %S : RA:0x%x SZ:0x%x, time: %d",seg->iFileName,seg->iRunAddress,seg->iSize, sampleNum);
+                return KErrAlreadyExists;
+                }
+            }
+        }
+    // check if list gone through
+    else //if (count == 0)
+        {
+        iInitialSegsTaken = ETrue;
+        iTimeToSample = false;
+        LOGSTRING("ITT sampler - all initial samples generated!");
+        }
+    return 0;
+    }
+
 // end of file

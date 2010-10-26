@@ -29,6 +29,7 @@ VENDORID      VID_DEFAULT
 #endif
 CAPABILITY    ALL -TCB // AllFiles ReadDeviceData ReadUserData UserEnvironment WriteDeviceData WriteUserData
 SMPSAFE
+UNPAGED
 
 OS_LAYER_SYSTEMINCLUDE
 USERINCLUDE     ../inc

@@ -214,6 +214,10 @@ void CMemSpyEngineOutputSinkFile::DataStreamEndL()
     TRACE( RDebug::Printf( "CMemSpyEngineOutputSinkFile::DataStreamEndL() - END" ) );
     }
 
+void CMemSpyEngineOutputSinkFile::FlushL()
+    {
+    HeadLog().FlushL();
+    }
 
 void CMemSpyEngineOutputSinkFile::DoOutputLineL( const TDesC& aLine )
     {
@@ -297,11 +301,6 @@ CMemSpyEngineFileHolder& CMemSpyEngineOutputSinkFile::HeadLog() const
     //TRACE( RDebug::Print( _L("CMemSpyEngineOutputSinkFile::HeadLog() - headLog: 0x%08x %S"), headLog, &headLog->FileName() ) );
     return *headLog;
     }
-
-
-
-
-
 
 
 
@@ -637,6 +636,11 @@ void CMemSpyEngineFileHolder::DisableBufferL()
     TRACE( RDebug::Printf( "CMemSpyEngineFileHolder::DisableBufferL() - END" ) );
     }
 
+
+void CMemSpyEngineFileHolder::FlushL()
+    {
+    FlushWorkingBufferL();
+    }
 
 void CMemSpyEngineFileHolder::FlushWorkingBufferL()
     {

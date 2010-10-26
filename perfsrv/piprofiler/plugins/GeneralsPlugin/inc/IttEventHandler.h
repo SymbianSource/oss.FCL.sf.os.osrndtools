@@ -41,6 +41,7 @@ public:
     TBool Tracking() {return iTracking;}
        
     TBool SampleNeeded();
+    void SampleHandled();
     
 private:
     static TUint EventHandler(TKernelEvent aEvent, TAny* a1, TAny* a2, TAny* aThis);
@@ -55,11 +56,12 @@ private:
         TBool       iTracking;
         DProfilerSampleBuffer*  iSampleBuffer;
 
-        TUint32     iCount;        
-        
+        //TUint32     iCount;        
+        //TUint32     iPreviousCount;
         TUint8      iSample[KITTBufferSize];
         TPtr8       iSampleDescriptor;
         TProfilerGppSamplerData*     gppSamplerData;
+        TBool       iSampleAvailable;
     };
 
 #endif  //__PI_ITT_EVENT_HANDLER__

@@ -160,6 +160,8 @@ public: // API - chunk info
     TAny* BaseAddress() const;
     TAny* UpperAddress() const;
     TUint OwnerId() const;
+    TMemSpyDriverChunkType Type() const;
+    TInt Attributes() const;
 
 public: // API
     IMPORT_C void OwnerName( TDes& aDes ) const;

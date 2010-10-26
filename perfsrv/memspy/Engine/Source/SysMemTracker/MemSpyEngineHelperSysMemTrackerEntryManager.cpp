@@ -720,8 +720,7 @@ void CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsHeapUserL( CMe
 void CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsHeapKernelL( CMemSpyEngineChunkList& aList )
     {
     SYSMEMTRACKERLOG_PRINTF( RDebug::Printf( "CMemSpyEngineHelperSysMemTrackerEntryManager::CreateSeedItemsHeapKernelL() - START" ) );
-
-    CMemSpyEngine& engine = Engine();
+    
     CMemSpyEngineHelperSysMemTrackerEntryHeap* entry = CMemSpyEngineHelperSysMemTrackerEntryHeap::NewKernelLC( iTracker );
     AddItemAndPopL( entry );
 

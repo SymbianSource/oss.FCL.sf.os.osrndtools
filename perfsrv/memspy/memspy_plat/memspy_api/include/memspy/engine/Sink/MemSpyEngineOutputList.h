@@ -75,6 +75,9 @@ public: // API - print
     void PrintL();
     void PrintL( CMemSpyEngineOutputSink& aSink );
 
+public: // API - flush
+    void FlushL();
+    
 public: // API - access
     CMemSpyEngineOutputListItem& Item( TInt aPos );
     const CMemSpyEngineOutputListItem& Item( TInt aPos ) const;

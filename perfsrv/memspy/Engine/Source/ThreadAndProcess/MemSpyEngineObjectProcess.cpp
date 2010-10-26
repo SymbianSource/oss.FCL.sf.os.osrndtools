@@ -394,11 +394,19 @@ void CMemSpyProcess::RefreshL()
 
 void CMemSpyProcess::RefreshL( const RProcess& aProcess )
     {
-    const TBool handleValid = aProcess.Handle() != KNullHandle;
+    TBool handleValid = aProcess.Handle() != KNullHandle;
     if  ( handleValid )
         {
-        RMemSpyDriverClient& driver = iEngine.Driver();
-        User::LeaveIfError( driver.GetProcessInfo( iId, *iInfo ) );
+        TInt err = iEngine.Driver().GetProcessInfo( iId, *iInfo );
+        if ( err != KErrNone && err != KErrDied )
+            {
+            User::Leave( err );
+            }
+        
+        if ( err == KErrDied )
+            {
+            handleValid = false;
+            }
         }
 
     // Get priority, exit info etc

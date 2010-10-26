@@ -26,6 +26,14 @@
 extern TUint*		IntStackPtr();
 #define	TAG(obj)	(*(TUint32*)&(obj.iAsyncDeleteNext))
 
+#ifndef __SMP__
+extern TUint IDFCRunning();
+#endif
+
+#ifdef __SMP__
+static TSpinLock CpuSpinLock = TSpinLock(TSpinLock::EOrderGenericIrqLow3);
+#endif
+
 // properties for ISA task parsing
 const TUid KIsaPropertyCat={0x2001E5AD};
 enum TIsaPropertyKeys
@@ -42,11 +50,13 @@ enum TIsaPropertyKeys
 DGppSamplerImpl::DGppSamplerImpl()
 	{
 	LOGTEXT("GppSamplerImpl::GppSamplerImpl");
+#ifndef __SMP__
 	iInterruptStack = (TUint*)IntStackPtr();
-
+#endif
+	
 	LOGTEXT("GppSamplerImpl::GppSamplerImpl - attaching to properties");
 
-	TInt err = iIsaStartAddr.Attach(KIsaPropertyCat, EIsaPropertyIsaTaskAddressStart);
+	TInt err(iIsaStartAddr.Attach(KIsaPropertyCat, EIsaPropertyIsaTaskAddressStart));
 	if(err != KErrNone)
 		LOGTEXT("GppSamplerImpl::GppSamplerImpl() - Property EIsaPropertyIsaTaskAddressStart not available"); 
 	err = iIsaEndAddr.Attach(KIsaPropertyCat, EIsaPropertyIsaTaskAddressEnd);
@@ -61,6 +71,15 @@ DGppSamplerImpl::DGppSamplerImpl()
 	
 	PROFILER_ISA_TASK_NAMES
 	
+	NKern::LockSystem();
+	// get status of ISA plug-in
+	TPropertyStatus status;
+    if(iIsaPluginStatus.GetStatus(status))
+        {
+        iIsaPluginStatus.Get(iIsaStatus);
+        LOGSTRING2("GppSamplerImpl::Reset - ISA plug-in status %d", iIsaStatus);
+        }
+	NKern::UnlockSystem();
 	Reset();
 	}
 
@@ -74,7 +93,7 @@ DGppSamplerImpl::~DGppSamplerImpl()
 
 void DGppSamplerImpl::Reset()
 	{
-	LOGTEXT("GppSamplerImpl::Reset");
+    LOGSTRING("GppSamplerImpl::Reset() - entry");
 	iLastPc = 0;
 	iLastThread = 0xfffffffe;
 	iRepeat = 0;
@@ -82,41 +101,36 @@ void DGppSamplerImpl::Reset()
 	iIsaStart = 0;
 	iIsaEnd = 0;
 //	isaOsTaskRunningAddr = 0;
+	iPrevTS = NKern::TickCount(); // get the system tick value for sync purposes 
 	
 	// in SMP start time common with all CPUs, provided by DGeneralsDriver class
 #ifndef __SMP__
-	iStartTime = ( NKern::TickCount() & 0xfffffffc );
+	iStartTime = ( iPrevTS & 0xfffffffc );
+#else
+	iStartTime = ( iPrevTS & 0xfffffff0 );
 #endif
 	
-	TPropertyStatus status;
-	TInt osAddr = 0;
+	TInt osAddr(0);
 	
-	LOGTEXT("GppSamplerImpl::Reset - getting status");
-	
-	// get status of ISA plug-in
-	if(iIsaPluginStatus.GetStatus(status))
-		{
-		iIsaPluginStatus.Get(iIsaStatus);
-		LOGSTRING2("GppSamplerImpl::Reset - ISA plug-in status %d", iIsaStatus);
-		}
+	LOGSTRING("GppSamplerImpl::Reset - getting status");
 	
 	if(iIsaStatus > 0)
 		{
-		LOGTEXT("GppSamplerImpl::Reset - get isa start address");
+		LOGSTRING("GppSamplerImpl::Reset - get isa start address");
 		iIsaStartAddr.Get(iIsaStart);
-		LOGTEXT("GppSamplerImpl::Reset - get isa end address");
+		LOGSTRING("GppSamplerImpl::Reset - get isa end address");
 		iIsaEndAddr.Get(iIsaEnd);
-		LOGTEXT("GppSamplerImpl::Reset - get isa os_task_running address");
+		LOGSTRING("GppSamplerImpl::Reset - get isa os_task_running address");
 		iIsaOsTaskRunning.Get(osAddr);
 		isaOsTaskRunningAddr = reinterpret_cast<TInt*>(osAddr);
 		LOGSTRING2("GppSamplerImpl::Reset - got isa os_task_running address 0x%X", osAddr);
 		}
 	
-	LOGTEXT("GppSamplerImpl::Reset - initializing isa task list");
+	LOGSTRING("GppSamplerImpl::Reset - initializing isa task list");
 
 	iIsaSample = false;
 	
-	for(TInt i=0;i<256;i++)
+	for(TInt i(0);i<256;i++)
 		knownIsaTasks[i] = -1;
 	
 	knownIsaTaskCount = 0;
@@ -142,6 +156,7 @@ void DGppSamplerImpl::Reset()
             break;
         }
 #endif
+    LOGSTRING("GppSamplerImpl::Reset() - exit");
 	}
 
 TUint8* DGppSamplerImpl::EncodeTag(TUint8* aPtr)
@@ -178,7 +193,10 @@ TUint8* DGppSamplerImpl::EncodeInt(TUint8* aPtr,TInt aValue)
 	LOGSTRING2("Encoding int 0x%x",aPtr);
 
 	LOGSTRING2("TIint = 0x%x",aValue);
-
+#ifdef __SMP__
+	TInt intState(0);
+	intState = __SPIN_LOCK_IRQSAVE(CpuSpinLock);
+#endif
 	TUint byte;
 	for (;;)
 		{
@@ -189,7 +207,9 @@ TUint8* DGppSamplerImpl::EncodeInt(TUint8* aPtr,TInt aValue)
 		*aPtr++ = byte;
 		}
 	*aPtr++ = byte | 0x80;
-
+#ifdef __SMP__
+	__SPIN_UNLOCK_IRQRESTORE(CpuSpinLock, intState);
+#endif
 	LOGSTRING2("Encoded int 0x%x",aPtr);
 
 	return aPtr;
@@ -201,7 +221,10 @@ TUint8* DGppSamplerImpl::EncodeUint(TUint8* aPtr,TUint aValue)
 
 	LOGSTRING2("TUint = 0x%x",aValue);
 
-
+#ifdef __SMP__
+	TInt intState(0);
+	intState = __SPIN_LOCK_IRQSAVE(CpuSpinLock);
+#endif
 	TUint byte;
 	for (;;)
 		{
@@ -212,7 +235,9 @@ TUint8* DGppSamplerImpl::EncodeUint(TUint8* aPtr,TUint aValue)
 		*aPtr++ = byte;
 		}
 	*aPtr++ = byte | 0x80;
-
+#ifdef __SMP__
+	__SPIN_UNLOCK_IRQRESTORE(CpuSpinLock, intState);
+#endif
 	LOGSTRING2("Encoded Uint 0x%x",aPtr);
 
 	return aPtr;
@@ -226,14 +251,20 @@ TUint8* DGppSamplerImpl::EncodeText(TUint8* aPtr, const TDesC& aDes)
 //
 {
 	LOGSTRING2("Encoding text 0x%x",aPtr);
-	TInt len=aDes.Length();
+	TInt len(aDes.Length());
+#ifdef __SMP__
+	TInt intState(0);
+	intState = __SPIN_LOCK_IRQSAVE(CpuSpinLock);
+#endif
 	*aPtr++ = TUint8(len);
 	const TText* p = aDes.Ptr();
 	while (--len >= 0)
 		{
 		*aPtr++ = TUint8(*p++);
 		}
-
+#ifdef __SMP__
+	__SPIN_UNLOCK_IRQRESTORE(CpuSpinLock, intState);
+#endif
 	LOGSTRING2("Encoded text 0x%x",aPtr);
 	return aPtr;
 }
@@ -247,7 +278,8 @@ TUint8* DGppSamplerImpl::EncodeName(TUint8* aPtr, DObject& aObject,TUint32 id)
 	LOGSTRING2("Encoding name 0x%x",aPtr);
 	TBuf8<0x5f> name;
 	aObject.TraceAppendName(name,false);
-
+	LOGSTRING2("DGppSamplerImpl::EncodeName() - new process/thread found: %S", &name);
+	
 	if(id != 0xffffffff)
 	{
 		name.Append('[');
@@ -276,7 +308,7 @@ TUint8* DGppSamplerImpl::EncodeThread(TUint8* aPtr, DThread& aThread)
 {
 	LOGSTRING2("Encoding thread 0x%x",aPtr);	
 
-	DProcess& p = *aThread.iOwningProcess;
+	DProcess& p(*aThread.iOwningProcess);
 	
 	aPtr = EncodeUint(aPtr, p.iId);
 
@@ -296,6 +328,10 @@ TUint8* DGppSamplerImpl::EncodeThread(TUint8* aPtr, DThread& aThread)
         TAG(p) = (TAG(p) | iCpuSelector);
         // The thread is 'unknown' to this sample, so encode the thread name
         aPtr = EncodeName(aPtr, p, p.iId);     
+        }
+    else
+        {
+        
         }
 #else
 	if (TAG(p) != iStartTime)
@@ -333,10 +369,10 @@ TInt DGppSamplerImpl::CreateFirstSample()
 	LOGTEXT("GppSamplerImpl::CreateFirstSample");
 	Reset();
 
-	TUint8* w = this->tempBuf;
+	TUint8* w(this->tempBuf);
 	w = EncodeTag(w);
 
-	TInt length = w-tempBuf;
+	TInt length(w-tempBuf);
 
 	LOGSTRING2("TAG encoded, length %d",length);
 	return length;
@@ -344,7 +380,7 @@ TInt DGppSamplerImpl::CreateFirstSample()
 
 TBool DGppSamplerImpl::IsaTaskKnown(TUint8 task)
 {
-	for(TInt i=0;i<256;i++)
+	for(TInt i(0);i<256;i++)
 	{
 		if(knownIsaTasks[i] == -1)
 		{
@@ -386,7 +422,6 @@ TUint8* DGppSamplerImpl::EncodeIsaName(TUint8* aPtr, TUint task,TBool process)
 {
 	TBuf8<256> aDes;
 	
-//	#ifdef NCP_COMMON_PROFILER_ISA_TASKS 
 	if(iIsaStatus > 0)
 		{
 		// resolve the isa task name from the task name array
@@ -409,9 +444,9 @@ TUint8* DGppSamplerImpl::EncodeIsaName(TUint8* aPtr, TUint task,TBool process)
 	aDes.Append(']');
 
 	LOGSTRING2("Encoding ISA name 0x%x",aPtr);
-	TInt len=aDes.Length();
+	TInt len(aDes.Length());
 	*aPtr++ = TUint8(len);
-	const TText* p = aDes.Ptr();
+	const TText* p(aDes.Ptr());
 	while (--len >= 0)
 		{
 		*aPtr++ = TUint8(*p++);
@@ -430,143 +465,177 @@ TInt DGppSamplerImpl::SampleImpl()
 // DFC is triggered to complete a read request
 //
     {
-	TUint8* w(this->tempBuf);
-	
-//    Kern::Printf(("Got thread 0x%08x"), &t);
+    NThread* pN(NKern::CurrentThread());
+    TUint8* w(this->tempBuf);
+    //TInt currCpu(NKern::CurrentCpu());
+    TInt mySampleStartTime(NKern::TickCount()); // get the system tick value for sync purposes, in ms
+//    TInt tickdiff(mySampleStartTime-iPrevTS);
+    
+    if (Kern::NThreadToDThread(pN)==NULL)
+        {
+        LOGSTRING("Kern::NThreadToDThread is null");
+        }
+
+    else
+        {
+        // check timestamp & compare to previous
+        // if out of sync, encode unknown::unknown thread
+
+/*
+// In SMP environment there have been missing ticks. These prints are for helping debug this issue
+// but solution might not work.
+        if(tickdiff > 1)
+            {
+            Kern::Printf(("DGppSamplerImpl::SampleImpl() - Current time tick %d"), mySampleStartTime);
+            Kern::Printf(("DGppSamplerImpl::SampleImpl() - Previous time tick %d"), iPrevTS);
+//            Kern::Printf(("DGppSamplerImpl::SampleImpl() - Tick period %d"),NKern::TickPeriod());
+            Kern::Printf(("DGppSamplerImpl::SampleImpl() - Tick difference %d"),tickdiff);
+            Kern::Printf(("DGppSamplerImpl::SampleImpl() - Current cpu %d"),NKern::CurrentCpu());
+            }
+//        else
+//            {
+//            Kern::Printf(("DGppSamplerImpl::SampleImpl() - Tick differance <= 1: %d"),tickdiff);
+//            }
+*/
+
+        TLinAddr pC;
+            
 #ifdef __SMP__
-    // get the program counter of irq mode
-    TUint32 pc = (TUint32)Arm::IrqReturnAddress();
+        pC = Arm::IrqReturnAddress();
 #else
-    // get program counter of irq mode
-    TUint32 pc = iInterruptStack[-1];
+        // get program counter of irq mode
+        pC = iInterruptStack[-1]; // ignore the low bit being set for THUMB mode - we use for something else
 #endif
-    //LOGSTRING3("pc value 0x%x sp 0x%x",pc,iInterruptStack);
-
-	// ignore the low bit being set for THUMB mode - we use for something else
-	pc &= ~1;			
-	TInt diff = pc - iLastPc;
-	iLastPc = pc;
-
-	if(iIsaStatus > 0)
-		{
-		if((TUint32)pc > (TUint32)iIsaStart && (TUint32)pc < (TUint32)iIsaEnd)
-			{
-			LOGSTRING2("Identified ISA execution at 0x%x",pc);
-			iIsaSample = true;
-			}
-		else
-			{
-			LOGSTRING2("Normal sample at 0x%x",pc);
-			iIsaSample = false;
-			}
-		}
-
-	// request for current thread from kernel
-	DThread& t = ((DThread&)*Kern::NThreadToDThread(NKern::CurrentThread()));
-	
-	TUint tid;
-	TUint8 isaTask = 0;
-	if(iIsaSample)
-	{
-		LOGSTRING2("Reading ISA task number from 0x%x",isaOsTaskRunningAddr);
-
-		// if we don't get reasonable ISA address to read, skip ISA task handling
-		if(isaOsTaskRunningAddr == 0)
-			{
-			tid = 100000; // to tell the difference from SOS threads
-			iIsaSample = false;
-			}
-		else	// normal ISA task parsing process
-			{
-			isaTask = *isaOsTaskRunningAddr;
-			LOGSTRING2("ISA task = %d",isaTask);
-			tid = isaTask;
-			// this will make sure we don't mix ISA tasks and normal tasks
-			tid += 100000;
-			}
-
-	}
-	else
-	{
-		tid = t.iId;
-	}
-
-	if (tid != iLastThread)
-	{
-		// Change of thread is marked in the low bit of the PC difference
-		diff |= 1;
-	}
-	TUint rp = iRepeat;
-	if (diff == 0)
-	{
-		// Identical sample, bump up the repeat count
-		iRepeat = rp + 1;
-	}
-	else
-	{
-		if (rp)
-		{
-			// Encode the repeat data
-			w = EncodeRepeat(w);
-		}
-		// Encode the PC difference
-		w = EncodeInt(w, diff);
-		if (diff & 1)
-		{
-			// Encode the new thread ID
-			if(iIsaSample)
-			{
-				iLastThread = tid;
-				w = EncodeUint(w,tid);
-
-				if(!this->IsaTaskKnown(isaTask))
-				{
-					w = EncodeIsaTask(w,iLastThread);
-				}
-				//LOGSTRING2("Sample total length: %d",w-tempBuf);
-				TInt length = w-tempBuf;
-				// encoded isa task, return here
-				return length;
-			}
-		
-			iLastThread = tid;
-			w = EncodeUint(w, tid);
-
-#ifdef __SMP__
-			// iStartTime format: 0xXXXXXXX0, the last byte set to zero
-			// iMask =  0xfffffff0(0b111....1110000)
-			// iCpuSelector = 0x1(0b0001), 0x2(0b0010), 0x4(0b0100) or 0x8(0b1000) 
-			
-			// check first time founding
-			if ((TAG(t) & iMask) != iStartTime)
-			    {
-			    // mark tagged for this CPU
-				TAG(t) = (iStartTime | iCpuSelector);
-				
-				// The thread is 'unknown' to this sample, so encode the thread name
-				w = EncodeThread(w, t);		
-			    }
-			// check if thread appeared on this CPU
-			else if((TAG(t) & iCpuSelector) != iCpuSelector)
-			    {
-                TAG(t) = (TAG(t) | iCpuSelector);
-                // The thread is 'unknown' to this sample, so encode the thread name
-                w = EncodeThread(w, t);     
-			    }
-#else
-			// check if tag has not been set, neither original nor 
-            if ((TAG(t) & 0xfffffffc) != iStartTime)
+        //Kern::Printf(("pc value 0x%x sp 0x%x"),pc,iInterruptStack);
+        pC &= ~1;
+        TInt diff(pC - iLastPc);
+        iLastPc = pC;
+           
+        if(iIsaStatus > 0)
+            {
+            if((TUint32)pC > (TUint32)iIsaStart && (TUint32)pC < (TUint32)iIsaEnd)
                 {
-                TAG(t) = ((TAG(t) & 0x3) | iStartTime);
-                // The thread is 'unknown' to this sample, so encode the thread name
-                w = EncodeThread(w, t);     
+                iIsaSample = true;
                 }
+            else
+                {
+                iIsaSample = false;
+                }
+            }
+        
+//        if((TUint32)pC < 0x80000000 || (TUint32)pC > 0x8FFFFFFF)
+//            {
+//            //Kern::Printf("DGppSamplerImpl::SampleImpl() - wrong PC value, 0x%x", (TUint32)pC);
+//            iIsaSample = true;
+//            }
+        
+        // request for current thread from kernel
+        DThread& t(((DThread&)*Kern::NThreadToDThread(pN)));
+    
+        TUint tid;
+        TUint8 isaTask(0);
+        if(iIsaSample)
+            {
+            //Kern::Printf(("Reading ISA task number from 0x%x"),isaOsTaskRunningAddr);
+            // if we don't get reasonable ISA address to read, skip ISA task handling
+            if(isaOsTaskRunningAddr == 0)
+                {
+                tid = 100000; // to tell the difference from SOS threads
+                iIsaSample = false;
+                }
+            else    // normal ISA task parsing process
+                {
+                isaTask = *isaOsTaskRunningAddr;
+                LOGSTRING2("ISA task = %d",isaTask);
+                tid = isaTask;
+                // this will make sure we don't mix ISA tasks and normal tasks
+                tid += 100000;
+                }
+            }
+        else
+            {
+            tid = t.iId;
+            }
+    
+        if (tid != iLastThread)
+            {
+            diff |= 1;    // Change of thread is marked in the low bit of the PC difference
+            }
+        TUint rp(iRepeat);
+        if (diff == 0)
+            {
+            iRepeat = rp + 1; // Identical sample, bump up the repeat count
+            }
+        else
+            {
+            if (rp)
+                {
+                w = EncodeRepeat(w); // Encode the repeat data
+                }
+            w = EncodeInt(w, diff);   // Encode the PC difference
+            //if (diff & 0x1 == 1)
+            if (diff & 1)
+                {
+//                LOGSTRING3("Encode pc diff curr cpu %d diff %d", currCpu, diff);
+                if(iIsaSample)   // Encode the new thread ID
+                    {
+                    iLastThread = tid;
+//                    LOGSTRING2("Encode thread id UINT curr cpu %d", currCpu);
+                    w = EncodeUint(w,tid);
+                    if(!this->IsaTaskKnown(isaTask))
+                        {
+                        //Kern::Printf("Encode isa task");
+                        w = EncodeIsaTask(w,iLastThread);
+                        }
+                    //LOGSTRING2("Sample total length: %d",w-tempBuf);
+                    TInt length = w-tempBuf;
+                    return length;  // encoded isa task, return here
+                    }
+                iLastThread = tid;
+//                LOGSTRING2("Encode lastthread id UinT curr cpu %d", currCpu);
+                w = EncodeUint(w, tid);
+    
+#ifdef __SMP__
+                // iStartTime format: 0xXXXXXXX0, the last byte set to zero
+                // iMask =  0xfffffff0(0b111....1110000), last bits reserved for the CPUs bit0=CPU0 etc.
+                // iCpuSelector = 0x1(0b0001), 0x2(0b0010), 0x4(0b0100) or 0x8(0b1000), to use against the mask
+                //#define  TAG(obj)    (*(TUint32*)&(obj.iAsyncDeleteNext))
+                // check first time founding
+                LOGSTRING4("TAG(t) 0x%x, iMask 0x%x, AND 0x%x ",TAG(t),iMask, (TAG(t)& iMask));
+                if ((TAG(t) & iMask) != iStartTime)
+                    {
+                    // mark tagged for this CPU
+                    TAG(t) = (iStartTime | iCpuSelector);
+                    
+                    // The thread is 'unknown' to this sample, so encode the thread name
+//                    LOGSTRING2("Encode SMP thread start time curr cpu %d", currCpu);
+                    w = EncodeThread(w, t);
+                    }
+                // check if thread appeared on this CPU
+                else if((TAG(t) & iCpuSelector) != iCpuSelector)
+                    {
+                    TAG(t) = (TAG(t) | iCpuSelector);
+                    // The thread is 'unknown' to this sample, so encode the thread name
+//                    LOGSTRING2("Encode SMP thread cpu selector curr cpu %d", currCpu);
+                    w = EncodeThread(w, t);
+                    }
+#else
+                // check if tag has not been set, neither original nor 
+                if ((TAG(t) & 0xfffffffc) != iStartTime)
+                    {
+                    TAG(t) = ((TAG(t) & 0x3) | iStartTime);
+                    // The thread is 'unknown' to this sample, so encode the thread name
+                    w = EncodeThread(w, t);
+                    }
+        
 #endif
-		    }
-	    }
-	LOGSTRING2("Sample total length: %d",w-tempBuf);
-	TInt length = w-tempBuf;
+                }
+            }
+        }
 
-	return length;
-}
+    TInt length(w-tempBuf);
+    LOGSTRING2("Sample total length: %d",length);
+    iPrevTS = mySampleStartTime;  // get the system tick value for sync purposes 
+    return length;
+    }
 

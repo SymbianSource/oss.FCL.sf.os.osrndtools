@@ -99,16 +99,21 @@ TInt DPriSamplerImpl::SampleImpl()
 	    
         LOGTEXT("Processing threads...");
 
-        DObjectCon& threads = *Kern::Containers()[EThread];
+        DObjectCon* threads = Kern::Containers()[EThread];
+        NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
+        threads->Wait();
 
         // PRI trace variables
         this->iThreadCount = 0; 
         this->iNewThreadCount = 0;
-        TInt totalThreadCount = threads.Count();
+        TInt totalThreadCount = threads->Count();
 
         for(TInt i=0;i<totalThreadCount;i++)
             {
-            DThread* t = (DThread*)(threads)[i];
+            //DThread* t = (DThread*)(threads)[i];
+            DObject* pO=(*threads)[i];
+            DThread* t = (DThread*)pO;
+            
             LOGSTRING3("Processing thread %d, tag: 0x%x",i,TAG(t));
 
             if( (TAG(t) & PROFILER_THREAD_MARK) == 0)
@@ -132,6 +137,9 @@ TInt DPriSamplerImpl::SampleImpl()
             LOGSTRING2("Added thread %d to threads to sample",i);
             }
 
+        threads->Signal();
+        NKern::ThreadLeaveCS();  // End of critical section
+
         if(this->iThreadCount > 0 || this->iNewThreadCount > 0)
             {
             this->iProcessing = EStartingToProcess;
@@ -143,7 +151,6 @@ TInt DPriSamplerImpl::SampleImpl()
                 {
                 this->iProcessing = ENothingToProcess;
                 }
-        
             return length;
             }
         else
@@ -301,12 +308,17 @@ void DPriSamplerImpl::Reset()
 
 
 	// clear all thread tags
+	NKern::ThreadEnterCS(); // Prevent us from dying or suspending whilst holding a DMutex
 	DObjectCon* threads = Kern::Containers()[EThread];
+	threads->Wait(); // Obtain the container mutex so the list does get changed under us
+
 	TInt totalThreadCount = threads->Count();
 	for(TInt i=0;i<totalThreadCount;i++)
 	    {
 		DThread* t = (DThread*)(*threads)[i];
 		TAG(t) = (TAG(t) & 0xfffffffd);
 	    }
-    }
+	threads->Signal();
+	NKern::ThreadLeaveCS();  // End of critical section
+	}
 

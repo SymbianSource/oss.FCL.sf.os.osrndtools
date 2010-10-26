@@ -15,7 +15,7 @@
 *
 */
 
-
+PRJ_TESTEXPORTS
 
 #include "../mmp_traces/group/bld.inf"
 #include "../mmp_traces_mmpname/group/bld.inf"

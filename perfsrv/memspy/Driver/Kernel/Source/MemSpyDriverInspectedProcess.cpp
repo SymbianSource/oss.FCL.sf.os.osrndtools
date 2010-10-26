@@ -102,8 +102,9 @@ TInt DMemSpyInspectedProcess::Open( DProcess* aProcess )
             // the user-side thread stacks.
             iInfoCurrent.iMemoryStack = StackSize( *aProcess );
         
-            // Request events
-            EventMonitor().RequestEvents( *this );
+            // Request events 
+            // Ignore error since it can only be KErrAlreadyExists or KErrNone
+            (void) EventMonitor().RequestEvents( *this );
         
             // Find initial chunks that are mapped into process
             FindChunks( *aProcess );
@@ -111,8 +112,8 @@ TInt DMemSpyInspectedProcess::Open( DProcess* aProcess )
             // Indicate that we have data waiting for client. This will
             // cause the client's RS to be completed as soon as it 
             // registers with us...
-            UpdateStatistics();
-            CompleteClientsRequest( KErrNone, &iInfoCurrent );
+            (void) UpdateStatistics();// Ignore return since we don't care if it's different or not            
+            CompleteClientsRequest( KErrNone, &iInfoCurrent );  
             }
         }
     //

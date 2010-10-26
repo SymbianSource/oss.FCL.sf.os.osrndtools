@@ -62,6 +62,8 @@
 			<!-- Files to analyze -->
 			<fileset dir="../src/">
 				<include name="**/*.java"/>
+				<exclude name="**/*Test.java"/>
+				<exclude name="**/Mock*.java"/>
 			</fileset>
 		</pmd>
 	</target>

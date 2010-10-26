@@ -30,7 +30,7 @@ class DMemoryEventHandler : public DKernelEventHandler
     {
 public:
     // constructor
-    DMemoryEventHandler(DProfilerSampleBuffer*  aSampleBuffer);
+    DMemoryEventHandler(DProfilerSampleBuffer*  aSampleBuffer, TProfilerGppSamplerData* aGppSamplerDataIn);
     TInt Create();
     ~DMemoryEventHandler();
     TInt Start();
@@ -38,6 +38,7 @@ public:
     TBool Tracking() {return iTracking;}
        
     TBool SampleNeeded();
+    void SampleHandled();
     
 private:
     static TUint EventHandler(TKernelEvent aEvent, TAny* a1, TAny* a2, TAny* aThis);
@@ -80,12 +81,14 @@ private:
     DProfilerSampleBuffer*  iSampleBuffer;
     TInt iCounters[EEventLimit];
     
-    TUint32     iCount;
+    //TUint32     iCount;
     
     TUint8      iSample[KEventBufferSize];
     TPtr8       iSampleDescriptor;
     
     TUint32     iPreviousCount;
+    TBool       iSampleAvailable;
+    TProfilerGppSamplerData*     gppSamplerData;
     };
 
 #endif

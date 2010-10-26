@@ -280,6 +280,5 @@ void CMemSpyEngineHelperSysMemTrackerCycleChangeGlobalData::OutputContentL( CMem
 
 void CMemSpyEngineHelperSysMemTrackerCycleChangeGlobalData::OutputDataL( CMemSpyEngineOutputSink& aSink, CMemSpyEngineHelperSysMemTrackerCycle& /*aCycle*/ )
     {
-    CMemSpyEngine& engine = aSink.Engine();
     }
 

@@ -35,8 +35,7 @@ DIttEventHandler::DIttEventHandler(DProfilerSampleBuffer* aSampleBuffer, TProfil
         iSampleDescriptor(&(this->iSample[1]),0,KITTBufferSize),
         gppSamplerData(aGppSamplerDataIn)
     {
-    //Kern::Printf("DIttEventHandler::DIttEventHandler()");
-
+    iSampleAvailable = false;
     }
 
 /*
@@ -44,8 +43,6 @@ DIttEventHandler::DIttEventHandler(DProfilerSampleBuffer* aSampleBuffer, TProfil
  */
 TInt DIttEventHandler::Create()
     {
-    Kern::Printf("DIttEventHandler::Create()");
-
     TInt err(Kern::MutexCreate(iLock, _L("IttEventHandlerLock"), KMutexOrdDebug));
     if (err != KErrNone)
         return err;
@@ -58,7 +55,7 @@ TInt DIttEventHandler::Create()
  */
 DIttEventHandler::~DIttEventHandler()
     {
-    //Kern::Printf("DIttEventHandler::~DIttEventHandler()");
+    LOGSTRING("DIttEventHandler::~DIttEventHandler()");
 
     if (iLock)
         iLock->Close(NULL);
@@ -67,7 +64,7 @@ DIttEventHandler::~DIttEventHandler()
 
 TInt DIttEventHandler::Start()
     {
-    //Kern::Printf("DIttEventHandler::Start()");
+    LOGSTRING("DIttEventHandler::Start()");
 
     iTracking = ETrue;
     return KErrNone;
@@ -76,30 +73,41 @@ TInt DIttEventHandler::Start()
 
 TInt DIttEventHandler::Stop()
     {
-    //Kern::Printf("DIttEventHandler::Stop()");
+    LOGSTRING("DIttEventHandler::Stop()");
 
     iTracking = EFalse;
+    LOGSTRING2("ITT - gpp sample counter %d", this->gppSamplerData->sampleNumber);
     return KErrNone;
     }
 
 TBool DIttEventHandler::SampleNeeded()
     {
-    LOGTEXT("DIttEventHandler::SampleNeeded()");
-    
-    // increase the counter by one on each round
-    iCount++;
+    //LOGSTRING("DIttEventHandler::SampleNeeded()");
     
     // check if event handler was not running
     if(!iTracking)
-       return false;
-    
-    return true;
+        {
+        return false;
+        }
+    // check if a new sample is available
+    if(iSampleAvailable)
+        {
+        return true;
+        }
+    else
+        {
+        return false;
+        }
     }
 
+void DIttEventHandler::SampleHandled()
+    {
+    iSampleAvailable = false;
+    }
 
 TUint DIttEventHandler::EventHandler(TKernelEvent aType, TAny* a1, TAny* a2, TAny* aThis)
     {
-    //Kern::Printf("DIttEventHandler::EventHandler()");
+    //LOGSTRING("DIttEventHandler::EventHandler()");
     return ((DIttEventHandler*)aThis)->HandleEvent(aType, a1, a2);
     }
 
@@ -107,21 +115,18 @@ TUint DIttEventHandler::EventHandler(TKernelEvent aType, TAny* a1, TAny* a2, TAn
 
 TUint DIttEventHandler::HandleEvent(TKernelEvent aType, TAny* a1, TAny* a2)
     {
-    //Kern::Printf("DIttEventHandler::HandleEvent()");
-    //Kern::Printf("New kernel event received, %d", aType);
     
-    if (iTracking/* && iCount != iPreviousCount*/)
+    if (iTracking)
         {
         switch (aType)
             {
-            
             case EEventAddCodeSeg:
-                //Kern::Printf("DCodeSeg added: 0x%08x", (DCodeSeg*)a1);
+                LOGSTRING("DIttEventHandler::HandleEvent() EEventAddCodeSeg received");
                 HandleAddCodeSeg((DCodeSeg*)a1);
                 break;
                 
             case EEventRemoveCodeSeg:
-                //Kern::Printf("DCodeSeg deleted: 0x%08x", (DCodeSeg*)a1);
+                LOGSTRING("DIttEventHandler::HandleEvent() EEventRemoveCodeSeg received");
                 HandleRemoveCodeSeg((DCodeSeg*)a1);
                 break;
    
@@ -129,11 +134,6 @@ TUint DIttEventHandler::HandleEvent(TKernelEvent aType, TAny* a1, TAny* a2)
                 break;
             }
         }
-//    else if(iTracking && iCount == iPreviousCount)
-//        {
-//        // if time stamp is not updated profiling has stopped
-//        Stop();
-//        }
     return DKernelEventHandler::ERunNext;
     }
 
@@ -142,33 +142,48 @@ TUint DIttEventHandler::HandleEvent(TKernelEvent aType, TAny* a1, TAny* a2)
  */
 TBool DIttEventHandler::HandleAddCodeSeg(DCodeSeg* aSeg)
     {    
+    LOGSTRING("DIttEventHandler::HandleAddCodeSeg()");
     iSampleDescriptor.Zero();
     //Kern::Printf("DLL ADD: NM %S : RA:0x%x SZ:0x%x SN:0x%x",aSeg->iFileName,aSeg->iRunAddress,aSeg->iSize, this->gppSamplerData->sampleNumber);
 
+    NKern::ThreadEnterCS();
+    Kern::MutexWait(*iLock);
     iSample[0] = aSeg->iFileName->Length();
     iSampleDescriptor.Append(*aSeg->iFileName);
     iSampleDescriptor.Append((TUint8*)&(aSeg->iRunAddress),4);
     iSampleDescriptor.Append((TUint8*)&(aSeg->iSize),4);
     iSampleDescriptor.Append((TUint8*)&(this->gppSamplerData->sampleNumber),4);
     iSample[0] = iSampleDescriptor.Size();
-    
+   
     iSampleBuffer->AddSample(iSample,iSampleDescriptor.Size()+1);
+    Kern::MutexSignal(*iLock);
+    NKern::ThreadLeaveCS();
+    
+    iSampleAvailable = true;
     return ETrue;
     }
 
 TBool DIttEventHandler::HandleRemoveCodeSeg(DCodeSeg* aSeg)
     {
+    LOGSTRING("DIttEventHandler::HandleRemoveCodeSeg()");
     iSampleDescriptor.Zero();
     //Kern::Printf("DLL REM: NM %S : RA:0x%x SZ:0x%x SN:0x%x",aSeg->iFileName,aSeg->iRunAddress,aSeg->iSize, this->gppSamplerData->sampleNumber);
 
+    NKern::ThreadEnterCS();
+    Kern::MutexWait(*iLock);
+    
     iSample[0] = aSeg->iFileName->Length();
     iSampleDescriptor.Append(*aSeg->iFileName);
     iSampleDescriptor.Append((TUint8*)&(aSeg->iRunAddress),4);
     iSampleDescriptor.Append((TUint8*)&(aSeg->iSize),4);
     iSampleDescriptor.Append((TUint8*)&(this->gppSamplerData->sampleNumber),4);
     iSample[0] = iSampleDescriptor.Size();
-    
+
     iSampleBuffer->AddSample(iSample,iSampleDescriptor.Size()+1);
+    Kern::MutexSignal(*iLock);
+    NKern::ThreadLeaveCS();
+
+    iSampleAvailable = true;
     return ETrue;
     }
 // end of file

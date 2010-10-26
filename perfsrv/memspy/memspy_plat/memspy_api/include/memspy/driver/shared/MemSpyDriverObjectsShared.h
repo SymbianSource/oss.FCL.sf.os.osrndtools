@@ -351,6 +351,7 @@ public: // Enumerations
         ETypeUnknown = 0,
         ETypeRHeap = 1,
 		ETypeRHybridHeap = 2,
+        ETypeRHybridHeapV2 = 3,
         };
 
 public: // Constructor & destructor

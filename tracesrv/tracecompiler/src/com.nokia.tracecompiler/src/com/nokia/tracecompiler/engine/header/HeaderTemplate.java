@@ -184,7 +184,15 @@ interface HeaderTemplate {
 			HeaderTemplateElementType.PARAMETER_NAME, ";", //$NON-NLS-1$
 			HeaderTemplateElementType.NEW_LINE, "ptr += sizeof ( ", //$NON-NLS-1$
 			HeaderTemplateElementType.PARAMETER_TYPE, " );", //$NON-NLS-1$
+			HeaderTemplateElementType.NEW_LINE};
+	
+	/**
+	 * 
+	 */
+	Object[] INCREMENT_LENGTH = { "length += sizeof ( ", //$NON-NLS-1$
+			HeaderTemplateElementType.PARAMETER_TYPE, " );", //$NON-NLS-1$
 			HeaderTemplateElementType.NEW_LINE };
+	
 
 	/**
 	 * Template for parameter with fixed size and length check

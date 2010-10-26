@@ -31,6 +31,7 @@ EXPORT_C void HelloTraceExample::JustTypes()
     {
     OstTrace0( TRACE_EXAMPLE, HELLOTRACEEXAMPLE_JUSTTYPES, "*********************************************** " );
     
+    HelloTraceTypes::TestBoolean();
     HelloTraceTypes::SignedIntegers();
     HelloTraceTypes::UnsignedIntegers();
     HelloTraceTypes::Descriptors();    

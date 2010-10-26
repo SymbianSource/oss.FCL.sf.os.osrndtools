@@ -56,6 +56,8 @@
 #include <memspy/engine/memspyserverdata.h>
 #include <memspysession.h>
 #include <memspy/engine/memspyecomdata.h>
+#include <memspy/engine/memspychunkdata.h>
+#include <memspy/engine/memspycodesegmentdata.h>
 
 inline CShutdown::CShutdown() :CTimer(-1)
     {
@@ -88,12 +90,20 @@ CMemSpyEngineServer::CMemSpyEngineServer( CMemSpyEngine& aEngine )
 
 CMemSpyEngineServer::~CMemSpyEngineServer()
     {
+    if (iNotificationTracker) 
+        {
+        delete iNotificationTracker;
+        }
     }
 
 
 void CMemSpyEngineServer::ConstructL()
     {
     StartL( KMemSpyServerName );
+    
+    // create and setup notification tracker
+    iNotificationTracker = CMemSpyNotificationTracker::NewL();
+    iEngine.SetObserver( iNotificationTracker );
         
     iShutdown.ConstructL();
     // ensure that the server still exits even if the 1st client fails to connect
@@ -387,6 +397,18 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 					process.KillL();
 					break;
 					}
+				case EExit:
+				    {
+				    if (!iEngine.IsHelperWindowServerSupported())
+				    	{
+						User::Leave(KErrNotSupported);
+				    	}
+				    
+				    MMemSpyEngineHelperWindowServer& windowServerManager = iEngine.HelperWindowServer();
+				    windowServerManager.EndTaskL( process.Name() );
+				            
+				    break;
+				    }
 				}																
 			break;
 			}
@@ -965,7 +987,6 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
 			CleanupStack::PopAndDestroy(list);
 			break;
         	}
-          
         case EMemSpyClientServerOpServerListOutputGeneric:
         	{
             TPckgBuf<TBool> a0;
@@ -1003,7 +1024,95 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
             CleanupStack::PopAndDestroy(list);        	
         	break;
         	}        	
+        case EMemSpyClientServerOpGetChunksCount:
+            {
+            CMemSpyEngineChunkList* list = iEngine.HelperChunk().ListL();
+            CleanupStack::PushL( list );
+            aMessage.WriteL(0, TPckgBuf<TInt>(list->MdcaCount()));            
+            CleanupStack::PopAndDestroy( list );
+            
+            break;
+            }
+        case EMemSpyClientServerOpGetSortedChunks:
+            {
+            CMemSpyEngineChunkList* list = iEngine.HelperChunk().ListL();
+            CleanupStack::PushL( list );
+                
+            TPckgBuf<TSortType> a2;
+            aMessage.ReadL( 2, a2 );
+                
+            //sort the list of chunks
+            if( a2() == ESortChunkByName )
+                list->SortByNameL();
+            else
+                list->SortBySizeL();
+                
+            TPckgBuf<TInt> a0;          
+            aMessage.ReadL(0, a0);                              
+                
+            TInt realCount = Min(a0(), list->MdcaCount());
+            
+            for(TInt i=0, offset = 0; i<realCount; i++, offset += sizeof(TMemSpyChunkData))
+                {
+                const CMemSpyEngineChunkEntry& chunk = list->At(i);
+                TMemSpyChunkData data;
+                            
+                data.iName.Copy( chunk.Name() );
+                data.iHandle = (TUint8*)chunk.Handle();
+                data.iSize = chunk.Size();
+                data.iMaxSize = chunk.MaxSize();
+                data.iBaseAddress = (TUint8*)chunk.BaseAddress();
+                data.iOwnerId = chunk.OwnerId();
+                TFullName ownerName;
+                chunk.OwnerName( ownerName );
+                data.iOwnerName = ownerName;
+                data.iType = chunk.Type();
+                data.iAttributes = chunk.Attributes();
+                            
+                TPckgBuf<TMemSpyChunkData> buffer(data);
+                aMessage.WriteL(1, buffer, offset);
+                }                      
+                                                            
+            CleanupStack::PopAndDestroy( list );
+            
+            break;
+            }
+        case EMemSpyClientServerOpChunkListOutput:
+        	{
+        	//Get Chunk list
+        	CMemSpyEngineChunkList* list = iEngine.HelperChunk().ListL();
+        	CleanupStack::PushL( list );        	            
         	
+            // Begin a new data stream
+            _LIT( KMemSpyContext, "Chunk List" );
+            _LIT( KMemSpyFolder, "Chunks" );
+            iEngine.Sink().DataStreamBeginL( KMemSpyContext, KMemSpyFolder );
+
+            // Set prefix for overall listing
+            _LIT( KOverallPrefix, "Chunk List - " );
+            iEngine.Sink().OutputPrefixSetLC( KOverallPrefix );
+
+            // Create header
+            CMemSpyEngineChunkList::OutputDataColumnsL( iEngine );
+            
+            // List items
+            const TInt count = list->Count();
+            for(TInt i=0; i<count; i++)
+                {
+                const CMemSpyEngineChunkEntry& entry = list->At( i );
+                //
+                entry.OutputDataL( iEngine.HelperChunk() );
+                }
+
+            // Tidy up
+            CleanupStack::PopAndDestroy(); // prefix
+
+            // End data stream
+            iEngine.Sink().DataStreamEndL();
+            CleanupStack::PopAndDestroy( list );
+            
+        	break;
+        	}        	
 		case EMemSpyClientServerOpGetMemoryTrackingCycleCount:
 			{
 			TInt count = iEngine.HelperSysMemTracker().CompletedCycles().Count();
@@ -1297,6 +1406,146 @@ void CMemSpyEngineSession::DoUiServiceL( const RMessage2& aMessage )
         
 	    break;
 	    }
+	case EMemSpyClientServerOpSwitchToWindowGroup:
+		{
+		TPckgBuf<TInt> id;		
+		aMessage.ReadL(0, id);
+		
+		MMemSpyEngineHelperWindowServer& windowServerManager = iEngine.HelperWindowServer();		
+		windowServerManager.SwitchToL( id() );
+		
+		break;
+		}
+	case EMemSpyClientServerOpIsAknIconCacheConfigurable:
+		{			
+		TBool ret = iEngine.HelperRAM().IsAknIconCacheConfigurable();
+		
+		TPckgBuf<TBool> retBuf( ret );
+		aMessage.WriteL( 0, retBuf );		
+		break;
+		}
+	case EMemSpyClientServerOpSetAknIconCacheStatus:
+		{
+		TPckgBuf<TBool> enabled;
+		aMessage.ReadL(0, enabled);
+				
+		TInt64 savedAmount = iEngine.HelperRAM().SetAknIconCacheStatusL( enabled() );
+		
+		TPckgBuf<TInt64> ret(savedAmount);
+		aMessage.WriteL(1, ret);
+		break;		
+		}
+		
+	// Code Segments
+	case EMemSpyClientServerOpGetCodeSegmentsCount:
+		{
+	    TInt result = 0;
+	    
+	    CMemSpyEngineCodeSegList* list = iEngine.HelperCodeSegment().CodeSegmentListL();
+	    CleanupStack::PushL( list );	    
+	    result = list->MdcaCount();	    	    	    
+	    aMessage.WriteL(0, TPckgBuf<TInt>(result));
+	    CleanupStack::Pop( list );
+		break;
+		}		
+	case EMemSpyClientServerOpGetSortedCodeSegments:
+		{
+        CMemSpyEngineCodeSegList* list = iEngine.HelperCodeSegment().CodeSegmentListL();
+        CleanupStack::PushL( list );
+             
+        TPckgBuf<TSortType> a2;
+        aMessage.ReadL( 2, a2 );
+             
+        //sort the list of Code Segments
+        if( a2() == ESortCodeSegByName )
+        	list->SortByFileNameL();
+        else if ( a2() == ESortCodeSegBySize )
+        	list->SortByCodeSizeL();
+        else if ( a2() == ESortCodeSegByTotalDataSize )
+        	list->SortByDataSizeL();
+        else 
+        	list->SortByUidsL();
+             
+         TPckgBuf<TInt> a0;          
+         aMessage.ReadL(0, a0);                              
+             
+         TInt realCount = Min(a0(), list->MdcaCount());
+         
+         for(TInt i=0, offset = 0; i<realCount; i++, offset += sizeof(TMemSpyCodeSegmentData))
+             {
+             const CMemSpyEngineCodeSegEntry& codeSegment = list->At(i);
+             TMemSpyCodeSegmentData data;
+             TCodeSegCreateInfo createInfo = codeSegment.CreateInfo();
+                         
+             data.iName.Copy( codeSegment.FileName() );
+             data.iCodeSize = createInfo.iCodeSize;
+             data.iTotalDataSize = createInfo.iTotalDataSize;
+             data.iTextSize = createInfo.iTextSize;
+             data.iDataSize = createInfo.iDataSize;
+             data.iBssSize = createInfo.iBssSize;
+             data.iUids = createInfo.iUids;
+             data.iModuleVersion = createInfo.iModuleVersion;
+             data.iSecureId = createInfo.iS.iSecureId;
+             data.iVendorId = createInfo.iS.iVendorId;
+             data.iEntryPtVeneer = createInfo.iEntryPtVeneer;
+             data.iFileEntryPoint = createInfo.iFileEntryPoint;
+             data.iDepCount = createInfo.iDepCount;
+             data.iCodeLoadAddress = createInfo.iCodeLoadAddress;
+             data.iDataLoadAddress = createInfo.iDataLoadAddress;                 
+             data.iCapabilities1 = static_cast<TUint32>(createInfo.iS.iCaps[0]);
+             data.iCapabilities2 = static_cast<TUint32>(createInfo.iS.iCaps[1]);
+                         
+             TPckgBuf<TMemSpyCodeSegmentData> buffer(data);
+             aMessage.WriteL(1, buffer, offset);
+             }                                                                               
+        CleanupStack::PopAndDestroy( list );				
+		
+		break;
+		}
+	case EMemSpyClientServerOpCodeSegmentsOutput:
+		{
+		CMemSpyEngineCodeSegList* list = iEngine.HelperCodeSegment().CodeSegmentListL();
+		CleanupStack::PushL( list );
+	    // Begin a new data stream
+	    _LIT( KMemSpyContext, "CodeSeg List - " );
+	    _LIT( KMemSpyFolder, "CodeSegs" );
+	    iEngine.Sink().DataStreamBeginL( KMemSpyContext, KMemSpyFolder );
+
+	    // Set prefix for overall listing
+	    _LIT(KOverallPrefix, "CodeSeg List - ");
+	    iEngine.Sink().OutputPrefixSetLC( KOverallPrefix );
+
+	    // Create header
+	    CMemSpyEngineCodeSegList::OutputDataColumnsL( iEngine );
+	    
+	    // List items
+	    const TInt count = list->Count();
+	    for(TInt i=0; i<count; i++)
+	        {
+	        const CMemSpyEngineCodeSegEntry& entry = list->At( i );
+	        //
+	        entry.OutputDataL( iEngine.HelperCodeSegment() );
+	        }
+	    
+	    // Tidy up
+	    CleanupStack::PopAndDestroy(); // prefix
+
+	    // End data stream
+	    iEngine.Sink().DataStreamEndL();
+	    
+	    // Tidy up Code segment list
+	    CleanupStack::PopAndDestroy( list );
+	    
+	    break;
+		}
+		
+	case EMemSpyClientServerOpNotifyEvent:
+	    Server().NotificationTracker()->AddNotificationL( aMessage );
+	    break;
+	     
+	case EMemSpyClientServerOpCancelEventNotification:
+	    Server().NotificationTracker()->CancelNotification( aMessage );
+	    break;
 	    
 	    
 		}
@@ -1858,3 +2107,71 @@ void CMemSpyDwOperationTracker::HandleDeviceWideOperationEvent(TEvent aEvent, TI
 		}
 	
 	}
+
+
+
+
+
+
+
+
+
+CMemSpyNotificationTracker* CMemSpyNotificationTracker::NewL()
+    {
+    CMemSpyNotificationTracker* self = new (ELeave) CMemSpyNotificationTracker();
+    CleanupStack::PushL( self );
+    self->ConstructL();
+    CleanupStack::Pop( self );
+    return self;
+    }
+    
+CMemSpyNotificationTracker::~CMemSpyNotificationTracker()
+    {
+    delete iPendingNotifications;
+    }
+
+void CMemSpyNotificationTracker::ConstructL()
+    {
+    iPendingNotifications = new (ELeave) CArrayFixFlat<RMessage2>(3);
+    }
+
+void CMemSpyNotificationTracker::AddNotificationL( const RMessage2& aMessage )
+    {
+    iPendingNotifications->AppendL(aMessage);
+    }
+
+void CMemSpyNotificationTracker::CancelNotification( const RMessage2& aMessage )
+    {
+    for (TInt i = iPendingNotifications->Count()-1; i >= 0; --i)
+        {
+        if (iPendingNotifications->At( i ).Session() == aMessage.Session())
+            {
+                iPendingNotifications->At( i ).Complete( KErrCancel );
+                iPendingNotifications->Delete( i );
+            }
+        }
+    }
+
+void CMemSpyNotificationTracker::HandleMemSpyEngineEventL( TEvent aEvent, TAny* aContext )
+    {
+    switch( aEvent )
+        {
+    
+    case MMemSpyEngineObserver::EHandleThreadsOrProcessesChanged:
+        {
+        for (TInt i=0; i<iPendingNotifications->Count(); i++)
+            {
+            TRAPD(err, iPendingNotifications->At(i).WriteL(0, TPckgBuf<TInt>( aEvent )));
+            if (err != KErrNone)
+                {
+                // TODO: iPendingProgressNotifications->At(i).Panic()
+                }
+            iPendingNotifications->At(i).Complete( KErrNone );
+            }
+        iPendingNotifications->Reset();
+        break;
+        }
+        
+        }
+    
+    }

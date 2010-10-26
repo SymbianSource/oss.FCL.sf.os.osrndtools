@@ -24,10 +24,12 @@
 // User includes
 #include <memspyengineclientinterface.h>
 #include <memspy/engine/memspydevicewideoperations.h>
+#include <memspy/engine/memspyengineobserver.h>
 
 // Classes referenced
 class CMemSpyEngine;
 class CMemSpyDwOperationTracker;
+class CMemSpyNotificationTracker;
 
 NONSHARABLE_CLASS( CShutdown ) : public CTimer
     {
@@ -49,6 +51,8 @@ public:
     CMemSpyDwOperationTracker* CurrentOperationTracker() const { return iCurrentOperationTracker; }
     void SetCurrentOperationTracker(CMemSpyDwOperationTracker* aTracker) { iCurrentOperationTracker = aTracker; }
     
+    CMemSpyNotificationTracker* NotificationTracker() const { return iNotificationTracker; }
+    
     CMemSpyEngine& Engine() { return iEngine; } 
     
     void AddSession(TBool aCliRequest);
@@ -64,6 +68,7 @@ protected: // From CServer2
 private:
     CMemSpyEngine& iEngine;
     CMemSpyDwOperationTracker* iCurrentOperationTracker;
+    CMemSpyNotificationTracker* iNotificationTracker;
     
     TInt iSessionCount;
     TBool iCliConnected;
@@ -138,6 +143,32 @@ private:
 	CMemSpyDeviceWideOperations* iOperation;
 	TInt iProgress;
 	};
+
+/**
+ * CMemSpyNotificationTracker
+ * Tracks notification requests for various events on server site. 
+ * Currently only notifications of process changes are supported.  
+ */
+NONSHARABLE_CLASS( CMemSpyNotificationTracker ) : public CBase, public MMemSpyEngineObserver
+    {
+public:
+    static CMemSpyNotificationTracker* NewL();
+    ~CMemSpyNotificationTracker();
+    
+    void AddNotificationL( const RMessage2& aMessage );
+    
+    void CancelNotification(const RMessage2& aMessage);
+
+public: // From MMemSpyEngineObserver
+    void HandleMemSpyEngineEventL( TEvent aEvent, TAny* aContext = NULL );
+    
+private:
+    CMemSpyNotificationTracker() {};
+    void ConstructL();
+    
+private:
+    CArrayFixFlat<RMessage2>* iPendingNotifications;
+    };
 
 
 #endif

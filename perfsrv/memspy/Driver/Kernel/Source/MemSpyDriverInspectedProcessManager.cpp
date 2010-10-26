@@ -33,8 +33,11 @@ DMemSpyInspectedProcessManager::~DMemSpyInspectedProcessManager()
 	TRACE( Kern::Printf("DMemSpyInspectedProcessManager::~DMemSpyInspectedProcessManager() - START"));
     NKern::ThreadEnterCS();
 
-	TRACE( Kern::Printf("DMemSpyInspectedProcessManager::~DMemSpyInspectedProcessManager() - cancelling event monitor..."));
-    EventMonitor().RequestEventsCancel( *this );
+    if ( iDevice )
+    	{
+		TRACE( Kern::Printf("DMemSpyInspectedProcessManager::~DMemSpyInspectedProcessManager() - cancelling event monitor..."));
+		EventMonitor().RequestEventsCancel( *this );
+    	}
 
 	TRACE( Kern::Printf("DMemSpyInspectedProcessManager::~DMemSpyInspectedProcessManager() - freeing all inspected processes..."));
     FreeAllInspectedProcesses();

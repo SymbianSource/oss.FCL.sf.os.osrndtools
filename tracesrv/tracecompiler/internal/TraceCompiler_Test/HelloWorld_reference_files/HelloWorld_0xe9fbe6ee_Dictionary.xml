@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tracedictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="DictionarySchema.xsd">
+	<typedefs>
+		<object type="ascii" size="1" formatchar="s" classification="string"/>
+		<object type="ascii" size="1" formatchar="ls" classification="string"/>
+		<object type="unicode" size="2" formatchar="S" classification="string"/>
+		<object type="unicode" size="2" formatchar="lS" classification="string"/>
+		<object type="int32" size="4" formatchar="d" classification="integer"/>
+		<object type="int32" size="4" formatchar="ld" classification="integer"/>
+	</typedefs>
+	<data>
+		<def id="1" type="string">Test different kind of unicode strings.</def>
+		<def id="2" type="string">ascii(5): %s ascii(4): %s</def>
+		<def id="3" type="string">unicode(5): %S unicode(5): %S</def>
+		<def id="4" type="string">ascii(4): %s unicode(5): %S</def>
+		<def id="5" type="string">unicode(5): %S ascii (5): %s</def>
+		<def id="6" type="string">ascii(5): %s</def>
+		<def id="7" type="string">unicode(5): %S</def>
+		<def id="8" type="string">ascii(1): %s</def>
+		<def id="9" type="string">unicode(1): %S</def>
+		<def id="10" type="string">ascii(4): %s</def>
+		<def id="11" type="string">unicode(4): %S</def>
+		<def id="12" type="string">ascii(6): %s unicode (8): %S</def>
+		<def id="13" type="string">unicode(4): %S ascii(8): %s</def>
+		<def id="14" type="string">unicode(4): %S ascii(8): %s int: %d</def>
+		<def id="15" type="string">unicode(4): %S ascii(0): %s int: %d</def>
+		<def id="16" type="string">unicode(60): %S</def>
+		<def id="17" type="string">unicode(333): %S</def>
+		<def id="18" type="string">unicode(600): %S</def>
+		<def id="19" type="string">unicode(5): %S ascii(0): %s</def>
+		<def id="20" type="string">unicode(0): %S ascii(5): %s</def>
+		<def id="21" type="string">ascii(0): %s</def>
+		<def id="22" type="string">unicode(0): %S</def>
+		<def id="23" type="string">ascii(4): %s unicode(0): %S</def>
+		<def id="24" type="string">ascii(0): %s unicode(5): %S</def>
+		<def id="25" type="string">ascii(5): %s ascii(0): %s</def>
+		<def id="26" type="string">unicode(5): %S unicode(0): %S</def>
+		<def id="27" type="string">ascii(0): %s ascii(4): %s</def>
+		<def id="28" type="string">unicode(0): %S unicode(5): %S</def>
+		<def id="29" type="string">unicode(333): %S ascii(0): %s int: %d</def>
+		<def id="30" type="string">unicode(333): %S unicode(333): %S</def>
+		<def id="31" type="string">unicode(65): %S</def>
+		<def id="32" type="string">CDataOutPut::DumpL() %S</def>
+		<def id="33" type="string">unicode abc =  %S</def>
+		<def id="34" type="string">ascii abc =  %s</def>
+		<def id="35" type="string">unicode(333): %S</def>
+		<def id="36" type="string">ascii(600): %s</def>
+	</data>
+	<locations>
+		<path val="../../HelloWorld/src/">
+			<file id="1">HelloWorld.cpp</file>
+		</path>
+	</locations>
+	<component id="-369367314" name="HelloWorld" prefix="HelloWorld: " suffix="">
+		<group id="222" name="UNICODE_STRING_TEST" prefix="UNICODE_STRING_TEST: " suffix="">
+			<trace data-ref="1" name="TRACE0">
+				<instance id="1" loc-ref="1" line="45" methodname="MainL"/>
+			</trace>
+			<trace data-ref="2" name="TRACE1">
+				<instance id="2" loc-ref="1" line="46" methodname="MainL"/>
+			</trace>
+			<trace data-ref="3" name="TRACE2">
+				<instance id="3" loc-ref="1" line="49" methodname="MainL"/>
+			</trace>
+			<trace data-ref="4" name="TRACE3">
+				<instance id="4" loc-ref="1" line="52" methodname="MainL"/>
+			</trace>
+			<trace data-ref="5" name="TRACE4">
+				<instance id="5" loc-ref="1" line="55" methodname="MainL"/>
+			</trace>
+			<trace data-ref="6" name="TRACE5">
+				<instance id="6" loc-ref="1" line="58" methodname="MainL"/>
+			</trace>
+			<trace data-ref="7" name="TRACE7">
+				<instance id="7" loc-ref="1" line="61" methodname="MainL"/>
+			</trace>
+			<trace data-ref="8" name="TRACE8">
+				<instance id="8" loc-ref="1" line="64" methodname="MainL"/>
+			</trace>
+			<trace data-ref="9" name="TRACE9">
+				<instance id="9" loc-ref="1" line="67" methodname="MainL"/>
+			</trace>
+			<trace data-ref="10" name="TRACE10">
+				<instance id="10" loc-ref="1" line="70" methodname="MainL"/>
+			</trace>
+			<trace data-ref="11" name="TRACE11">
+				<instance id="11" loc-ref="1" line="73" methodname="MainL"/>
+			</trace>
+			<trace data-ref="12" name="TRACE12">
+				<instance id="12" loc-ref="1" line="76" methodname="MainL"/>
+			</trace>
+			<trace data-ref="13" name="TRACE13">
+				<instance id="13" loc-ref="1" line="79" methodname="MainL"/>
+			</trace>
+			<trace data-ref="14" name="TRACE14">
+				<instance id="14" loc-ref="1" line="82" methodname="MainL"/>
+			</trace>
+			<trace data-ref="15" name="TRACE15">
+				<instance id="15" loc-ref="1" line="83" methodname="MainL"/>
+			</trace>
+			<trace data-ref="16" name="TRACE16">
+				<instance id="16" loc-ref="1" line="85" methodname="MainL"/>
+			</trace>
+			<trace data-ref="17" name="TRACE17">
+				<instance id="17" loc-ref="1" line="86" methodname="MainL"/>
+			</trace>
+			<trace data-ref="18" name="TRACE18">
+				<instance id="18" loc-ref="1" line="87" methodname="MainL"/>
+			</trace>
+			<trace data-ref="19" name="TRACE19">
+				<instance id="19" loc-ref="1" line="89" methodname="MainL"/>
+			</trace>
+			<trace data-ref="20" name="TRACE20">
+				<instance id="20" loc-ref="1" line="92" methodname="MainL"/>
+			</trace>
+			<trace data-ref="21" name="TRACE21">
+				<instance id="21" loc-ref="1" line="95" methodname="MainL"/>
+			</trace>
+			<trace data-ref="22" name="TRACE22">
+				<instance id="22" loc-ref="1" line="98" methodname="MainL"/>
+			</trace>
+			<trace data-ref="23" name="TRACE23">
+				<instance id="23" loc-ref="1" line="101" methodname="MainL"/>
+			</trace>
+			<trace data-ref="24" name="TRACE24">
+				<instance id="24" loc-ref="1" line="104" methodname="MainL"/>
+			</trace>
+			<trace data-ref="25" name="TRACE25">
+				<instance id="25" loc-ref="1" line="107" methodname="MainL"/>
+			</trace>
+			<trace data-ref="26" name="TRACE26">
+				<instance id="26" loc-ref="1" line="110" methodname="MainL"/>
+			</trace>
+			<trace data-ref="27" name="TRACE27">
+				<instance id="27" loc-ref="1" line="113" methodname="MainL"/>
+			</trace>
+			<trace data-ref="28" name="TRACE28">
+				<instance id="28" loc-ref="1" line="116" methodname="MainL"/>
+			</trace>
+			<trace data-ref="29" name="TRACE29">
+				<instance id="29" loc-ref="1" line="119" methodname="MainL"/>
+			</trace>
+			<trace data-ref="30" name="TRACE30">
+				<instance id="30" loc-ref="1" line="121" methodname="MainL"/>
+			</trace>
+			<trace data-ref="31" name="TRACE31">
+				<instance id="31" loc-ref="1" line="123" methodname="MainL"/>
+			</trace>
+			<trace data-ref="32" name="TRACE32">
+				<instance id="32" loc-ref="1" line="146" methodname="MainL"/>
+			</trace>
+			<trace data-ref="33" name="TRACE33">
+				<instance id="33" loc-ref="1" line="148" methodname="MainL"/>
+			</trace>
+			<trace data-ref="34" name="TRACE34">
+				<instance id="34" loc-ref="1" line="149" methodname="MainL"/>
+			</trace>
+			<trace data-ref="35" name="TRACE35">
+				<instance id="35" loc-ref="1" line="151" methodname="MainL"/>
+			</trace>
+			<trace data-ref="36" name="TRACE36">
+				<instance id="36" loc-ref="1" line="153" methodname="MainL"/>
+			</trace>
+		</group>
+	</component>
+</tracedictionary>

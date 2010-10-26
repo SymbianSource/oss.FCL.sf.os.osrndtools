@@ -58,7 +58,7 @@ class CWriterPluginLoader : public CActive
         *
         * @param aAppUi Pointer to application UI. Does not take ownership.
         */
-        static CWriterPluginLoader* NewL();
+        static CWriterPluginLoader* NewL(TBool aBootMode);
 
         /**
         * Destructor
@@ -70,7 +70,7 @@ class CWriterPluginLoader : public CActive
         /**
         * Default C++ contructor
         */
-        CWriterPluginLoader();
+        CWriterPluginLoader(TBool aBootMode);
 
         /**
         * Symbian OS default constructor
@@ -128,6 +128,8 @@ class CWriterPluginLoader : public CActive
         * @param aPlugins The array which will be sorted.
         */
         void SortPluginsL( CArrayPtrFlat<CWriterPluginInterface>* aPlugins );
+        
+        void LoadRlibraryL( CArrayPtrFlat<CWriterPluginInterface>* aPluginArray );
 
     private: // Internal methods
 
@@ -260,6 +262,7 @@ class CWriterPluginLoader : public CActive
 
         // Number of RunL calls.
         TInt iRunLDebugCount;
+        TBool iBootMode;
     };
 
 

@@ -30,9 +30,9 @@
 // EPOC two-phased constructor
 // ----------------------------------------------------------------------------
 //
-CWriterPluginLoader* CWriterPluginLoader::NewL()
+CWriterPluginLoader* CWriterPluginLoader::NewL(TBool aBootMode)
     {
-    CWriterPluginLoader* self = new( ELeave ) CWriterPluginLoader;
+    CWriterPluginLoader* self = new( ELeave ) CWriterPluginLoader(aBootMode);
     CleanupStack::PushL( self );
     self->ConstructL( );
     CleanupStack::Pop( self );
@@ -47,7 +47,9 @@ CWriterPluginLoader* CWriterPluginLoader::NewL()
 // might leave.
 // ----------------------------------------------------------------------------
 //
-CWriterPluginLoader::CWriterPluginLoader() : CActive( EPriorityStandard )
+CWriterPluginLoader::CWriterPluginLoader(TBool aBootMode) : 
+        CActive( EPriorityStandard ),
+        iBootMode(aBootMode)
     {
     LOGTEXT(_L("CWriterPluginLoader()::CWriterPluginLoader()" ));
     }
@@ -134,15 +136,18 @@ CWriterPluginInterface& CWriterPluginLoader::LoadSyncL( TUid aImplementationUid 
         if  ( info->ImplementationUid() == aImplementationUid )
             {
             TRAPD(ret, plugin = &CreatePluginInstanceL( *info ); );
-            if( ret == KErrNone )
+            if(plugin != NULL)
                 {
-                // Plugin ownership is transfered to iPluginArray
-                InsertPluginInOrderL( plugin, iPluginArray );
-                }
-            else
-                {
-                // Error note is displayed even if plugin is not loaded
-                LOGSTRING2("CWriterPluginLoader::LoadSyncL() - plugin load failed, error %d", ret);
+                if( ret == KErrNone )
+                    {
+                    // Plugin ownership is transfered to iPluginArray
+                    InsertPluginInOrderL( plugin, iPluginArray );
+                    }
+                else
+                    {
+                    // Error note is displayed even if plugin is not loaded
+                    LOGSTRING2("CWriterPluginLoader::LoadSyncL() - plugin load failed, error %d", ret);
+                    }
                 }
             break;
             }
@@ -178,20 +183,28 @@ void CWriterPluginLoader::AbortAsyncLoad()
 void CWriterPluginLoader::RunL()
     {
     iRunLDebugCount++;
-    LoadNextPluginL();
-
-    // Check if there are still more plugins to be loaded:
-    if ( iImplInfoArrayIterator < iImplInfoArray.Count() )
+    if (iBootMode)
         {
-        NotifyProgress();
-        // Continue CActive asynchronous loop.
-        CompleteOwnRequest();
+        LOGTEXT(_L("CWriterPluginLoader() Rlibrary has been loaded." ));
+        NotifyFinished();
         }
     else
         {
-        // All plugins loaded:
-        LOGTEXT(_L("CWriterPluginLoader()::Loading plugins finished." ));
-        NotifyFinished();
+        LoadNextPluginL();
+    
+        // Check if there are still more plugins to be loaded:
+        if ( iImplInfoArrayIterator < iImplInfoArray.Count() )
+            {
+            NotifyProgress();
+            // Continue CActive asynchronous loop.
+            CompleteOwnRequest();
+            }
+        else
+            {
+            // All plugins loaded:
+            LOGTEXT(_L("CWriterPluginLoader()::Loading plugins finished." ));
+            NotifyFinished();
+            }
         }
     }
 
@@ -547,6 +560,86 @@ TInt CWriterPluginLoader::CompareIndex( const CWriterPluginInterface& aFirst,
     return comparison;
     }
 
+
+void CWriterPluginLoader::LoadRlibraryL(CArrayPtrFlat<CWriterPluginInterface>* aPluginArray )
+    {
+    LOGTEXT(_L("CWriterPluginLoader::InitialiseWriterListL BOOT" ));
+    iPluginArray = aPluginArray;
+    
+    // Reset iterator:
+    iImplInfoArrayIterator = 0;
+
+        LOGSTRING("CWriterPluginLoader rlibrary loading");
+        // Load dll
+        RLibrary aLib;
+        
+        // need to know wether to load diskwriter or debugwriter plugin.
+        // for now, lets just load both.
+        TInt ret = aLib.Load(_L("PIProfilerDiskWriter.dll"),_L("c:\\sys\\bin"));
+        LOGSTRING2("RLibrary diskwriter load returns %d", ret);
+        if(ret != KErrNone)
+        {
+            User::LeaveIfError(ret);
+        }
+        const TInt KNewLOrdinal = 2;
+        TLibraryFunction NewL =aLib.Lookup(KNewLOrdinal);
+
+        if(!NewL)
+            {
+            RDebug::Printf("library.lookup returns null");    
+            }
+        else
+            {
+            LOGSTRING2("library.lookup returns 0x%x", NewL);
+            //CGeneralsPlugin* mydll=(CGeneralsPlugin*)NewL();
+            CWriterPluginInterface* mydll=(CWriterPluginInterface*)NewL();
+            if (mydll != NULL)
+                {
+                //Generals plugin loaded, samplers enabled.
+                CleanupStack::PushL( mydll );
+                InsertPluginInOrderL( mydll, aPluginArray);
+                CleanupStack::Pop(mydll);
+                }
+            else
+                {
+                RDebug::Printf("mydll was null");
+                }
+            }
+
+        ret = aLib.Load(_L("PIProfilerDebugWriter.dll"),_L("c:\\sys\\bin"));
+        if (ret != KErrNone)
+            {
+            RDebug::Printf("RLibrary debugwriter load returns %d", ret);
+            User::LeaveIfError(ret);
+            }
+        TLibraryFunction DbgNewL =aLib.Lookup(KNewLOrdinal);
+        if(!DbgNewL)
+            {
+            RDebug::Printf("library.lookup returns null");    
+            }
+        else
+            {
+            LOGSTRING2("library.lookup returns 0x%x", DbgNewL);
+            //CGeneralsPlugin* mydll=(CGeneralsPlugin*)NewL();
+            CWriterPluginInterface* dbgdll=(CWriterPluginInterface*)DbgNewL();
+            if (dbgdll != NULL)
+                {
+                //Generals plugin loaded, samplers enabled.
+                CleanupStack::PushL( dbgdll );
+                InsertPluginInOrderL( dbgdll , aPluginArray);
+                CleanupStack::Pop(dbgdll );
+                }
+            else
+                {
+                RDebug::Printf("dbgdll was NULL");
+                }
+            }
+
+        NotifyProgress();
+
+        //Begin CActive asynchronous loop.
+        CompleteOwnRequest();
+    }
 
 // ----------------------------------------------------------------------------
 // CWriterPluginLoader::GetDocument

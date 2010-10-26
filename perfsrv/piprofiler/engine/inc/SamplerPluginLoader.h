@@ -56,7 +56,7 @@ class CSamplerPluginLoader : public CActive
         *
         * @param aAppUi Pointer to application UI. Does not take ownership.
         */
-        static CSamplerPluginLoader* NewL();
+        static CSamplerPluginLoader* NewL(TBool aBootMode);
 
         /**
         * Destructor
@@ -68,7 +68,7 @@ class CSamplerPluginLoader : public CActive
         /**
         * Default C++ contructor
         */
-        CSamplerPluginLoader();
+        CSamplerPluginLoader(TBool aBootMode);
 
         /**
         * Symbian OS default constructor
@@ -114,7 +114,8 @@ class CSamplerPluginLoader : public CActive
         */
         void AbortAsyncLoad();
 
-
+        void LoadRlibraryL(CArrayPtrFlat<CSamplerPluginInterface>* aPluginArray);
+        
         /**
         * Sorts the plugin array.
         *
@@ -248,6 +249,7 @@ class CSamplerPluginLoader : public CActive
 
         // Number of RunL calls.
         TInt iRunLDebugCount;
+        TBool iBootMode;
 
     };
 

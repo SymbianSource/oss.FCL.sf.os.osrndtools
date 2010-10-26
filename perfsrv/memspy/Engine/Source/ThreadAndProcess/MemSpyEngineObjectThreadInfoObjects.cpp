@@ -3083,9 +3083,7 @@ CMemSpyThreadInfoMemoryTrackingStatisticsCurrent::~CMemSpyThreadInfoMemoryTracki
 
 
 void CMemSpyThreadInfoMemoryTrackingStatisticsCurrent::ConstructL()
-    {
-    CMemSpyEngine& engine = Container().Thread().Process().Engine();
-    //
+    {    
     if  ( iTracker )
         {
         iTracker->RemoveObserver( *this );
@@ -3214,8 +3212,6 @@ CMemSpyThreadInfoMemoryTrackingStatisticsPeak::~CMemSpyThreadInfoMemoryTrackingS
 
 void CMemSpyThreadInfoMemoryTrackingStatisticsPeak::ConstructL()
     {
-    CMemSpyEngine& engine = Container().Thread().Process().Engine();
-    //
     if  ( iTracker )
         {
         iTracker->RemoveObserver( *this );
@@ -3341,8 +3337,6 @@ CMemSpyThreadInfoMemoryTrackingStatisticsHWM::~CMemSpyThreadInfoMemoryTrackingSt
 
 void CMemSpyThreadInfoMemoryTrackingStatisticsHWM::ConstructL()
     {
-    CMemSpyEngine& engine = Container().Thread().Process().Engine();
-    //
     if  ( iTracker )
         {
         iTracker->RemoveObserver( *this );

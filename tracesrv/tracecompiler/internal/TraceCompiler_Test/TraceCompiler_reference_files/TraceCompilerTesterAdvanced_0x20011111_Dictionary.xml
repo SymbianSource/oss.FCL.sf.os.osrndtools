@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tracedictionary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="DictionarySchema.xsd">
+	<typedefs>
+		<object type="int32" size="4" formatchar="d" classification="integer"/>
+		<object type="int32" size="4" formatchar="ld" classification="integer"/>
+		<object type="uint8" size="1" formatchar="hhu" classification="integer"/>
+		<object type="hex8" size="1" formatchar="hhx" classification="hex"/>
+		<object type="HEX8" size="1" formatchar="hhX" classification="hex"/>
+		<object type="hex32" size="4" formatchar="x" classification="hex"/>
+		<object type="hex32" size="4" formatchar="lx" classification="hex"/>
+		<object type="HEX32" size="4" formatchar="lX" classification="hex"/>
+		<object type="HEX32" size="4" formatchar="X" classification="hex"/>
+		<object type="void*" size="4" formatchar="p" classification="hex"/>
+		<object type="void*" size="4" formatchar="lp" classification="hex"/>
+		<object type="ascii" size="1" formatchar="s" classification="string"/>
+		<object type="ascii" size="1" formatchar="ls" classification="string"/>
+	</typedefs>
+	<data>
+		<def id="1" type="string">Hello world!</def>
+		<def id="2" type="string">Inline function GetBigValue1000 return value: %d</def>
+		<def id="3" type="string">Inline function GetBigValue1000 return value: %d</def>
+		<def id="4" type="string">Hello moon!</def>
+		<def id="5" type="string">Test OLD TraceCompiler</def>
+		<def id="6" type="string">&gt; DTraceCompilerTesterCommon1::SumValues;aValue1=%d;aValue2=%d;aValue3=%hhu;aValue4=%hhu;Filler=%hhx;Filler=%hhx;this=%x</def>
+		<def id="7" type="string">&lt; DTraceCompilerTesterCommon1::SumValues;this=%x;retVal=%d</def>
+		<def id="8" type="string">Print out pointer values of two NTimers;myNTimer1=%p;myNTimer2=%p</def>
+		<def id="9" type="string">Print out pointer values of one const NTimers;myNTimer3=%p</def>
+		<def id="10" type="string">Ascii60: %s</def>
+		<def id="11" type="string">Ascii300: %s</def>
+		<def id="12" type="string">Ascii512: %s</def>
+		<def id="13" type="string">Ascii600: %s</def>
+		<def id="14" type="string">Ascii300: %s Ascii512: %s</def>
+		<def id="15" type="string">Ascii600: %s Ascii300: %s</def>
+		<def id="16" type="string">Ascii333: %s Ascii333: %s</def>
+		<def id="17" type="string">Ascii1: %s</def>
+		<def id="18" type="string">Ascii2: %s</def>
+		<def id="19" type="string">Ascii3: %s</def>
+		<def id="20" type="string">Ascii4: %s</def>
+		<def id="21" type="string">Ascii1: %s Ascii2: %s</def>
+		<def id="22" type="string">Machine=%s;State=%s</def>
+		<def id="23" type="string">Machine=%s;State=%s;Instance=0x%x</def>
+		<def id="24" type="string">DTraceCoreXtiIf::DebugPrintMsg - Msg via XTI IF 0x%{hex8[]}</def>
+		<def id="25" type="string">Print some POST code traces</def>
+		<def id="26" type="string">                      :;ttjffLLGLLLLffjt;,</def>
+		<def id="27" type="string">                  :;fGWWGWWWWWWWWWWWWGGGGGGLj,.</def>
+		<def id="28" type="string">               ;tfGGGGGGGGGWWWWGGGGGGGGGGGLLLLGj;</def>
+		<def id="29" type="string">             ifGGGGGGGGGGGGGGGGGGGGGGGLLLLLLLLLLLLj.</def>
+		<def id="30" type="string">           ;fGGGGGGGGGGGGGGGGGGGGGLLLLLLffffffffLffLt,</def>
+		<def id="31" type="string">         .iLLLGGGGGGGGGGGGGGGGGGLLLLLfffffffffjfffffjfi:</def>
+		<def id="32" type="string">        .fLLLLLGGGGGGGGGGGGGGGGLLLLLLLfffffjjjjjjjjjttjt</def>
+		<def id="33" type="string">       .iffLfLGLGGGGGGGGGGGGGGGGGLLLLfffffffjjjjjjjtttii.</def>
+		<def id="34" type="string">      .ijfffLLLLLLGGGGGGGGGGGGGGGLLLffLffffffjjjjjttti;;:</def>
+		<def id="35" type="string">      ittfffffLLLLGGGGGGGGGGGGGGGLLLLLLLffffjjjjjttttti;:</def>
+		<def id="36" type="string">     .iitjffffLLLLLGGGGGGGGGGGGGGGGGLLLffffjjttjjtitttii;:</def>
+		<def id="37" type="string">     :ittffLLLLGGGLGGGGGGGGGWGGGGGGGGLLLLffjjttjjtittiiii:</def>
+		<def id="38" type="string">    .,tjjffLLLGGGGGGGGGGGGWWWWWGGGGGGGLLLffjjtjfftitttti;:</def>
+		<def id="39" type="string">     ,jffjjffLLGGGGGGGGGWWWWGGGWWWWWWWGGLLjjtjffjtttttti;:</def>
+		<def id="40" type="string">    .;LLLLLLLLGGGGGGGGGWWWWGGWGGLGGGGWGGLfjjjffjjjjtttii,:.:.</def>
+		<def id="41" type="string">    .;fffjjjfLLGGGGGGGGWGGGLfttitLGGGGGGLfjjjjfjjjjjti;,:;fLfi.</def>
+		<def id="42" type="string">      .:;;,:...:,;jLLLfi.....:,;;iii:,,::,jjjjfjti;.. .;GGjiiji</def>
+		<def id="43" type="string">  . ..:,:::..  ....,;;.:,:. .....  .:;;,..;tt;,.   ..:jLtiLfLGi</def>
+		<def id="44" type="string">::    :,,;iii;,:::  .::iffjtttjjffffjt;,.        ..,;ijffGGLLL;</def>
+		<def id="45" type="string">::  .:;itttjjjjjjj:tGG,:ifGGLLLLLLfffffji:  ..::::,tiiLtifGGLi</def>
+		<def id="46" type="string"> ....:,;itttjjjjfijDDWGt .iGLLLLfffffffft,.:,,::,jjiiiLGLLGGt.</def>
+		<def id="47" type="string">  ,:.:,,,;iittjji;WDDWGG,..fGGGLffffjjjji,,;,:,tjjji;iLjjLGW,</def>
+		<def id="48" type="string">  .,,:..:,;iiii:.iDDDWGLft;ifLLLLLffjjji::ii,jjfjjti;iiiLfjj</def>
+		<def id="49" type="string">     .:..::::..ifLWDDWGLLLLj;,,;;;iiii;;ttt;;fjfjtiiiijGLjf;</def>
+		<def id="50" type="string">         .:;;;;ti;jfLLjt;;ijjLfjjfffffjttti;tjjjjtitiijLfj;</def>
+		<def id="51" type="string">        .;tffjjjti::::;tLGGGGWWGLGGGLLLfLLLLfjjjjtti;;jji,</def>
+		<def id="52" type="string">       .;i;fjjffLLGGWGWWWWWGGGGWGLLLLLffLLffjttttiii;,...</def>
+		<def id="53" type="string">        ,;ijjjjfffLGGLLGGGGGGGGGGLfjLLfffffjjiii;;;,:..:</def>
+		<def id="54" type="string">        .iifjttttjfLGGLLLLLLLLffffjtfLffffjjt;;;,;,:..:i</def>
+		<def id="55" type="string">         ,iLGi,:,,,;;iiiiiittttiiitjLLffjjjti:::,;,..:ff</def>
+		<def id="56" type="string">         .,jLfjtjjfLLGGGGGGGGLLLLfjjfLfjjjti;..;;,:,itG,</def>
+		<def id="57" type="string">           ijjjjjjttjjfffLLGGGLLLLfjjfjjjji;:.,;;,;tfW,</def>
+		<def id="58" type="string">           :;itjjffffLLGGGGGGGGGGLLLfjfjjj;:.,iiitjGDL</def>
+		<def id="59" type="string">           .:;ijjfffLLGGWWWWWWGGGGLLffjjti:..;ttijjEG,</def>
+		<def id="60" type="string">              .itjjjfLLLGGGWWWWGGLjji;,,::..:jjitWEj.</def>
+		<def id="61" type="string">               :;itjjjjjLLLGGGWGLi;,,::::::;ttiGEKW</def>
+		<def id="62" type="string">                  ::,,;;iiittjj;,,,,,,;;;ijjjGEKKf:</def>
+		<def id="63" type="string">                    .: ........::,,;;;ttjjGDKKKEL</def>
+		<def id="64" type="string">                    ,j. ......:::,,;ttjjWE#KKKE,</def>
+		<def id="65" type="string">                    ,fj,  .  ..,,;;iijDK#####f:</def>
+		<def id="66" type="string">                    tWLf.   ..:,,;tfEKKK###Ef</def>
+		<def id="67" type="string">                    jK##EL; .. :iDKKKKKKK#f:</def>
+		<def id="68" type="string">                    LK#Effj;;::fDKKKKKKK#D.</def>
+		<def id="69" type="string">                    EEi.     .:EKKKKKKKKL:</def>
+		<def id="70" type="string">                            :DitD#KKKKKG</def>
+		<def id="71" type="string">                   ;i: .:,,::::.iK###Ki.</def>
+		<def id="72" type="string">                  .iWD  .:::::,,:fE#Dt</def>
+		<def id="73" type="string">                  ,L#D:ijttiiii;, :j:</def>
+		<def id="74" type="string">                  jK#  ...::,,.  .</def>
+	</data>
+	<locations>
+		<path val="../../TraceCompilerTester/src/">
+			<file id="1">TraceCompilerTesterAdvanced.cpp</file>
+			<file id="2">TraceCompilerTesterCommon1.cpp</file>
+			<file id="3">TraceCompilerTesterCommon2.cpp</file>
+		</path>
+		<path val="W:/TraceCompilerTester/inc/">
+			<file id="4">TraceCompilerTesterAdvanced.h</file>
+			<file id="5">TraceCompilerTesterAdvanced.inl</file>
+		</path>
+		<path val="W:/TraceCompilerTester/inl/">
+			<file id="6">BigNumbers.inl</file>
+		</path>
+	</locations>
+	<component id="536940817" name="TraceCompilerTesterAdvanced" prefix="TraceCompilerTesterAdvanced: " suffix="">
+		<group id="222" name="INCLUDED_NON_SOURCE_FILE_TEST" prefix="INCLUDED_NON_SOURCE_FILE_TEST: " suffix="">
+			<trace data-ref="1" name="HELLO_WORLD">
+				<instance id="1" loc-ref="5" line="11" methodname="HelloWorld" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="2" name="NON_SOURCE_FILE_TRACE1">
+				<instance id="2" loc-ref="6" line="12" methodname="GetBigValue1000"/>
+			</trace>
+			<trace data-ref="3" name="NON_SOURCE_FILE_TRACE2">
+				<instance id="3" loc-ref="6" line="19" methodname="GetBigValue2000"/>
+			</trace>
+		</group>
+		<group id="138" name="TRACE_FLOW" prefix="Flow: " suffix="">
+			<trace data-ref="4" name="HELLO_MOON">
+				<instance id="1" loc-ref="4" line="36" methodname="NONSHARABLE_CLASS"/>
+			</trace>
+			<trace data-ref="5" name="TEST_TRACE_2">
+				<instance id="2" loc-ref="1" line="268" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="6" name="DTRACECOMPILERTESTERCOMMON1_SUMVALUES_ENTRY">
+				<instance id="3" loc-ref="2" line="38" methodname="SumValues" classname="DTraceCompilerTesterCommon1"/>
+			</trace>
+			<trace data-ref="7" name="DTRACECOMPILERTESTERCOMMON1_SUMVALUES_EXIT">
+				<instance id="4" loc-ref="2" line="40" methodname="SumValues" classname="DTraceCompilerTesterCommon1"/>
+			</trace>
+		</group>
+		<group id="223" name="POINTER_PARAMETER_TEST" prefix="POINTER_PARAMETER_TEST: " suffix="">
+			<trace data-ref="8" name="POINTER_PARAMETER_TRACE1">
+				<instance id="1" loc-ref="1" line="106" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="9" name="POINTER_PARAMETER_TRACE2">
+				<instance id="2" loc-ref="1" line="107" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+		</group>
+		<group id="224" name="LONG_TRACE_TEST" prefix="LONG_TRACE_TEST: " suffix="">
+			<trace data-ref="10" name="ASCII60">
+				<instance id="1" loc-ref="1" line="138" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="11" name="ASCII300">
+				<instance id="2" loc-ref="1" line="151" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="12" name="ASCII512">
+				<instance id="3" loc-ref="1" line="164" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="13" name="ASCII600">
+				<instance id="4" loc-ref="1" line="177" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="14" name="ASCII300_ASCII512">
+				<instance id="5" loc-ref="1" line="190" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="15" name="ASCII600_ASCII300">
+				<instance id="6" loc-ref="1" line="203" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="16" name="ASCII333_ASCII333">
+				<instance id="7" loc-ref="1" line="216" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+		</group>
+		<group id="225" name="SHORT_TRACE_TEST" prefix="SHORT_TRACE_TEST: " suffix="">
+			<trace data-ref="17" name="ASCII1">
+				<instance id="1" loc-ref="1" line="240" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="18" name="ASCII2">
+				<instance id="2" loc-ref="1" line="242" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="19" name="ASCII3">
+				<instance id="3" loc-ref="1" line="244" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="20" name="ASCII4">
+				<instance id="4" loc-ref="1" line="246" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="21" name="ASCII5">
+				<instance id="5" loc-ref="1" line="248" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+		</group>
+		<group id="135" name="TRACE_STATE" prefix="State: " suffix="">
+			<trace data-ref="22" name="STATE_TRACE_0">
+				<instance id="1" loc-ref="1" line="287" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+			<trace data-ref="23" name="STATE_TRACE_1">
+				<instance id="2" loc-ref="1" line="288" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+		</group>
+		<group id="226" name="TRACE_DATA" prefix="Data: " suffix="">
+			<trace data-ref="24" name="TRACE_DATA_TRACE">
+				<instance id="1" loc-ref="1" line="296" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+		</group>
+		<group id="227" name="POST_CODE_TEST" prefix="POST_CODE_TEST: " suffix="">
+			<trace data-ref="25" name="POST1">
+				<instance id="1" loc-ref="1" line="303" methodname="TraceActivated" classname="DTraceCompilerTesterAdvanced"/>
+			</trace>
+		</group>
+		<group id="228" name="KEKKONEN" prefix="KEKKONEN: " suffix="">
+			<trace data-ref="26" name="TEXT1">
+				<instance id="1" loc-ref="3" line="32" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="27" name="TEXT2">
+				<instance id="2" loc-ref="3" line="33" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="28" name="TEXT3">
+				<instance id="3" loc-ref="3" line="34" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="29" name="TEXT4">
+				<instance id="4" loc-ref="3" line="35" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="30" name="TEXT5">
+				<instance id="5" loc-ref="3" line="36" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="31" name="TEXT6">
+				<instance id="6" loc-ref="3" line="37" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="32" name="TEXT7">
+				<instance id="7" loc-ref="3" line="38" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="33" name="TEXT8">
+				<instance id="8" loc-ref="3" line="39" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="34" name="TEXT9">
+				<instance id="9" loc-ref="3" line="40" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="35" name="TEXT10">
+				<instance id="10" loc-ref="3" line="41" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="36" name="TEXT11">
+				<instance id="11" loc-ref="3" line="42" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="37" name="TEXT12">
+				<instance id="12" loc-ref="3" line="43" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="38" name="TEXT13">
+				<instance id="13" loc-ref="3" line="44" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="39" name="TEXT14">
+				<instance id="14" loc-ref="3" line="45" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="40" name="TEXT15">
+				<instance id="15" loc-ref="3" line="46" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="41" name="TEXT16">
+				<instance id="16" loc-ref="3" line="47" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="42" name="TEXT17">
+				<instance id="17" loc-ref="3" line="48" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="43" name="TEXT18">
+				<instance id="18" loc-ref="3" line="49" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="44" name="TEXT19">
+				<instance id="19" loc-ref="3" line="50" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="45" name="TEXT20">
+				<instance id="20" loc-ref="3" line="51" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="46" name="TEXT21">
+				<instance id="21" loc-ref="3" line="52" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="47" name="TEXT22">
+				<instance id="22" loc-ref="3" line="53" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="48" name="TEXT23">
+				<instance id="23" loc-ref="3" line="54" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="49" name="TEXT24">
+				<instance id="24" loc-ref="3" line="55" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="50" name="TEXT25">
+				<instance id="25" loc-ref="3" line="56" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="51" name="TEXT26">
+				<instance id="26" loc-ref="3" line="57" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="52" name="TEXT27">
+				<instance id="27" loc-ref="3" line="58" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="53" name="TEXT28">
+				<instance id="28" loc-ref="3" line="59" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="54" name="TEXT29">
+				<instance id="29" loc-ref="3" line="60" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="55" name="TEXT30">
+				<instance id="30" loc-ref="3" line="61" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="56" name="TEXT31">
+				<instance id="31" loc-ref="3" line="62" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="57" name="TEXT32">
+				<instance id="32" loc-ref="3" line="63" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="58" name="TEXT33">
+				<instance id="33" loc-ref="3" line="64" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="59" name="TEXT34">
+				<instance id="34" loc-ref="3" line="65" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="60" name="TEXT35">
+				<instance id="35" loc-ref="3" line="66" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="61" name="TEXT36">
+				<instance id="36" loc-ref="3" line="67" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="62" name="TEXT37">
+				<instance id="37" loc-ref="3" line="68" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="63" name="TEXT38">
+				<instance id="38" loc-ref="3" line="69" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="64" name="TEXT39">
+				<instance id="39" loc-ref="3" line="70" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="65" name="TEXT40">
+				<instance id="40" loc-ref="3" line="71" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="66" name="TEXT41">
+				<instance id="41" loc-ref="3" line="72" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="67" name="TEXT42">
+				<instance id="42" loc-ref="3" line="73" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="68" name="TEXT43">
+				<instance id="43" loc-ref="3" line="74" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="69" name="TEXT44">
+				<instance id="44" loc-ref="3" line="75" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="70" name="TEXT45">
+				<instance id="45" loc-ref="3" line="76" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="71" name="TEXT46">
+				<instance id="46" loc-ref="3" line="77" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="72" name="TEXT47">
+				<instance id="47" loc-ref="3" line="78" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="73" name="TEXT48">
+				<instance id="48" loc-ref="3" line="79" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+			<trace data-ref="74" name="TEXT49">
+				<instance id="49" loc-ref="3" line="80" methodname="Kekkonen" classname="DTraceCompilerTesterCommon2"/>
+			</trace>
+		</group>
+	</component>
+</tracedictionary>

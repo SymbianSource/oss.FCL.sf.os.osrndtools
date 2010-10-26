@@ -22,6 +22,7 @@
 class HelloTraceTypes
     {
 public:
+    static void TestBoolean();
     static void SignedIntegers();
     static void UnsignedIntegers();
     static void Descriptors();

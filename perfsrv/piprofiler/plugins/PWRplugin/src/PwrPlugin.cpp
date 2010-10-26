@@ -19,8 +19,8 @@
 #include <piprofiler/ProfilerTraces.h>
 
 #include <centralrepository.h>
-#include <HWRMPower.h>
-#include <HWRMLight.h>
+#include <hwrmpower.h>
+#include <hwrmlight.h>
 #include <hwrm/hwrmpowerdomaincrkeys.h>
 
 
@@ -324,11 +324,9 @@ CProfilerPowerListener::CProfilerPowerListener(CPwrPlugin* aSampler) :
     iNominalCapa(0),
     iVoltage(0), 
     iCurrent(0),
-    iPowerAPI(0)
-#ifdef PWR_SAMPLER_BACKLIGHT
-    ,iLightAPI(0),
+    iPowerAPI(0),
+    iLightAPI(0),
     iBackLightStatus(CHWRMLight::ELightStatusUnknown)
-#endif
 
     {
     LOGTEXT(_L("CProfilerPowerListener::CProfilerPowerListener() - konstuktori"));
@@ -363,13 +361,12 @@ CProfilerPowerListener::~CProfilerPowerListener()
         delete iPowerAPI;
         iPowerAPI = 0;
         }
-#ifdef PWR_SAMPLER_BACKLIGHT
+
     if (iLightAPI)
         {
         delete iLightAPI;
         iLightAPI = 0;
         }
-#endif
 
     LOGTEXT(_L("CProfilerPowerListener::~CProfilerPowerListener() - exit"));
     }
@@ -429,6 +426,8 @@ TInt CProfilerPowerListener::StartL(const TDesC8& aBuf)
 
     // Read HWRM reporting settings from central repository
     CRepository* centRep = CRepository::NewL(KCRUidPowerSettings);
+    CleanupStack::PushL( centRep );
+
     TInt baseInterval(0);
     User::LeaveIfError(centRep->Get(KPowerBaseTimeInterval, baseInterval));
     User::LeaveIfError(centRep->Get(KPowerMaxReportingPeriod, iOriginalReportingPeriod));
@@ -437,6 +436,7 @@ TInt CProfilerPowerListener::StartL(const TDesC8& aBuf)
     LOGSTRING2("CProfilerPowerListener::StartL() - Original HWRM max power reporting period: %d", iOriginalReportingPeriod);
 
     User::LeaveIfError(centRep->Set(KPowerMaxReportingPeriod, KReportingPeriodInfinite));
+    CleanupStack::PopAndDestroy();
 
     // Power reporting interval reading may return too low value sometimes. Minimum value expected to be 250ms.
     if ( baseInterval < KMinSampleInterval )
@@ -468,10 +468,8 @@ TInt CProfilerPowerListener::StartL(const TDesC8& aBuf)
         return status.Int();
         }
 
-#ifdef PWR_SAMPLER_BACKLIGHT
     // Start monitoring backlight status
     iLightAPI = CHWRMLight::NewL(this);
-#endif
 
     LOGTEXT(_L("CProfilerPowerListener::StartL() - exit"));
     return KErrNone;
@@ -505,9 +503,7 @@ void CProfilerPowerListener::Sample()
     LOGSTRING2("CProfilerPowerListener::Sample() - Nominal capacitance: %d", iNominalCapa);
     LOGSTRING2("CProfilerPowerListener::Sample() - Voltage: %d", iVoltage);
     LOGSTRING2("CProfilerPowerListener::Sample() - Current: %d", iCurrent);
-#ifdef PWR_SAMPLER_BACKLIGHT
     LOGSTRING2("CProfilerPowerListener::Sample() - Backlight status: %d", (TUint8)iBackLightStatus);
-#endif
 
     iSample[0] = iNominalCapa;
     iSample[1] = iNominalCapa >> 8;
@@ -517,7 +513,6 @@ void CProfilerPowerListener::Sample()
     iSample[5] = iCurrent >> 8;
     iSample[6] = iCurrent >> 16;
     iSample[7] = iCurrent >> 24;
-#ifdef PWR_SAMPLER_BACKLIGHT
     iSample[8] = (TUint8)iBackLightStatus;
     iSample[9] = sampleTime;
     iSample[10] = sampleTime >> 8;
@@ -525,14 +520,6 @@ void CProfilerPowerListener::Sample()
     iSample[12] = sampleTime >> 24;
 
     iSampler->AddSample(iSample, 13, 0);
-#else
-    iSample[8] = sampleTime;
-    iSample[9] = sampleTime >> 8;
-    iSample[10] = sampleTime >> 16;
-    iSample[11] = sampleTime >> 24;
-
-    iSampler->AddSample(iSample, 12, 0);
-#endif
 
     LOGTEXT(_L("CProfilerPowerListener::Sample() - exit"));
     }
@@ -570,14 +557,17 @@ TInt CProfilerPowerListener::Stop()
                 LOGSTRING2("CProfilerPowerListener::Stop() - Failed to restore max sampling period: %d", err);
                 }
             }
+        if (centRep)
+            {
+            delete centRep;
+            }
         }
-#ifdef PWR_SAMPLER_BACKLIGHT
+
     if (iLightAPI)
         {
         delete iLightAPI;
         iLightAPI = 0;
         }
-#endif
 
     LOGTEXT(_L("CProfilerPowerListener::Stop() - exit"));
     return KErrNone;
@@ -604,7 +594,6 @@ void CProfilerPowerListener::PowerMeasurement(TInt aErr, CHWRMPower::TBatteryPow
     LOGTEXT(_L("CProfilerPowerListener::PowerMeasurement - exit"));
     }
 
-#ifdef PWR_SAMPLER_BACKLIGHT
 void CProfilerPowerListener::LightStatusChanged(TInt aTarget, CHWRMLight::TLightStatus aStatus)
     {
     LOGTEXT(_L("CProfilerPowerListener::LightStatusChanged - entry"));
@@ -620,4 +609,3 @@ void CProfilerPowerListener::LightStatusChanged(TInt aTarget, CHWRMLight::TLight
         }
     LOGTEXT(_L("CProfilerPowerListener::LightStatusChanged - exit"));
     }
-#endif

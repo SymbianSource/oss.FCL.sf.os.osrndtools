@@ -89,7 +89,7 @@ public:
 	DProfilerPriSampler(struct TProfilerGppSamplerData*, TInt id);
 	~DProfilerPriSampler();
 
-	void	Sample();
+	void	Sample(TAny* aPtr);
 	TInt	Reset(DProfilerSampleStream* aStream, TUint32 aSyncOffset);
 	TInt	PostSample();
 	TBool	PostSampleNeeded();
@@ -164,7 +164,7 @@ TInt DProfilerPriSampler<BufferSize>::PostSample()
 	    {
 		this->sampleNeeded = false;
 
-		LOGSTRING3("CProfilerPriSampler<%d>::PostSample - state %d",BufferSize,this->sampleBuffer->GetBufferStatus());
+		LOGSTRING3("CProfilerPriSampler<%d>::PostSample - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
 		
 		//TInt interruptLevel = NKern::DisableInterrupts(0);
 		
@@ -203,11 +203,13 @@ TInt DProfilerPriSampler<BufferSize>::PostSample()
 template <int BufferSize> 
 TBool DProfilerPriSampler<BufferSize>::PostSampleNeeded()
     {
-	LOGSTRING3("CProfilerPriSampler<%d>::PostSampleNeeded - state %d",BufferSize,this->sampleBuffer->GetBufferStatus());
+	LOGSTRING3("CProfilerPriSampler<%d>::PostSampleNeeded - state %d",BufferSize,this->iSampleBuffer->GetBufferStatus());
 
-	TUint32 status = this->iSampleBuffer->iBufferStatus;
+	TUint32 status = this->iSampleBuffer->GetBufferStatus();
 
-	if(status == DProfilerSampleBuffer::BufferCopyAsap || status == DProfilerSampleBuffer::BufferFull || this->sampleNeeded == true)
+	if(status == DProfilerSampleBuffer::BufferCopyAsap || 
+	        status == DProfilerSampleBuffer::BufferFull ||
+	        this->sampleNeeded == true)
 	    {
 		return true;
 	    }
@@ -217,7 +219,7 @@ TBool DProfilerPriSampler<BufferSize>::PostSampleNeeded()
 
 
 template <int BufferSize>
-void DProfilerPriSampler<BufferSize>::Sample()
+void DProfilerPriSampler<BufferSize>::Sample(TAny* aPtr)
     {
 	LOGSTRING2("CProfilerPriSampler<%d>::Sample",BufferSize);	
 	

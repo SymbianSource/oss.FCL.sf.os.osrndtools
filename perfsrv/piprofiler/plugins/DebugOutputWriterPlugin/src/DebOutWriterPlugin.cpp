@@ -46,7 +46,7 @@ const TUid KDebOutWriterPluginUid = { 0x2001E5BA };
  *
  */
 
-CDebOutWriterPlugin* CDebOutWriterPlugin::NewL(const TUid /*aImplementationUid*/, TAny* /*aInitParams*/)
+EXPORT_C CDebOutWriterPlugin* CDebOutWriterPlugin::NewL(const TUid /*aImplementationUid*/, TAny* /*aInitParams*/)
 {
 	LOGTEXT(_L("CDebOutWriterPlugin::NewL() - entry"));
 	CDebOutWriterPlugin* self = new (ELeave) CDebOutWriterPlugin(KDebOutWriterPluginUid);

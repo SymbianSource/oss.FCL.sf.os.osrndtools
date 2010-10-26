@@ -32,9 +32,13 @@ _LIT(KNewLine, "\n");
 _LIT(KEquals, "=");
 _LIT(KCommentSeparator, " ; ");
 
-CSamplerController* CSamplerController::NewL(CProfilerSampleStream& aStream)
+// forward declarations
+
+
+
+CSamplerController* CSamplerController::NewL(CProfilerSampleStream& aStream, TBool aBootMode)
     {
-    CSamplerController* self = new( ELeave ) CSamplerController(aStream);
+    CSamplerController* self = new( ELeave ) CSamplerController(aStream, aBootMode);
     CleanupStack::PushL( self );
     self->ConstructL( );
     CleanupStack::Pop( self );
@@ -48,26 +52,37 @@ void CSamplerController::ConstructL()
 	}
 
 
-CSamplerController::CSamplerController(CProfilerSampleStream& aStream) : 
-    iStream(aStream)
+CSamplerController::CSamplerController(CProfilerSampleStream& aStream, TBool aBootMode) : 
+    iStream(aStream),
+    iScBootMode(aBootMode)
 	{
+    
 	}
 
 void CSamplerController::InitialiseSamplerListL()
     {
-    // create new sampler plugin array
-    iPluginArray = new (ELeave) CArrayPtrFlat<CSamplerPluginInterface>( KMaxSamplerPluginCount );
-    
-    // create plugin loader instance
-    iPluginLoader = CSamplerPluginLoader::NewL();
-    
-    // register sampler controller to get notifications of succesfull plugin load
-    iPluginLoader->SetObserver( this );
-    
-    // load sampler plugins asynchronously
-    iPluginLoader->LoadAsyncL( iPluginArray );
-    
-    LOGTEXT(_L(" RSamplerController::InitialiseUserSideSamplerList - exit"));	
+    // create new sampler plugin array    
+     iPluginArray = new (ELeave) CArrayPtrFlat<CSamplerPluginInterface>( KMaxSamplerPluginCount );
+             
+     // create plugin loader instance
+     iPluginLoader = CSamplerPluginLoader::NewL(iScBootMode);
+     
+     // register sampler controller to get notifications of succesfull plugin load
+     iPluginLoader->SetObserver( this );
+    if (iScBootMode)
+            {
+            LOGSTRING("CSamplerController boot mode");
+            // load sampler rlibrary
+            iPluginLoader->LoadRlibraryL(iPluginArray);
+            }
+        else
+            {
+            LOGSTRING("CSamplerController not boot mode");
+
+            // load sampler plugins asynchronously
+            iPluginLoader->LoadAsyncL( iPluginArray );
+            }   
+    LOGTEXT(_L("CSamplerController::InitialiseUserSideSamplerList - exit"));	
     }
 
 CSamplerController::~CSamplerController()
@@ -97,7 +112,22 @@ CSamplerController::~CSamplerController()
 	    delete iPluginLoader;
 	    iPluginLoader = NULL;
 	    }
-    
+	
+    if( iPlug )
+        {
+        iPlug->StopSampling();
+        delete iPlug;
+        iPlug= NULL;
+        LOGSTRING("iPlug deleted, sampling stopped");
+        }
+	if ( iLibrary )
+	    {
+        iLibrary->Close();
+        delete iLibrary;
+        iLibrary = NULL;
+	    }
+	REComSession::FinalClose();
+	
 	LOGTEXT(_L("CSamplerController::~CSamplerController - exit" ));
 	}
 
@@ -108,24 +138,27 @@ void CSamplerController::SetObserver(MSamplerControllerObserver* aObserver)
     
 TInt CSamplerController::UpdateSavedSamplerAttributesL(CDesC8ArrayFlat* aSavedLineArray, CArrayFixFlat<TSamplerAttributes>* aAttributes)
     {
+    LOGSTRING("CSamplerController::UpdateSavedSamplerAttributesL");
     TInt err(KErrNone);
-    TInt count(iPluginArray->Count());
-    // all plugins get their own settings among whole lump of setting strings
-    CSamplerPluginInterface* plugin = NULL;
-    
-    // loop through the plugin array
-    for(TInt i(0);i<count;i++)
+    if( iPluginArray )
         {
-        // get each plugin at a time
-        plugin = iPluginArray->At(i);
+        TInt count(iPluginArray->Count());
+        // all plugins get their own settings among whole lump of setting strings
+        CSamplerPluginInterface* plugin = NULL;
         
-        // call each plugin to sort out its own settings 
-        err = plugin->ConvertRawSettingsToAttributes(aSavedLineArray);
-        
-        // get plugin specific attributes, array may contain attributes of several sub samplers
-        plugin->GetAttributesL(aAttributes); 
+        // loop through the plugin array
+        for(TInt i(0);i<count;i++)
+            {
+            // get each plugin at a time
+            plugin = iPluginArray->At(i);
+            
+            // call each plugin to sort out its own settings 
+            err = plugin->ConvertRawSettingsToAttributes(aSavedLineArray);
+            
+            // get plugin specific attributes, array may contain attributes of several sub samplers
+            plugin->GetAttributesL(aAttributes); 
+            }
         }
-    
     return err;
     }
 
@@ -169,7 +202,7 @@ void CSamplerController::ComposeSettingsText(RFile& aFile, CArrayFixFlat<TSample
     TBuf<384> settingLine;
     TBuf8<384> settingLine8;
     TInt itemCount(0);
-    TBuf<266> tBuf;
+    //TBuf<266> tBuf;
     
     TSamplerAttributes attr;
     
@@ -369,20 +402,20 @@ inline TBuf8<16> CSamplerController::Int2Str(const TInt& aValue)
 
 void CSamplerController::HandlePluginLoaded( KSamplerPluginLoaderStatus aStatus )
     {
-    
+    LOGSTRING("CSamplerController::HandlePluginLoaded");
     // process status value
     switch(aStatus)
         {
-        case 0:
+        case ESamplerSuccess:
             LOGSTRING2("RSamplerController - one plugin loaded, status: %d", aStatus);
             break;
-        case 1:
+        case ESamplerFail:
             LOGSTRING2("RSamplerController - a plugin load failed: %d", aStatus);
             break;
-        case 2:
+        case ESamplerAborted:
             LOGSTRING2("RSamplerController - plugin loading aborted: %d", aStatus);
             break;
-        case 3:
+        case ESamplerFinished:
             LOGSTRING2("RSamplerController - all plugins loaded: %d", aStatus);
             TRAPD(err, iPluginLoader->SortPluginsL(iPluginArray));
             if(err != KErrNone)
@@ -397,7 +430,7 @@ void CSamplerController::HandlePluginLoaded( KSamplerPluginLoaderStatus aStatus 
                 LOGTEXT(_L("Failed to notify engine"));
                 }
             break;
-        case 4:
+        case ESamplerError:
             LOGSTRING2("RSamplerController - error in loading plugins: %d", aStatus);
             break;
         default:
@@ -473,8 +506,7 @@ TInt CSamplerController::StopSamplerPlugins()
     		{
 			plugin = iPluginArray->At(i); 
 			TUint32 id = plugin->Id(-1).iUid;
-            LOGSTRING2(" CSamplerController::StopSamplerPlugins - traceId = %d",
-                        id);
+            LOGSTRING2(" CSamplerController::StopSamplerPlugins - traceId = 0x%x",id);
             // stop only started samplers
             if(plugin->Enabled())
                 {
@@ -486,6 +518,10 @@ TInt CSamplerController::StopSamplerPlugins()
                     LOGTEXT(_L(" CSamplerController::StopSamplerPlugins - flushing user mode sampler stream"));
                     plugin->Flush();
                     }
+                }
+            else
+                {
+                LOGSTRING2("CSamplerController::StopSamplerPlugins - plugin id 0x%x not enabled",id);
                 }
             count++;
     		}

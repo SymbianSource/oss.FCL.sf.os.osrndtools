@@ -35,7 +35,7 @@ _LIT(KProfilerEngineExe, "PIProfilerEngine.exe");
 static void PrintUsageInfo(const TDesC& aAdditionalInfo)
     {
     _LIT(KConsoleName, "Console");
-    _LIT(KLegalNote, "PIProfiler Version 2.2.2 Copyright @ 2009 Nokia\n");
+    _LIT(KLegalNote, "PIProfiler Version 2.2.0.3 Copyright @ 2009 Nokia\n");
     _LIT(KUsageNote, "Usage: PIProfiler [start/end/timed] settingsfile [time to run]\n");
     _LIT(KExample, "Example: PIProfiler timed C:\\data\\piprofilersettings.txt 60\n");
 
@@ -96,11 +96,12 @@ static TInt StartProfilerProcess(const TDesC& configFile, TInt aRunTimeInSeconds
     conf.Append(configFile);
     if(aBootTime)
         {
-        RDebug::Printf("boot time measurement");
+        RDebug::Printf("PIProfiler: StartProfilerProcess: boot time measurement");
         conf.Append(_L(" "));
         conf.Append(_L("boot"));
         }
     RDebug::RawPrint(conf);
+    RDebug::Printf("PIProfiler: StartProfilerProcess run time is %d", aRunTimeInSeconds);
     // check if process exists
     err = FindProcess();
     LOGSTRING2("PIProfiler: tried to find process, response %d", err); 
@@ -116,20 +117,22 @@ static TInt StartProfilerProcess(const TDesC& configFile, TInt aRunTimeInSeconds
         // check if RProcess::Create() succeeded
         if( err == KErrNone )
             {
+            LOGSTRING("PI Profiler start rendezvous ");
             // Trigger rendezvous on the supplied TRequestStatus object
             proc.Rendezvous(status); 
-
+            LOGSTRING("PI Profiler start resume ");
             // kick off the engine process
             proc.Resume();
-            
+            LOGSTRING("PI Profiler start waitforrequest ");
             // wait for the constructor to complete 
             User::WaitForRequest(status); 
-            
+            LOGSTRING("PI Profiler start close ");
             // just lose the handle
             proc.Close();
-            
+            LOGSTRING("PI Profiler start: closed");
             // start sampling, using settings found in settings file or if not found the default settings
             err = RProfiler::StartSampling();
+            LOGSTRING2("PI Profiler start: err %d", err);
             // check if command succesful
             if( err != KErrNone )
                 {
@@ -273,7 +276,7 @@ static TInt ParseCommandAndExecute()
     TBool myBoot=false;
     // copy the full command line with arguments into a buffer
     User::CommandLine(c);
-    LOGSTRING2("command: %S", &c);
+    LOGSTRING2("ParseCommandAndExecute command: %S", &c);
 
     // try to match with each of the literals defined above
     // (commands in atf format)
@@ -282,11 +285,11 @@ static TInt ParseCommandAndExecute()
     match = c.Match(KAutomatedTestStart);
     if (match != KErrNotFound)
         {
-        LOGTEXT(_L("Found keyword start"));
+        LOGTEXT(_L("ParseCommandAndExecute Found keyword start"));
 
         TBuf<256> fileName;
         fileName.Append(c.Right(c.Length()-6));
-        LOGSTRING2("Filename is %S", &fileName);
+        LOGSTRING2("ParseCommandAndExecute Filename is %S", &fileName);
         if(TestSettingsFile(fileName) != KErrNone)
             {
             _LIT(KSettingsFileFailed, "False settings file");
@@ -321,12 +324,12 @@ static TInt ParseCommandAndExecute()
         // command "timed" or " boot" found, need for finding settings file and run time next
         if(bootmatch != KErrNotFound)
             {
-            LOGTEXT(_L("Found keyword boot"));
+            LOGTEXT(_L("ParseCommandAndExecute Found keyword boot"));
             myBoot = TRUE;
             }
         if(match != KErrNotFound)
             {
-            LOGTEXT(_L("Found keyword timed"));
+            LOGTEXT(_L("ParseCommandAndExecute Found keyword timed"));
             }
         
         TBuf<256> temp;

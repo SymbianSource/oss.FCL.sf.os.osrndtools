@@ -49,7 +49,9 @@ TMemSpyHeapInfo::THeapImplementationType RMemSpyDriverRHeapBase::GetTypeFromHelp
 				return TMemSpyHeapInfo::ETypeRHeap;
 			case LtkUtils::RAllocatorHelper::ETypeRHybridHeap:
 				return TMemSpyHeapInfo::ETypeRHybridHeap;
-			case LtkUtils::RAllocatorHelper::ETypeUnknown:
+            case LtkUtils::RAllocatorHelper::ETypeRHybridHeapV2:
+                return TMemSpyHeapInfo::ETypeRHybridHeapV2;
+            case LtkUtils::RAllocatorHelper::ETypeUnknown:
 			default:
 				return TMemSpyHeapInfo::ETypeUnknown;
 			}
